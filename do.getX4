@@ -1,0 +1,1 @@
+getX4cn4data.py $1 $2 $3 $4 | tee getX4cn-$1-above$2@$4.out

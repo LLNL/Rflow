@@ -1,0 +1,2 @@
+#
+data4rflow.py -d Data_N15_X4 -p datafile.props.csv n 20. $*                |& tee data4rflow-Data_N15_X4.out
