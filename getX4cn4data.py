@@ -1,8 +1,8 @@
 #! /usr/bin/env python
-
+  
 import sys,os,math
 sys.path.append( '..' )
-from x4i import exfor_manager, exfor_entry 
+from x4i import exfor_manager, exfor_entry
 from nuclear import *
 lightnuclei = {'n':'N', '2n':'2N', 'H1':'P', 'H2':'D', 'H3':'T', 'He3':'HE3', 'He4':'A', 'photon':'G'}
 GNDSnuclei = {'N':'n', '2N':'2n', 'P':'H1', 'D':'H2', 'T':'H3', 'HE3':'He3', 'A':'He4', 'G':'photon'}
@@ -31,7 +31,8 @@ rescale_e3 = ['20920']  # Scobel data should be label b, not mb
 excludeSE = ['F0005002','10547002','11182002','11164003','10755003']
 
 from PoPs import database as databaseModule
-pops = databaseModule.database.readFile( 'pops.xml' )
+pops = databaseModule.database.readFile( 'pops-global.xml' )
+
 pi = math.pi
 rad = 180/pi
 amu    = 931.494013
@@ -55,7 +56,7 @@ if __name__ == "__main__":
 
     CN = sys.argv[1]
     name,Acn = CN.split('-')
-    
+
     try: proj = sys.argv[3]
     except: proj = 'any'
     try: nat = sys.argv[4]
@@ -63,6 +64,11 @@ if __name__ == "__main__":
     Acn = int(Acn)
     Zcn = elementsSymbolZ[name]
     
+
+    pops_cn = '%s%s-pops.xml' % (name,Acn)
+    print('Read local pops file',pops_cn)
+    pops.addFile(pops_cn)
+
     channels = []
     for p in lightA.keys():
         if proj != 'any' and p != proj: continue
@@ -76,7 +82,7 @@ if __name__ == "__main__":
     print('Binary channels for',CN,':\n',channels)
     
     db = exfor_manager.X4DBManagerPlainFS( )  
-    dir = 'Data_'+CN.replace('-','')+'_X4'
+    dir = 'Data_X4'
     #if nat is not None: dir = 'nat'+name
     os.system('mkdir '+dir)
     excuses = {}

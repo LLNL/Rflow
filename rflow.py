@@ -23,10 +23,11 @@ if TF:
     tf.enable_v2_behavior()
 
 # TO DO:
-#   2 blocks for angular then total data, so AA array smaller
+#   3 blocks for angular, Ain, total data, so AA array smaller
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
 #   Angle batching of specified size (?)
 #   Fit specific Legendre orders
+#   Reconstruct all channels on an energy grid (uniform or generated) (maybe no angular distributions?)
 
 # Search options:
 #   Fix Reich-Moore widths

@@ -2,6 +2,7 @@
 
 import os,sys,copy,csv,math
 import argparse
+from PoPs import database
 pi = math.pi
 rad = pi/180
 
@@ -41,13 +42,15 @@ parser = argparse.ArgumentParser(description='Prepare data for Rflow')
 parser.add_argument("Projectile", type=str,  help="gnds name for projectile in GNDS file to be used. For all Elab energies.")
 parser.add_argument("Emax", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
 
-parser.add_argument('inFiles', type=str, nargs="+", help='cross-section data files: E,angle,expt,err as desribed in property file.')
+parser.add_argument('-i', '--inFiles', type=str, nargs="+", help='cross-section data files: E,angle,expt,err as desribed in property file.')
+parser.add_argument('--pops', type=str, nargs='+', help='pops files for nuclear levels data')
+
 parser.add_argument("-d", "--Dir", type=str,  default="Data", help="output data directory for small filesdu")
 parser.add_argument("-o", "--Out", type=str,  default="flow.data", help="output data file")
 parser.add_argument("-n", "--Norms", type=str,  default="flow.norms", help="output normalization file")
 parser.add_argument("-S", "--Sfresco", action="store_true", help="Outputs for Sfresdco")
 
-parser.add_argument("-p", "--Props", type=str,  default="properties", help="property file")
+parser.add_argument("-p", "--Props", type=str,  default="properties", help="property datafile.props.csv in args.Dir")
 parser.add_argument("-a", "--Adjusts", type=str,  default="adjusts", help="list of current norm and shift adjustments")
 parser.add_argument("-f", "--Fits", type=str,  default="datafit.csv", help="list of current norm and shift adjustments")
 
@@ -55,6 +58,10 @@ parser.add_argument("-f", "--Fits", type=str,  default="datafit.csv", help="list
 args = parser.parse_args()
 Dir = args.Dir + '/'
 
+pops = database.database.readFile(args.pops[0])
+for p in args.pops[1:]:
+    print('read further pops file',p)
+    pops.addFile(p)
     
 scales = {-1: "nodim", 0: "fm^2", 1: "b", 2:"mb", 3:"mic-b"}
 rscales = {"nodim": -1, "fm^2":0, "b":1, "mb":2, "mic-b":3, "microbarns":3}
@@ -128,14 +135,45 @@ for prop in csv.DictReader(csvf):
     print(','.join(sdata), file=csv_out)
     stat_percent = float(stat_percent)
 
-print('Partitions with projs:',projs,' targs:',targs,' elimits:',elimits)
+print('Partitions with projs:',projs,' targs:',targs)
+print('Partitions elimits:',elimits)
 print('           masses: ',masses)
 print('           charges: ',charges)
+print('           Q values: ',qvalue)
 if len(projs)==0:
     print("Missing information about projectiles for partitions and limits")
     sys.exit(1)
 norm_adj = {}
 shift_adj = {}
+
+# fresco = open('fresco.in','w')
+# for ic in range(len(projs)):
+#     p = projs[ic]
+#     t = targs[ic]
+#     pz = charges[p]
+#     tz = charges[t]
+#     pmass = masses[p];  A = int(pmass+0.5)
+#     tmass = masses[t]
+#     Q = qvalue[p]
+#     nex = 1
+# #     pgs,plevel = nuclIDs(p)
+#     tgs,tlevel = t.split('_e') if '_e' in t else t,0
+#     jp = (A % 2) * 0.5 if A!=2 else 1.0
+#     pp = 1  # all stable projectiles  A<=4 are + parity
+#     ep = 0.0
+#     print('For target:',t)
+#     target = pops[t]
+#     jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
+#     
+#     print(" &PARTITION namep='%s' massp=%s zp=%s nex=%s namet='%s' masst=%s zt=%s qval=%s /" % (p,pmass,pz,nex,t,tmass,tz,Q ), file=fresco)
+#     print("&STATES  cpot =%s jp=%s ptyp=1 ep=%s  jt=%s ptyt=%s et=%s /" % (tlevel,jp,pp,ep,jt,pt,et) , file=fresco)
+#     for level in range(1,tlevel):
+#         target = pops["%s_e%s" % (tgs,level)]
+#         jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
+#         print("&STATES  copyp=1                      jt=%s ptyt=%s et=%s /" % (nex,jp,pp,ep,jt,pt,et) , file=fresco)
+#         
+# print(" &PARTITION /", file=fresco)
+  
 
 try:
     adjustments = f90nml.read(args.Adjusts)
