@@ -55,7 +55,12 @@ def getmz(nucl):
 if __name__ == "__main__":
 
     CN = sys.argv[1]
-    name,Acn = CN.split('-')
+    if '-' in CN:
+        name,Acn = CN.split('-')
+    else:
+        name = CN[:2] if CN[1].isalpha() else CN[0]
+        Acn = CN[len(name):]
+        CN = '%s-%s' % (name,Acn)
 
     try: proj = sys.argv[3]
     except: proj = 'any'
@@ -66,8 +71,12 @@ if __name__ == "__main__":
     
 
     pops_cn = '%s%s-pops.xml' % (name,Acn)
-    print('Read local pops file',pops_cn)
-    pops.addFile(pops_cn)
+    pops_cn = 'local-pops.xml'
+    try:
+        print('Try reading local pops file',pops_cn)
+        pops.addFile(pops_cn)
+    except:
+        pass
 
     channels = []
     for p in lightA.keys():

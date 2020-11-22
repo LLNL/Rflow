@@ -302,9 +302,10 @@ def Rflow(gnd,partitions,base,data_val,data_p,Ein_list, fixedlist,norm_val,norm_
     IFG = RMatrix.reducedWidthAmplitudes
     Overrides = False
     brune = bndx=='Brune'
-    if brune and not LMatrix:
-        print('Brune basis requires Level-matrix method')
-        LMatrix = True
+    if brune: LMatrix = True
+#     if brune and not LMatrix:
+#         print('Brune basis requires Level-matrix method')
+#         LMatrix = True
  
     n_data = data_val.shape[0]
 #     print('Reconstruction emin,emax =',emin,emax,'with',n_data,'energies')
@@ -840,7 +841,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,Ein_list, fixedlist,norm_val,norm_
                             ZZbar[L,iS,jset2,c2,jset1,c1] = angularMomentumCoupling.zbar_coefficient(i2(L1),n2(J1),i2(L2),n2(J2),n2(S),i2(L))
 
     BB = numpy.zeros([n_data,NL])
-    AA = numpy.zeros([n_data, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans  ], dtype=DBLE)
+    AAL = numpy.zeros([npairs,npairs, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans ,NL], dtype=DBLE)
 
     for rr_in in RMatrix.resonanceReactions:
         if rr_in.eliminated: continue
@@ -849,44 +850,48 @@ def Rflow(gnd,partitions,base,data_val,data_p,Ein_list, fixedlist,norm_val,norm_
         for rr_out in RMatrix.resonanceReactions:
             if rr_out.eliminated: continue
             pair = partitions[rr_out.label]
-
-            for ie in range(n_data):
-                pin = data_p[ie,0]
-                pout= data_p[ie,1]
-                if pin != ipair or pout != pair: continue
                 
-                for S_out in Spins[pair]:
-                    for S_in in Spins[ipair]:
-    #                     print('>> S_in:',S_in)
-                        for iS,S in enumerate(All_spins):
-                            for iSo,So in enumerate(All_spins):
-                                if abs(S-S_in)>0.1 or abs(So-S_out)>0.1: continue
-                                phase = (-1)**int(So-S) / 4.0
+            for S_out in Spins[pair]:
+                for S_in in Spins[ipair]:
+#                     print('>> S_in:',S_in)
+                    for iS,S in enumerate(All_spins):
+                        for iSo,So in enumerate(All_spins):
+                            if abs(S-S_in)>0.1 or abs(So-S_out)>0.1: continue
+                            phase = (-1)**int(So-S) / 4.0
 
 
-                                for jset1 in range(n_jsets):
-                                    J1 = J_set[jset1]
-                                    for c1 in range(n_chans):
-                                        if seg_val[jset1,c1] != ipair: continue
-                                        if abs(S_val[jset1,c1]-S) > 0.1 : continue
+                            for jset1 in range(n_jsets):
+                                J1 = J_set[jset1]
+                                for c1 in range(n_chans):
+                                    if seg_val[jset1,c1] != ipair: continue
+                                    if abs(S_val[jset1,c1]-S) > 0.1 : continue
 
-                                        for c1_out in range(n_chans):
-                                            if seg_val[jset1,c1_out] != pair: continue
-                                            if abs(S_val[jset1,c1_out]-So) > 0.1 : continue
+                                    for c1_out in range(n_chans):
+                                        if seg_val[jset1,c1_out] != pair: continue
+                                        if abs(S_val[jset1,c1_out]-So) > 0.1 : continue
 
-                                            for jset2 in range(n_jsets):
-                                                J2 = J_set[jset2]
-                                                for c2 in range(n_chans):
-                                                    if seg_val[jset2,c2] != ipair: continue
-                                                    if abs(S_val[jset2,c2]-S) > 0.1 : continue
+                                        for jset2 in range(n_jsets):
+                                            J2 = J_set[jset2]
+                                            for c2 in range(n_chans):
+                                                if seg_val[jset2,c2] != ipair: continue
+                                                if abs(S_val[jset2,c2]-S) > 0.1 : continue
 
-                                                    for c2_out in range(n_chans):
-                                                        if seg_val[jset2,c2_out] != pair: continue
-                                                        if abs(S_val[jset2,c2_out]-So) > 0.1 : continue
-            
-                                                        for L in range(NL):
-                                                            ZZ = ZZbar[L,iS,jset2,c2,jset1,c1] * ZZbar[L,iSo,jset2,c2_out,jset1,c1_out] 
-                                                            AA[ie, jset2,c2_out,c2, jset1,c1_out,c1] += phase * ZZ / pi * Pleg[ie,L]
+                                                for c2_out in range(n_chans):
+                                                    if seg_val[jset2,c2_out] != pair: continue
+                                                    if abs(S_val[jset2,c2_out]-So) > 0.1 : continue
+        
+                                                    for L in range(NL):
+                                                        ZZ = ZZbar[L,iS,jset2,c2,jset1,c1] * ZZbar[L,iSo,jset2,c2_out,jset1,c1_out] 
+                                                        AAL[ipair,pair, jset2,c2_out,c2, jset1,c1_out,c1,L] += phase * ZZ / pi 
+
+    AA = numpy.zeros([n_data, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans  ], dtype=DBLE)
+    cc = (n_jsets*n_chans**2)**2
+    print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_data*8/1e9 ))
+    for ie in range(n_data):
+        pin = data_p[ie,0]
+        pout= data_p[ie,1]
+        for L in range(NL):
+            AA[ie, :,:,:, :,:,:] += AAL[pin,pout, :,:,:, :,:,:, L] * Pleg[ie,L]
 
     Ax = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans)
 
@@ -1236,11 +1241,11 @@ if __name__=='__main__':
     parser.add_argument("-D", "--Distant", type=float, default="25",  help="Pole energy (lab) above which are all distant poles. Fixed in  searches.")
     parser.add_argument("-B", "--Background", action="store_true",  help="Include BG in name of background poles")
     parser.add_argument("-R", "--ReichMoore", action="store_true", help="Include Reich-Moore damping widths in search")
-    parser.add_argument(      "--LMatrix", action="store_true", help="Use level matrix method")
+    parser.add_argument("-L", "--LMatrix", action="store_true", help="Use level matrix method if not already Brune basis")
     parser.add_argument("-A", "--AngleBunching", type=int, default="1",  help="Max number of angles to bunch at each energy.")
     parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to read in (to make smaller search)")
 
-    parser.add_argument("-L", "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
+    parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
     parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files for grace")
     parser.add_argument("-M", "--Matplot", action="store_true", help="Matplotlib data in .json output files")
     parser.add_argument("-l", "--logs", type=str, default='', help="none, x, y or xy for plots")

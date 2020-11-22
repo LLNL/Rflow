@@ -57,11 +57,6 @@ parser.add_argument("-f", "--Fits", type=str,  default="datafit.csv", help="list
 
 args = parser.parse_args()
 Dir = args.Dir + '/'
-
-pops = database.database.readFile(args.pops[0])
-for p in args.pops[1:]:
-    print('read further pops file',p)
-    pops.addFile(p)
     
 scales = {-1: "nodim", 0: "fm^2", 1: "b", 2:"mb", 3:"mic-b"}
 rscales = {"nodim": -1, "fm^2":0, "b":1, "mb":2, "mic-b":3, "microbarns":3}
@@ -146,33 +141,39 @@ if len(projs)==0:
 norm_adj = {}
 shift_adj = {}
 
-# fresco = open('fresco.in','w')
-# for ic in range(len(projs)):
-#     p = projs[ic]
-#     t = targs[ic]
-#     pz = charges[p]
-#     tz = charges[t]
-#     pmass = masses[p];  A = int(pmass+0.5)
-#     tmass = masses[t]
-#     Q = qvalue[p]
-#     nex = 1
-# #     pgs,plevel = nuclIDs(p)
-#     tgs,tlevel = t.split('_e') if '_e' in t else t,0
-#     jp = (A % 2) * 0.5 if A!=2 else 1.0
-#     pp = 1  # all stable projectiles  A<=4 are + parity
-#     ep = 0.0
-#     print('For target:',t)
-#     target = pops[t]
-#     jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
-#     
-#     print(" &PARTITION namep='%s' massp=%s zp=%s nex=%s namet='%s' masst=%s zt=%s qval=%s /" % (p,pmass,pz,nex,t,tmass,tz,Q ), file=fresco)
-#     print("&STATES  cpot =%s jp=%s ptyp=1 ep=%s  jt=%s ptyt=%s et=%s /" % (tlevel,jp,pp,ep,jt,pt,et) , file=fresco)
-#     for level in range(1,tlevel):
-#         target = pops["%s_e%s" % (tgs,level)]
-#         jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
-#         print("&STATES  copyp=1                      jt=%s ptyt=%s et=%s /" % (nex,jp,pp,ep,jt,pt,et) , file=fresco)
-#         
-# print(" &PARTITION /", file=fresco)
+if args.pops is not None:
+    pops = database.database.readFile(args.pops[0])
+    for p in args.pops[1:]:
+        print('read further pops file',p)
+        pops.addFile(p)
+
+    fresco = open('fresco.in','w')
+    for ic in range(len(projs)):
+        p = projs[ic]
+        t = targs[ic]
+        pz = charges[p]
+        tz = charges[t]
+        pmass = masses[p];  A = int(pmass+0.5)
+        tmass = masses[t]
+        Q = qvalue[p]
+        nex = 1
+    #     pgs,plevel = nuclIDs(p)
+        tgs,tlevel = t.split('_e') if '_e' in t else t,0
+        jp = (A % 2) * 0.5 if A!=2 else 1.0
+        pp = 1  # all stable projectiles  A<=4 are + parity
+        ep = 0.0
+        print('For target:',t)
+        target = pops[t]
+        jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
+    
+        print(" &PARTITION namep='%s' massp=%s zp=%s nex=%s namet='%s' masst=%s zt=%s qval=%s /" % (p,pmass,pz,nex,t,tmass,tz,Q ), file=fresco)
+        print("&STATES  cpot =%s jp=%s ptyp=1 ep=%s  jt=%s ptyt=%s et=%s /" % (tlevel,jp,pp,ep,jt,pt,et) , file=fresco)
+        for level in range(1,tlevel):
+            target = pops["%s_e%s" % (tgs,level)]
+            jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
+            print("&STATES  copyp=1                      jt=%s ptyt=%s et=%s /" % (nex,jp,pp,ep,jt,pt,et) , file=fresco)
+        
+    print(" &PARTITION /", file=fresco)
   
 
 try:
