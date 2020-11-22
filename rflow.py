@@ -396,7 +396,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             jt[pair],tt[pair],et[pair] = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
         except:
             jt[pair],tt[pair],et[pair] = 0.,1,0.
-        if verbose: print(pair,":",kp,rmass[pair],QI[pair],prmax[pair])
+        print(pair,":",kp,' Q =',QI[pair],'R =',prmax[pair])
         pair += 1
     if verbose: print("\nElastic channel is",elasticChannel,'so w factor=',w_factor,'as IFG=',IFG)
     npairs  = pair
@@ -762,24 +762,24 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             cout.close()
 
             for pout in range(npairs):
-                fname = base + '-ch_%i-to-%i' % (pair,pout)
-                print('Partition',pair,'to',pout,': angle-integrated cross-sections to file',fname)
+                fname = base + '-ch_%i-to-%i' % (pin,pout)
+                print('Partition',pin,'to',pout,': angle-integrated cross-sections to file',fname)
                 fout = open(fname,'w')
                 
                 for ie in range(n_data):
-                    y = 0
-                    for jset in range(n_jsets):
-                        for c_in in range(n_chans):   # incoming partial wave
-                            pair = seg_val[jset,c_in]      # incoming partition
-                            if seg_val[jset,c_in] !=pin: continue
-                            for c_out in range(n_chans):   # outgoing partial wave
-                                if seg_val[jset,c_out] !=pout: continue
-                                y += gfac[ie,jset,c_in] * abs(T_mat_n[ie,jset,c_out,c_in])**2
+#                   y = 0
+#                   for jset in range(n_jsets):
+#                       for c_in in range(n_chans):   # incoming partial wave
+#                           pair = seg_val[jset,c_in]      # incoming partition
+#                           if seg_val[jset,c_in] !=pin: continue
+#                           for c_out in range(n_chans):   # outgoing partial wave
+#                               if seg_val[jset,c_out] !=pout: continue
+#                               y += gfac[ie,jset,c_in] * abs(T_mat_n[ie,jset,c_out,c_in])**2
                                                         
-                    x = XSp_mat_n[ie,pout,pair]
+                    x = XSp_mat_n[ie,pout,pin]
                     E = E_scat[ie]
                     E = Ein_list[ie]
-                    print(E,x,y, file=fout)
+                    print(E,x, file=fout)
                 fout.close()
     
 ###################################################
@@ -799,16 +799,20 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         denom = (2.*jproj+1.) * (2.*jtarg+1)
         Gfacc[ie]    = pi * rksq_val[ie,pin] / denom  * 10.   # mb
         mu = mu_val[ie]
+        if abs(mu)>1.: 
+            print('Data pt ',ie,data_p[ie,:],'has bad mu:',mu_val[ie])
+            sys.exit()
         for L in range(NL):
             Pleg[ie,L] = Legendre(L, mu)
                         
     for ie in range(n_angle_integrals):
-        pin = data_p[ie,0]
-        pout= data_p[ie,1]
+        pin = data_p[n_angle_integrals0+ie,0]
+        pout= data_p[n_angle_integrals0+ie,1]
+        print('for ie',ie,'pout,pin=',pout,pin)
         ExptAint[ie,pout,pin] = 1.
         
     for ie in range(n_totals):
-        pin = data_p[ie,0]
+        pin = data_p[ntotals0+ie,0]
         ExptTot[ie,pin] = 1.
         
     if chargedElastic:
@@ -921,12 +925,18 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         AxA *= Gfacc
 
     XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
-    print('XSp_mat',XSp_mat.get_shape(),'want',n_angle_integrals0,n_totals0)
+#   print('XSp_mat',XSp_mat.get_shape(),'want',n_angle_integrals0,n_totals0)
     
+    print('Get angle-integrals from [',n_angle_integrals0,':',n_totals0,'] and totals from [',n_totals0,':',n_data,']')
+    print('AI mu vals:',mu_val[n_angle_integrals0:n_totals0])
+    print('XSp[:,0,1] in that range:',XSp_mat[n_angle_integrals0:n_totals0,0,1])
+    print('ExptAint :',[[['in,out,E',pin,pout,ExptAint[0,pout,pin]] for pin in range(npairs)] for pout in range(npairs)] )
+
     AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
+    print('AxI',AxI.numpy())
     AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
 
-    print('Ax*',AxA.get_shape(),AxI.get_shape(),AxT.get_shape())
+#   print('Ax*',AxA.get_shape(),AxI.get_shape(),AxT.get_shape())
     
     A_t = tf.concat([AxA, AxI, AxT], 0)
     print('Ax*',AxA.get_shape(),AxI.get_shape(),AxT.get_shape(),'giving',A_t.get_shape(),'to be used with',data_val.shape)
@@ -935,14 +945,14 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
     print('\nFirst run:',chisq.numpy()/n_data)  
     
     if verbose:
-        xsFile = open(base + '.xsa','w')
-        Angular_XS = Ax.numpy()
+        if n_angles>0: xsFile = open(base + '.xsa','w')
+        Angular_XS = AxA.numpy()
         chisqsum = 0.0      
-        for ie in range(n_data):
+        for ie in range(n_angles):
             fac = 1.0
             for ni in range(n_norms):
                 fac += (norm_val[ni]-1.)*effect_norm[ni,ie]
-            chi = (Angular_XS[ie]/fac/data_val[:,4]-data_val[ie,2])/data_val[ie,3] 
+            chi = (Angular_XS[ie]/fac/data_val[ie,4]-data_val[ie,2])/data_val[ie,3] 
             chisqsum += chi**2
             theta = math.acos(mu_val[ie])*180./pi if mu_val[ie] <= 1.0 else -1.
         
@@ -1333,7 +1343,7 @@ if __name__=='__main__':
             data_lines = numpy.random.choice(data_lines,abs(args.maxData))
     f.close( )
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]))  )
-    with open(args.data+'.sorted','w') as fout: fout.writelines(data_lines)
+    if debug: with open(args.data+'.sorted','w') as fout: fout.writelines(data_lines)
     
     n_data = len(data_lines)
     data_val = numpy.zeros([n_data,5], dtype=DBLE)    # Elab,mu, datum,absError
@@ -1405,9 +1415,9 @@ if __name__=='__main__':
         X4group = group.split('@')[0] + '@'
         X4groups.add(X4group)
         
-        id += 1
         if CMangle > 0:  n_angles = id + 1  # number of angle-data points
-        if CMangle < 0 and ejectile != 'TOT': n_angle_integrals = id - n_angles  # number of Angle-ints after the angulars
+        if CMangle < 0 and ejectile != 'TOT': n_angle_integrals = id+1  - n_angles  # number of Angle-ints after the angulars
+        id += 1
     
     print('Fitted norms:',Fitted_norm)
     f = open( args.norm )
@@ -1702,7 +1712,7 @@ if __name__=='__main__':
             with open(group+info+'.json','w') as ofile:
                json.dump([1,1,cmd,GraphList],ofile)
                
-            plot_cmd += '             json2pyplot.py -w 10,8 %s' % (group+info+'.json')
+            plot_cmd += '\t             json2pyplot.py -w 10,8 %s' % (group+info+'.json')
             plot_cmds.append(plot_cmd)
             
             ie = 0
