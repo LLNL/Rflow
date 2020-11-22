@@ -808,7 +808,6 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
     for ie in range(n_angle_integrals):
         pin = data_p[n_angle_integrals0+ie,0]
         pout= data_p[n_angle_integrals0+ie,1]
-        print('for ie',ie,'pout,pin=',pout,pin)
         ExptAint[ie,pout,pin] = 1.
         
     for ie in range(n_totals):
@@ -925,21 +924,12 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         AxA *= Gfacc
 
     XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
-#   print('XSp_mat',XSp_mat.get_shape(),'want',n_angle_integrals0,n_totals0)
-    
-    print('Get angle-integrals from [',n_angle_integrals0,':',n_totals0,'] and totals from [',n_totals0,':',n_data,']')
-    print('AI mu vals:',mu_val[n_angle_integrals0:n_totals0])
-    print('XSp[:,0,1] in that range:',XSp_mat[n_angle_integrals0:n_totals0,0,1])
-    print('ExptAint :',[[['in,out,E',pin,pout,ExptAint[0,pout,pin]] for pin in range(npairs)] for pout in range(npairs)] )
-
     AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
-    print('AxI',AxI.numpy())
+    
     AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
 
-#   print('Ax*',AxA.get_shape(),AxI.get_shape(),AxT.get_shape())
-    
     A_t = tf.concat([AxA, AxI, AxT], 0)
-    print('Ax*',AxA.get_shape(),AxI.get_shape(),AxT.get_shape(),'giving',A_t.get_shape(),'to be used with',data_val.shape)
+#   print('Ax*',AxA.get_shape(),AxI.get_shape(),AxT.get_shape(),'giving',A_t.get_shape(),'to be used with',data_val.shape)
 
     chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
     print('\nFirst run:',chisq.numpy()/n_data)  
@@ -1343,7 +1333,8 @@ if __name__=='__main__':
             data_lines = numpy.random.choice(data_lines,abs(args.maxData))
     f.close( )
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]))  )
-    if debug: with open(args.data+'.sorted','w') as fout: fout.writelines(data_lines)
+    if args.debug: 
+        with open(args.data+'.sorted','w') as fout: fout.writelines(data_lines)
     
     n_data = len(data_lines)
     data_val = numpy.zeros([n_data,5], dtype=DBLE)    # Elab,mu, datum,absError
