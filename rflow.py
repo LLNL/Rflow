@@ -23,11 +23,9 @@ if TF:
     tf.enable_v2_behavior()
 
 # TO DO:
-#   3 blocks for angular, Ain, total data, so AA array smaller
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
 #   Angle batching of specified size (?)
 #   Fit specific Legendre orders
-#   Reconstruct all channels on an energy grid (uniform or generated) (maybe no angular distributions?)
 
 # Search options:
 #   Fix Reich-Moore widths
@@ -329,10 +327,13 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
     E_scat  = data_val[:,0]
     if debug: print('Energy grid (lab):',E_scat)
     Elarge = 0.0
+    nExcluded = 0
     for i in range(n_data):
         if not max(emin,Elarge) <= E_scat[i] <= emax:
-            print('Datum at energy %10.4f MeV outside evaluation range [%.4f,%.4f]' % (E_scat[i],emin,emax))
+            # print('Datum at energy %10.4f MeV outside evaluation range [%.4f,%.4f]' % (E_scat[i],emin,emax))
             Elarge = E_scat[i]
+            nExcluded += 1
+    if nExcluded > 0: print('\n %5i points excluded as outside range [%s, %s]' % (nExcluded,emin,emax))
 
     mu_val = data_val[:,1]
 
@@ -453,10 +454,14 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
     for pair in range(npairs):
         for ie in range(n_data):
             E = E_scat[ie]*lab2cm + QI[pair]
-            k = cmath.sqrt(fmscal * rmass[pair] * E)
+            if rmass[pair]!=0:
+                k = cmath.sqrt(fmscal * rmass[pair] * E)
+            else: # photon!
+                k = E/hbc
             if debug: print('ie,E,k = ',ie,E,k)
             rho = k * prmax[pair]
-            if abs(rho) <1e-10: print('rho =',rho,'from E,k,r =',E,k,prmax[pair])
+            if abs(rho) <1e-10: 
+                print('rho =',rho,'from E,k,r =',E,k,prmax[pair],'from Elab=',E_scat[ie],'at',ie)
             eta  =  etacns * za[pair]*zb[pair] * cmath.sqrt(rmass[pair]/E)
             if E < 0: eta = -eta  #  negative imaginary part for bound states
             PM   = complex(0.,1.); 
@@ -811,7 +816,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         ExptAint[ie,pout,pin] = 1.
         
     for ie in range(n_totals):
-        pin = data_p[ntotals0+ie,0]
+        pin = data_p[n_totals0+ie,0]
         ExptTot[ie,pin] = 1.
         
     if chargedElastic:
@@ -1333,7 +1338,7 @@ if __name__=='__main__':
             data_lines = numpy.random.choice(data_lines,abs(args.maxData))
     f.close( )
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]))  )
-    if args.debug: 
+    if args.debug or True: 
         with open(args.data+'.sorted','w') as fout: fout.writelines(data_lines)
     
     n_data = len(data_lines)

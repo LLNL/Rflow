@@ -14,42 +14,171 @@ coulcn = hbc/finec                # e^2
 fmscal = 2e0 * amu / hbc**2
 etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 
+hbar = 6.582e-22 # MeV.s
 
-def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles):
+fresco_start = \
+"""R-matrix starter for {%s}
+NAMELIST
+&FRESCO
+ hcm=0.1000 rmatch=%.4f rintp=0.5000
+ jtmin=0.0 jtmax=%s absend=-1.0
+ thmin=30 thmax=-180 thinc=50  smats=0 weak=0
+ iter = 0 nrbases=1 nparameters=0 btype="A"  boldplot=F
+ pel=1 exl=1 elab(1:2) = %s %s nlab(1)=1 /
+"""
+ 
+def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,emin,emax,Rmatrix_radius,gammas):
 
     pops = database.database.readFile(popsicles[0])
     for p in popsicles[1:]:
         print('read further pops file',p)
         pops.addFile(p)
-
-    fresco = open('fresco.in','w')
+    gs = '+g' if gammas else ''
+    fresco = open('fresco%s.in' % gs,'w')
+    mxp = 0
+    reaction = ', '.join(["%s+%s" % (projs[ic],targs[ic]) for ic in range(len(projs)) ]) 
+    CN = None
+    OtherSep = -1e6
+    partitions = []
+    Lvals = None
     for ic in range(len(projs)):
         p = projs[ic]
         t = targs[ic]
         pz = charges[p]
         tz = charges[t]
-        pmass = masses[p];  A = int(pmass+0.5)
-        tmass = masses[t]
+        pmass = masses[p];  Ap = int(pmass+0.5)
+        tmass = masses[t];  At = int(tmass+0.5)
+        prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.))
+
+        if ic==0: # put in namelist start
+            starting = fresco_start % (reaction,prmax,Jmax,emin,emax)
+            print(starting, file=fresco)
+        
         Q = qvalue[p]
+        if p == 'photon': 
+            CN = t
+            CNsep = Q
+            if not gammas: continue
+        else:
+            OtherSep = max(OtherSep,Q)
+            
         nex = 1
-    #     pgs,plevel = nuclIDs(p)
         tgs,tlevel = t.split('_e') if '_e' in t else t,0
-        jp = (A % 2) * 0.5 if A!=2 else 1.0
+        jp = (Ap % 2) * 0.5 if Ap!=2 else 1.0
         pp = 1  # all stable projectiles  A<=4 are + parity
         ep = 0.0
-        print('For target:',t)
-        target = pops[t]
-        jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
+#         print('For target:',t)
+        target = pops[t.lower()]
+        proj   = pops[p.lower()]
+
+        jt,pt,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
+#         jp,pp,ep =   proj.spin[0].float('hbar'),   proj.parity[0].value,   proj.energy[0].pqu('MeV').value
     
-        print(" &PARTITION namep='%s' massp=%s zp=%s nex=%s namet='%s' masst=%s zt=%s qval=%s /" % (p,pmass,pz,nex,t,tmass,tz,Q ), file=fresco)
-        print("&STATES  cpot =%s jp=%s ptyp=1 ep=%s  jt=%s ptyt=%s et=%s /" % (tlevel,jp,pp,ep,jt,pt,et) , file=fresco)
-        for level in range(1,tlevel):
+        print("\n &PARTITION namep='%s' massp=%s zp=%s nex=%s namet='%s' masst=%s zt=%s qval=%s prmax=%.4f/" % (p,pmass,pz,nex,t,tmass,tz,Q,prmax), file=fresco)
+        mxp += 1
+        excitationPairs = []
+        print("  &STATES  cpot =%s jp=%s ptyp=%s ep=%s  jt=%s ptyt=%s et=%s /" % (mxp,jp,pp,ep,jt,pt,et) , file=fresco)
+        excitationPairs.append([jp,pp,ep,jt,pt,et])
+        for level in range(1,tlevel+1):
             target = pops["%s_e%s" % (tgs,level)]
             jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
-            print("&STATES  copyp=1                      jt=%s ptyt=%s et=%s /" % (nex,jp,pp,ep,jt,pt,et) , file=fresco)
+            print("&STATES  copyp=1                      jt=%s ptyt=%s et=%s /" % (nex,jt,pt,et) , file=fresco)
+            excitationPairs.append([jp,pp,ep,jt,pt,et])
+        partitions.append(excitationPairs)
         
-    print(" &PARTITION /", file=fresco)
-  
+    print(" &PARTITION /\n", file=fresco)
+    
+    for ic in range(mxp):
+        print(" &pot kp=%s  type=0 p(1:3) = 0 0 1.0 /" % (ic+1), file=fresco)
+    print(" &pot /\n\n &overlap /\n\n &coupling /", file=fresco)
+    
+    if CN is None:
+        print('CN not determined for resonances')
+        return
+        
+    CNsep = CNsep - OtherSep
+    print('Include CN resonances above %7.3f MeV excitation' % CNsep)
+    cn = CN.lower()
+    CNresonances = []
+    for nucl in pops.keys():
+        if nucl.startswith(cn):
+            CNresonances.append(pops[nucl])
+#             print('Include',nucl,'resonance')
+    if len(CNresonances)==0: return
+    
+    frescoVars = open('fresco%s.vars' % gs,'w')
+    term = 0
+    nvars = 0
+    for level in CNresonances:
+        jt,et = level.spin[0].float('hbar'), level.energy[0].pqu('MeV').value
+        if jt<0:
+            print('Level at %s MeV of unknown spin and parity' % et, "Omit for now")
+            continue
+        pt = level.parity[0].value
+        if et < CNsep: continue
+        print('Include',level.id,'resonance at',et,'MeV','halflife:',level.halflife[0].pqu('s').value)
+        step = 0.1 # search step in MeV
+        parity = '+' if pt > 0 else '-'
+        name = 'J%s%s:E%s' % (jt,parity,et)
+        term += 1
+        halflife = level.halflife[0].pqu('s').value
+        width = hbar/halflife*math.log(2)
+            
+        print("\n&Variable kind=3 name='%s' term=%s jtot=%s par=%s energy=%s step=%s / width ~ %s" % (name,term,jt,pt,et,step,width), file=frescoVars)
+        nvars += 1
+
+        JJ = jt
+        pi = pt
+        ic = 0
+        weight = 0
+        channels = []
+        for partition in partitions:
+            ic += 1
+            ia = 0
+            for excitationPair in partition:
+                ia += 1
+                jp,pp,ep,jt,pt,et = excitationPair
+                smin = abs(jt-jp)
+                smax = jt+jp
+                s2min = int(2*smin+0.5)
+                s2max = int(2*smax+0.5)
+                for s2 in range(s2min,s2max+1,2):
+                    sch = s2*0.5
+                    lmin = int(abs(sch-JJ) +0.5)
+                    lmax = int(sch+JJ +0.5)
+                    if Lvals is not None: lmax = min(lmax,lMax[icch-1])
+                    for lch in range(lmin,lmax+1):
+                        if pi != pp*pt*(-1)**lch: continue
+                        channels.append((ic,ia,lch,sch))
+                        if True: print(' Partial wave channels IC,IA,L,S:',ic,ia,lch,sch)
+                        w = 1./(2*lch+1)**2
+                        weight += w
+                        
+        nChans = len(channels)
+        c = 0
+        for icch,iach,lch,sch in channels:
+            w = 1./(2*lch+1)**2
+            wRel = w/weight
+            c += 1
+            stepFactor = 1e-2
+            pWid = width*wRel
+            print("&Variable kind=4 name='w%s,%s' term=%s icch=%s iach=%s lch=%s sch=%s width=%s rwa=F step= %9.2e/" % (c,name,term,icch,iach,lch,sch,pWid,pWid*stepFactor), file=frescoVars)
+            nvars += 1
+
+    print('%s resonance levels\n' % term)
+    fresco.close()
+    frescoVars.close()
+   
+    sfrescoName = "%sr%s.sfresco" % (CN,gs)
+    sf = open(sfrescoName,'w')
+    fLines = open('fresco%s.in' % gs,'r').readlines()
+    vLines = open('fresco%s.vars' % gs,'r').readlines()
+    print(" '='  '%s.frout' " % (sfrescoName+gs), file=sf )
+    print(nvars,0,'\n', file=sf)
+    sf.writelines(fLines)
+    sf.writelines(vLines)
+    return
+    
 
 def lab2cm(mu_lab, ap,at,ae,ar, E_lab,Q):
 #
@@ -78,6 +207,11 @@ parser = argparse.ArgumentParser(description='Prepare data for Rflow')
 
 parser.add_argument("Projectile", type=str,  help="gnds name for projectile in GNDS file to be used. For all Elab energies.")
 parser.add_argument("Emax", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
+parser.add_argument("-J", "--Jmax", type=float, default=5.0, help="Maximum total J of partial wave set.")
+parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum incident lab energy in 'projectile' partition.")
+parser.add_argument("-E", "--emaxp", type=float, default=10., help="Maximum incident lab energy in 'projectile' partition.")
+parser.add_argument("-R", "--Rmatrix_radius", type=float, default=1.4, help="Reduced R-matrix radius: factor of (A1^1/3+A2^1/3).")
+parser.add_argument("-G", "--GammaChannel", action="store_true", help="Include discrete gamma channel")
 
 parser.add_argument('-i', '--inFiles', type=str, nargs="+", help='cross-section data files: E,angle,expt,err as desribed in property file.')
 parser.add_argument('--pops', type=str, nargs='+', help='pops files for nuclear levels data')
@@ -85,7 +219,7 @@ parser.add_argument('--pops', type=str, nargs='+', help='pops files for nuclear 
 parser.add_argument("-d", "--Dir", type=str,  default="Data", help="output data directory for small filesdu")
 parser.add_argument("-o", "--Out", type=str,  default="flow.data", help="output data file")
 parser.add_argument("-n", "--Norms", type=str,  default="flow.norms", help="output normalization file")
-parser.add_argument("-S", "--Sfresco", action="store_true", help="Outputs for Sfresdco")
+parser.add_argument("-S", "--Sfresco", action="store_true", help="Outputs for Sfresco")
 
 parser.add_argument("-p", "--Props", type=str,  default="properties", help="property datafile.props.csv in args.Dir")
 parser.add_argument("-a", "--Adjusts", type=str,  default="adjusts", help="list of current norm and shift adjustments")
@@ -111,8 +245,8 @@ z_errors = set()
 nsf = 0
 
 print("\nProperty dictionary from '%s'" % args.Props)
-print("                           p e r  ang-int  %   %   expect  group  split  lab    abs   iscale   Aflip  Ein   rRuth Sfactor  Escale Eshift Ecalib split run")
-print("           File                           sys stat norm    an/en  norms  a,xs   err   units                                 shifts directory")
+print("                           p e r  ang-int     %    %   expect  group  split  lab    abs   iscale   Aflip   Ein rRuth Sfactor Escale Eshift Ecalib split run")
+print("           File                              sys  stat norm    an/en  norms  a,xs   err   units                                      shifts              directory")
 csv_out = open(Dir + args.Props + '-o.csv','w')
 headings = ['projectile','ejectile','residual','file','integrated','sys-error','stat-error','norm','group','splitnorms','lab','abserr','scale','filedir','Aflip','Ein','ratioRuth','Sfactor','eshift','ecalib','splitshifts']
 print(','.join(headings), file=csv_out)
@@ -179,7 +313,7 @@ norm_adj = {}
 shift_adj = {}
 
 if args.pops is not None:
-    make_fresco_input(projs,targs,masses,charges,qvalue,args.pops)
+    make_fresco_input(projs,targs,masses,charges,qvalue,args.pops,args.Jmax,args.eminp,args.emaxp,args.Rmatrix_radius,args.GammaChannel)
 
 try:
     adjustments = f90nml.read(args.Adjusts)
@@ -215,10 +349,16 @@ flast  = 0
 for datFile in args.inFiles:
     if '@' in datFile: continue
     baseFile = datFile.split(Dir)[1]
+    if len(open(datFile,'r').readlines())==0:
+        continue
     d = open(datFile,'r')
+
     dr = datFile.split('.dat')[0]
     projectile,ejectile,residual,integrated,syserror,staterror,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir = props[baseFile]
     print("\nRead ",datFile," write root:",filedir + dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth)
+    
+    if projectile=='photon' and not args.GammaChannel:
+        continue
 
 #   p,e,x = datFile.split('_')[1][0:3]
     p,e,x = projectile,ejectile,residual
@@ -337,7 +477,7 @@ for datFile in args.inFiles:
         ou  = filedir + outfile
         splitdata += ["&Data type=%i pel=%i ic=%i ia=%i data_file='%s' idir=%s iscale=%s abserr=%s / ! %i points" % (type,pel,ic,ia,ou,idir,iscale,abserr,npts) ]
         collect = 1  # column with angle=0, to be removed
-        if args.Sfresco: o = open(Dir + outfile,'w')
+        if args.Sfresco: o = open(outfile,'w')
         pts = 0
         datakeep = []
         for datum in data:
@@ -381,7 +521,7 @@ for datFile in args.inFiles:
         ou  = filedir + outfile
         print("  Keep original data ",datFile,"in",outfile,"as type=1, because %i > %i or group='%s'" % (nff,npts//3,group))
         splitdata += ["&Data type=%i pel=%i ic=%i ia=%i data_file='%s' idir=%s iscale=%s abserr=%s / ! %i points" % (type,pel,ic,ia,ou,idir,iscale,abserr,npts) ]
-        if args.Sfresco: o = open(Dir + outfile,'w')
+        if args.Sfresco: o = open(outfile,'w')
         pts = 0
 
         for datum in sorted(data, key=lambda x: x[0]):
@@ -433,7 +573,7 @@ for datFile in args.inFiles:
             # print 'File named for ',var,', splitgroupnorms=',splitgroupnorms
             base_v = base + str(var) 
             outfile =  base_v + '.data'
-            if args.Sfresco: o = open(Dir + outfile,'w')
+            if args.Sfresco: o = open(outfile,'w')
             pts = 0
             datakeep = []
             for datum in data:
@@ -541,7 +681,7 @@ for datFile in args.inFiles:
 #
 for  s in flownorms: print(s, file=noutput)
 
-print('Zero-error cases\n',z_errors)
+print('\nZero-error cases: ',len(list(z_errors)))
 for ze in sorted(list(z_errors)):
     print(ze, file=z_errorOut)
 

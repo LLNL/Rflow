@@ -6,8 +6,8 @@ from x4i import exfor_manager, exfor_entry
 from nuclear import *
 lightnuclei = {'n':'N', '2n':'2N', 'H1':'P', 'H2':'D', 'H3':'T', 'He3':'HE3', 'He4':'A', 'photon':'G'}
 GNDSnuclei = {'N':'n', '2N':'2n', 'P':'H1', 'D':'H2', 'T':'H3', 'HE3':'He3', 'A':'He4', 'G':'photon'}
-lightA      = {'n':1, '2n':2, 'H1':1, 'H2':2, 'H3':3, 'He3':3, 'He4':4} #l, 'photon':0}
-lightZ      = {'n':0, '2n':0, 'H1':1, 'H2':1, 'H3':1, 'He3':2, 'He4':2, 'photon':0}
+lightA      = {'photon':0, 'n':1, '2n':2, 'H1':1, 'H2':2, 'H3':3, 'He3':3, 'He4':4}
+lightZ      = {'photon':0, 'n':0, '2n':0, 'H1':1, 'H2':1, 'H3':1, 'He3':2, 'He4':2}
 
 classes = ['INL','NON','G']
 
@@ -46,7 +46,7 @@ def getmz(nucl):
         
     n = pops[nucl.replace('-','')]
     mass = n.getMass('amu')
-    if nucl=='n':
+    if nucl=='n' or nucl=='photon':
         charge = 0
     else:
         charge = n.nucleus.charge[0].value
@@ -61,6 +61,8 @@ if __name__ == "__main__":
         name = CN[:2] if CN[1].isalpha() else CN[0]
         Acn = CN[len(name):]
         CN = '%s-%s' % (name,Acn)
+    gndsName = name+Acn
+    CNmass,CNcharge = getmz(gndsName)
 
     try: proj = sys.argv[3]
     except: proj = 'any'
@@ -162,6 +164,7 @@ if __name__ == "__main__":
                         print(list(subents[ e ].keys()))
                         continue
                     for d in ds:
+                        npoints = 0
                         result = str( ds[ d ] ) 
                         Authors = ', '.join(ds[d].author[:])
                         author1 =  ds[d].author[0].split('.')[-1]
@@ -486,6 +489,7 @@ if __name__ == "__main__":
                         
                         qual = '-' + d[2] if d[2] != ' ' else ''
                         file = author1 + '-' + subent + qual + '.dat'
+                        X4_tag = subent + qual
                         file = file.replace(' ','_')
                         data_output = open(dir + '/' + file,'w')
         
@@ -538,7 +542,10 @@ if __name__ == "__main__":
                                 if E_index is not None:
                                     E = stuff[E_index] 
                                 else:
-                                    Emin_in = stuff[E_index_min]
+                                    if E_index_min is None and E_index_max is None: 
+                                        print('Neither E_index_min or E_index_max given. Skip *****')
+                                        continue
+                                    Emin_in = stuff[E_index_min] if E_index_min is not None else 0.0
                                     Emax_in = stuff[E_index_max]
                                     E = (Emin_in + Emax_in)*0.5
                                     Ediff = (Emax_in - Emin_in)*0.5
@@ -564,7 +571,10 @@ if __name__ == "__main__":
                                 if E_index is not None:
                                     E = stuff[E_index] 
                                 else:
-                                    Emin_in = stuff[E_index_min]
+                                    if E_index_min is None and E_index_max is None: 
+                                        print('Neither E_index_min or E_index_max given. Skip *****')
+                                        continue
+                                    Emin_in = stuff[E_index_min] if E_index_min is not None else 0.0
                                     Emax_in = stuff[E_index_max]
                                     E = (Emax_in + Emin_in)*0.5
                                     dE =(Emax_in - Emin_in)*0.5
@@ -619,8 +629,10 @@ if __name__ == "__main__":
                                 described = True
 
                             print(E, Ang, Data , dData, file=data_output)   # MeV, mb units
+                            npoints += 1
+                            
                         data_output.close()
-                        
+                        npts = str(npoints)
                     
                         residual = str(0)
                         if ejectile == 'INL':
@@ -665,11 +677,11 @@ if __name__ == "__main__":
                         target  = t.replace('-','')  # GNDS name
                         nucname = target  # TEMPORARY ??
                         Aflip = 'TRUE' if Aflip else 'FALSE'
-                        print(projectile,ejectile,residual,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor)
+                        print(projectile,ejectile,residual,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npoints,X4_tag)
                         if include:
 #                             subentries.append(', '.join(['"'+part+'"' for part in [subent,x4file,t,reaction,obs,Reaction,str(emin),str(emax),
 #                                 str(n),errs,Authors,ds[d].year,str(ds[d].reference)]]))
-                            subentries.append(','.join([projectile,ejectile,residual,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor]))
+                            subentries.append(','.join([projectile,ejectile,residual,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npts,X4_tag]))
 
     print('partitions:',partitions)
                 
@@ -678,14 +690,22 @@ if __name__ == "__main__":
         fn = dir + '/datafile.props.csv'
         print('\nWrite csv file',fn,'for',len(subentries),'subentries')
         f = open ( fn , 'w')
-        print('projectile,ejectile,residual,file,sys-error,stat-error,angle-integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,S_factor',file=f)
+        print('projectile,ejectile,residual,file,sys-error,stat-error,angle-integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,S_factor,Npoints,EXFOR',file=f)
         ents = set()
         for subent in sorted(list(subentries)):
             psubent = subent.replace('"','')
+            npts,x4_tag = psubent.split(',')[-2:]
+            file = psubent.split(',')[3]
             print(psubent)
-            print(subent.replace(", ",","), file=f)
+            if npts == '0':
+#                 print('   Not in csv as Npoints =',npts)
+                excuses[x4_tag] = "No points. Possibly unprocessed photonuclear"
+#                 os.remove(file)
+            else:
+                print(subent.replace(", ",","), file=f)
         for p in partitions:
             print(','.join([p[0],p[1],p[7],'LIMIT',p[3],p[4],p[2],p[5],p[6]]), file=f)
+#         print(','.join('CN',gndsName,'photon','LIMIT','',CNmass,0,'',CNcharge), file=f)
 
     if len(list(excuses.keys()))>0: print("\nReasons for exclusions:")
     for sub in list(excuses.keys()):
