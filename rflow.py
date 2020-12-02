@@ -919,7 +919,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
 
     AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans  ], dtype=DBLE)
     cc = (n_jsets*n_chans**2)**2
-    print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_angles*8/1e9 ))
+    print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,n_chans))
     for ie in range(n_angles):
         pin = data_p[ie,0]
         pout= data_p[ie,1]
@@ -1567,9 +1567,9 @@ if __name__=='__main__':
 
     
     X4groups = sorted(X4groups)
-    print('X4groups sorted:',X4groups)
+    print('\nX4groups sorted:',X4groups)
 #     if len(X4groups)<1: sys.exit()
-    print('\nData grouped by X4 subentry:')
+    print('Data grouped by X4 subentry:')
     chisqAll = 0
     plot_cmds = []
     legendsize = 1.0 # 0.5 # default
@@ -1592,11 +1592,10 @@ if __name__=='__main__':
         ie = 0
         io = 0
         chisq = 0.0
-        lchisq = 0.0
+#         lchisq = 0.0
         lfac = 1.0
-        gld_old = ''
-        LineData  = [{}, [[],[],[],[]] ]
-        LineModel = [{}, [[],[],[],[]] ]
+#         LineData  = [{}, [[],[],[],[]] ]
+#         LineModel = [{}, [[],[],[],[]] ]
         GraphList = []
         DataLines = []
         ModelLines = []
@@ -1611,33 +1610,8 @@ if __name__=='__main__':
             if groupB == glds[0]:
                 curve = glds[1]
                 ptsInCurve[curve] = ptsInCurve.get(curve,0) + 1
-                curves.add(curve)
-        
-        ncurve = 0
-        for curve in curves:
-            tag = groupB + '@' + curve
-            print('Curve for ',tag)
-            for id in range(n_data):
-                gld = group_list[id]
-                if gld != tag: continue             
-            
-                if args.Matplot:
-                    ng += 1
-                    ic = (ng-1) % 15 +1  # for colors
-                    leg = curve
-#                         if type(leg) is list and len(leg)>1: leg=leg[1]
-                    legtag = leg if len(leg) < 8 else leg[:8]
-                    legend = legtag + '  X2/pt=%.2f' % (lchisq/ptsInCurve[curve])
-                    if lfac!=0.0: legend += ' n%s%.2f%%' % ('+' if lfac>0 else '-', abs(lfac))
-                    LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
-                        'symbol': plsymbol[ng%7], 'symbolsize':args.datasize   }
-                    LineModel[0] = {'kind':'Model', 'color':plcolor[ic-1], 'linestyle': pldashes[(ng-1)%4], 'evaluation':''} # evaluation.split()[0] }
-                    DataLines.append(LineData)
-                    ModelLines.append(LineModel)
-                    lchisq = 0.
-                    LineData  = [{}, [[],[],[],[]] ]
-                    LineModel = [{}, [[],[],[],[]] ]
-                pin,pout = data_p[id,:]
+                
+                pin,pout = data_p[id,:]   # assume same for all data(id) in this curve!
                 if pout == -1:
                     reaction = 'total'
                 elif pout == pin:
@@ -1645,12 +1619,31 @@ if __name__=='__main__':
                 else:
                     reaction = pins[pin]+'->'+pins[pout]
                     
-                fac = 1.0
+                fac = 1.0 # assume same for all data(id) in this curve!
                 if not args.norm1:
                     for ni in range(n_norms):
                         fac += (norm_val[ni]-1.) * effect_norm[ni,id]
-                pin,pout = data_p[id,:]
-                reaction = pins[pin]+('->'+pins[pout] if pout!=pin else ' elastic')
+                lfac = (fac-1)*100
+                curves.add((curve,fac,lfac,pin,pout,reaction))
+     
+        if args.debug: print('\nGroup',group,'has curves:',curves)
+        ncurve = 0
+        for curve,fac,lfac,pin,pout,reaction in curves:
+            tag = groupB + '@' + curve
+            if ptsInCurve[curve]==0: continue
+#             print('\nCurve for ',tag)
+            
+            lchisq = 0.
+            if args.Matplot:
+                LineData  = [{}, [[],[],[],[]] ]
+                LineModel = [{}, [[],[],[],[]] ]
+
+            for id in range(n_data):
+                gld = group_list[id]
+                if gld != tag: continue
+     
+#                 pin,pout = data_p[id,:]
+#                 reaction = pins[pin]+('->'+pins[pout] if pout!=pin else ' elastic')
                 Data = data_val[id,2]*fac
                 DataErr = data_val[id,3]*fac        
                 ex2cm = data_val[id,4] 
@@ -1684,43 +1677,48 @@ if __name__=='__main__':
                     
                 chisq += chi**2
                 lchisq += chi**2
-                lfac = (fac-1)*100
                 io += 1
-            if args.Cross_Sections:
+            if args.Cross_Sections:   # end of curve
                 print('&', file=gf)
                 print('&', file=ef)
+                
+            if args.Matplot:    # end of curve
+                if len(LineModel[1][0])==1:  # extend model line +-5% if only 1 data points
+                    LineModel[1][0].append(LineModel[1][0][0]*0.99); LineModel[1][0].append(LineModel[1][0][0]*1.01)
+                    LineModel[1][1].append(LineModel[1][1][0]);      LineModel[1][1].append(LineModel[1][1][0])
+                    LineModel[1][2].append(0); LineModel[1][2].append(0)
+                    LineModel[1][3].append(0); LineModel[1][3].append(0)
+                    
+                ng += 1
+                ic = (ng-1) % 15 +1  # for colors
+                leg = curve
+#                         if type(leg) is list and len(leg)>1: leg=leg[1]
+                legtag = leg if len(leg) < 8 else leg[:8]
+                legend = legtag + '  X2/pt=%.2f' % (lchisq/ptsInCurve[curve])
+                if lfac!=0.0: legend += ' n%s%.2f%%' % ('+' if lfac>0 else '-', abs(lfac))
+                LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
+                    'symbol': plsymbol[ng%7], 'symbolsize':args.datasize   }
+                LineModel[0] = {'kind':'Model', 'color':plcolor[ic-1], 'linestyle': pldashes[(ng-1)%4], 'evaluation':''} # evaluation.split()[0] }
+#                 DataLines.append(LineData)
+#                 ModelLines.append(LineModel)
+                if args.debug: print('Finishing new curve',ng,'for',curve,'with legend',legend,'with',ptsInCurve[curve],'pts')
+
+                DataLines.append(LineData)
+                ModelLines.append(LineModel)
         
             ie += 1
-        if args.Cross_Sections:
-            gf.close()
-            ef.close()
         ncurve += 1
-        ng += 1
-        print('Model %2i %2i curves (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ncurve,ng,io,op,chisq/io,chisq/chisqtot*100.) )
+        print('\nModel %2i %2i curves (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ncurve,ng,io,op,chisq/io,chisq/chisqtot*100.) )
         chisqAll += chisq
         ngraphAll += 1
         
-        if args.Cross_Sections: 
+        if args.Cross_Sections:    # wrap up this subentry
+            gf.close()
+            ef.close()
             plot_cmd += 'xmgr -xy %s -xydy %s ' % (g_out,e_out) 
 #             plot_cmds.append(plot_cmd)
-        if args.Matplot:
-            ic = ng % 15 +1  # for colors
-            leg = gld_old.split('@')[-1]
-#             if type(leg) is list and len(leg)>1: leg=leg[1]
-            legtag = leg if len(leg) < 8 else leg[:8]
-            legend = legtag + '  X2/pt=%.2f' % (lchisq/len(LineModel[1][0]))
-            if lfac!=0.0: legend += ' n%s%.2f%%' % ('+' if lfac>0 else '-', abs(lfac))
-            LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
-                'symbol': plsymbol[ng%7], 'symbolsize':args.datasize   }
-            LineModel[0] = {'kind':'Model', 'color':plcolor[ic-1], 'linestyle': pldashes[(ng-1)%4], 'evaluation':''} # evaluation.split()[0] }
-            if len(LineModel[1][0])==1:  # extend model line +-5% if only 1 data points
-                LineModel[1][0].append(LineModel[1][0][0]*0.99); LineModel[1][0].append(LineModel[1][0][0]*1.01)
-                LineModel[1][1].append(LineModel[1][1][0]);      LineModel[1][1].append(LineModel[1][1][0])
-                LineModel[1][2].append(0); LineModel[1][2].append(0)
-                LineModel[1][3].append(0); LineModel[1][3].append(0)
-            DataLines.append(LineData)
-            ModelLines.append(LineModel)
-            
+
+        if args.Matplot:           # wrap up this subentry
             subtitle = "Using " + args.inFile + ' with  '+args.data+" & "+args.norm + ', Chisq/pt =%.3f' % (chisq/io)
             kind     = 'R-matrix fit of '+group.split('@')[0]+' for '+reaction+' (units mb and MeV)'
             GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
@@ -1730,16 +1728,6 @@ if __name__=='__main__':
                
             plot_cmd += '\t             json2pyplot.py -w 10,8 %s' % (group+info+'.json')
             plot_cmds.append(plot_cmd)
-            
-            ie = 0
-            io = 0
-            chisq = 0.0
-            lchisq = 0.0
-            gld_old = ''
-            LineData  = [{}, [[],[],[],[]] ]
-            LineModel = [{}, [[],[],[],[]] ]
-            ng = 0
-            ncurve = 0
 
 # chi from norm_vals themselves:
     for ni in range(n_norms):
