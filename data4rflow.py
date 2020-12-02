@@ -27,14 +27,20 @@ NAMELIST
  pel=1 exl=1 elab(1:2) = %s %s nlab(1)=1 /
 """
  
-def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,emin,emax,Rmatrix_radius,gammas):
+def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,emin,emax,Rmatrix_radius,gammas):
 
     pops = database.database.readFile(popsicles[0])
     for p in popsicles[1:]:
         print('read further pops file',p)
         pops.addFile(p)
     gs = '+g' if gammas else ''
+
     fresco = open('fresco%s.in' % gs,'w')
+    pel = 1  # in the made fresco files. This sets zero of pole energies
+    Qpel = None
+    
+    print(' CN partition is ',projs.index('photon'))
+
     mxp = 0
     reaction = ', '.join(["%s+%s" % (projs[ic],targs[ic]) for ic in range(len(projs)) ]) 
     CN = None
@@ -49,19 +55,23 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,emin,emax
         pmass = masses[p];  Ap = int(pmass+0.5)
         tmass = masses[t];  At = int(tmass+0.5)
         prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.))
+        Q = qvalue[p]
 
         if ic==0: # put in namelist start
             starting = fresco_start % (reaction,prmax,Jmax,emin,emax)
             print(starting, file=fresco)
         
-        Q = qvalue[p]
         if p == 'photon': 
             CN = t
             CNsep = Q
             if not gammas: continue
         else:
             OtherSep = max(OtherSep,Q)
-            
+        if emax + Q < 1.:
+            print('Omitting partition %s+%s as not open even at %s MeV' % (p,t,emax))
+            continue
+        if Qpel is None: Qpel = qvalue['photon'] - qvalue[p]  # first partition not excluded
+
         nex = 1
         tgs,tlevel = t.split('_e') if '_e' in t else t,0
         jp = (Ap % 2) * 0.5 if Ap!=2 else 1.0
@@ -74,6 +84,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,emin,emax
         jt,pt,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
 #         jp,pp,ep =   proj.spin[0].float('hbar'),   proj.parity[0].value,   proj.energy[0].pqu('MeV').value
     
+
         print("\n &PARTITION namep='%s' massp=%s zp=%s nex=%s namet='%s' masst=%s zt=%s qval=%s prmax=%.4f/" % (p,pmass,pz,nex,t,tmass,tz,Q,prmax), file=fresco)
         mxp += 1
         excitationPairs = []
@@ -90,14 +101,16 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,emin,emax
     
     for ic in range(mxp):
         print(" &pot kp=%s  type=0 p(1:3) = 0 0 1.0 /" % (ic+1), file=fresco)
-    print(" &pot /\n\n &overlap /\n\n &coupling /", file=fresco)
+    print(" &pot /\n\n &overlap /\n\n &coupling /\nEOF\n", file=fresco)
     
     if CN is None:
         print('CN not determined for resonances')
         return
         
     CNsep = CNsep - OtherSep
-    print('Include CN resonances above %7.3f MeV excitation' % CNsep)
+    print('Include CN resonances from threshold at %7.3f MeV excitation, up to %7.3f MeV' % (CNsep,EmaxCN))
+    print('Zero pole energy in fresco is at %7.3f excitation' % Qpel,'\n')
+
     cn = CN.lower()
     CNresonances = []
     for nucl in pops.keys():
@@ -114,16 +127,29 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,emin,emax
         if jt<0:
             print('Level at %s MeV of unknown spin and parity' % et, "Omit for now")
             continue
-        pt = level.parity[0].value
-        if et < CNsep: continue
-        print('Include',level.id,'resonance at',et,'MeV','halflife:',level.halflife[0].pqu('s').value)
+        try:
+            pt = level.parity[0].value
+        except:
+            print('Level at %s MeV of unknown parity' % et, "Omit for now")
+            continue
+
+        if et < CNsep or et > EmaxCN: continue
+        try:
+            print('Include',level.id,'resonance at',et,'MeV','halflife:',level.halflife[0].pqu('s').value if level.halflife is not None else None)
+        except:
+            print('Include',level.id,'resonance at',et,'MeV')
+
         step = 0.1 # search step in MeV
         parity = '+' if pt > 0 else '-'
         name = 'J%s%s:E%s' % (jt,parity,et)
         term += 1
-        halflife = level.halflife[0].pqu('s').value
-        width = hbar/halflife*math.log(2)
+        try:
+            halflife = level.halflife[0].pqu('s').value
+            width = hbar/halflife*math.log(2)
+        except:
+            width = 0.1  # starting point for fitting
             
+        et -= Qpel   # fresco convention for R-matrix poles
         print("\n&Variable kind=3 name='%s' term=%s jtot=%s par=%s energy=%s step=%s / width ~ %s" % (name,term,jt,pt,et,step,width), file=frescoVars)
         nvars += 1
 
@@ -150,7 +176,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,emin,emax
                     for lch in range(lmin,lmax+1):
                         if pi != pp*pt*(-1)**lch: continue
                         channels.append((ic,ia,lch,sch))
-                        if True: print(' Partial wave channels IC,IA,L,S:',ic,ia,lch,sch)
+                        # print(' Partial wave channels IC,IA,L,S:',ic,ia,lch,sch)
                         w = 1./(2*lch+1)**2
                         weight += w
                         
@@ -206,7 +232,7 @@ def lab2cm(mu_lab, ap,at,ae,ar, E_lab,Q):
 parser = argparse.ArgumentParser(description='Prepare data for Rflow')
 
 parser.add_argument("Projectile", type=str,  help="gnds name for projectile in GNDS file to be used. For all Elab energies.")
-parser.add_argument("Emax", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
+parser.add_argument("EmaxCN", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
 parser.add_argument("-J", "--Jmax", type=float, default=5.0, help="Maximum total J of partial wave set.")
 parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum incident lab energy in 'projectile' partition.")
 parser.add_argument("-E", "--emaxp", type=float, default=10., help="Maximum incident lab energy in 'projectile' partition.")
@@ -228,6 +254,7 @@ parser.add_argument("-f", "--Fits", type=str,  default="datafit.csv", help="list
 
 args = parser.parse_args()
 Dir = args.Dir + '/'
+EmaxCN = args.EmaxCN
     
 scales = {-1: "nodim", 0: "fm^2", 1: "b", 2:"mb", 3:"mic-b"}
 rscales = {"nodim": -1, "fm^2":0, "b":1, "mb":2, "mic-b":3, "microbarns":3}
@@ -311,9 +338,6 @@ if len(projs)==0:
     sys.exit(1)
 norm_adj = {}
 shift_adj = {}
-
-if args.pops is not None:
-    make_fresco_input(projs,targs,masses,charges,qvalue,args.pops,args.Jmax,args.eminp,args.emaxp,args.Rmatrix_radius,args.GammaChannel)
 
 try:
     adjustments = f90nml.read(args.Adjusts)
@@ -414,7 +438,7 @@ for datFile in args.inFiles:
         datum = [float(x) for x in line.split()]
 
         if len(datum)==0: continue
-        if elim>0. and float(datum[0])>elim: continue
+        if elim!=0. and float(datum[0])>elim: continue
         #print datum
         datum[0] *= Ein_scale
 
@@ -698,3 +722,8 @@ if args.Sfresco:
     for  s in normlimits: print(s, file=sf)
     print(' ', file=sf)
     for  s in shiftlimits: print(s, file=sf)
+
+if args.pops is not None:
+    print('\nFresco input file:')
+    make_fresco_input(projs,targs,masses,charges,qvalue,args.pops,args.Jmax,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,args.GammaChannel)
+

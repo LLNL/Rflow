@@ -9,7 +9,7 @@ rm -rf Data_X4
 # get X4 files into *.dat format, as used in IAEA project
 # check csv file for correctness. 
 # delete (or move out of this directory) any unwanted X4 datasets
-../do.getX4 Li7 0.01
+../do.getX4 Li7 0.01 15
 # 
 # This expands to
 ../getX4cn4data.py Li7 0.01 | tee getX4cn-Li7-above0.01@.out

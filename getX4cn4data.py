@@ -21,9 +21,10 @@ debug = False
 allObs = ['CS','DA','DA/DE','DE']
 plots1d = ['CS','NU']
 plots2d = ['DA','NU/DE','DA-G']
-EmaxLimit = 20. # lab energy in first channel
 No_neg_errorbars = True
 Ethreshold = float(sys.argv[2]) # ignore incoming energies below this.
+EmaxLimit = 20. # lab energy in first channel
+EmaxLimit = float(sys.argv[3]) # ignore incoming energies above this
 
 # BAD DATA:
 rescale_e3 = ['20920']  # Scobel data should be label b, not mb
@@ -64,9 +65,9 @@ if __name__ == "__main__":
     gndsName = name+Acn
     CNmass,CNcharge = getmz(gndsName)
 
-    try: proj = sys.argv[3]
+    try: proj = sys.argv[4]
     except: proj = 'any'
-    try: nat = sys.argv[4]
+    try: nat = sys.argv[5]
     except: nat = None
     Acn = int(Acn)
     Zcn = elementsSymbolZ[name]
@@ -703,10 +704,24 @@ if __name__ == "__main__":
 #                 os.remove(file)
             else:
                 print(subent.replace(", ",","), file=f)
+        print('\nPartitions:')
+        hasPhotons = False
         for p in partitions:
+            print(','.join([p[0],p[1],p[7],'LIMIT',p[3],p[4],p[2],p[5],p[6]]))
             print(','.join([p[0],p[1],p[7],'LIMIT',p[3],p[4],p[2],p[5],p[6]]), file=f)
-#         print(','.join('CN',gndsName,'photon','LIMIT','',CNmass,0,'',CNcharge), file=f)
+            if p[0]=='photon': hasPhotons = True
+        
+        if not hasPhotons:
+            qvalue = (Tmass - CNmass) * amu
+            elimit = e0limit + qvalue
+            
+            print(','.join(['photon',gndsName,str(elimit),'LIMIT','0',str(CNmass),str(qvalue),'0',str(CNcharge)]), file=f)
+            print('photon',gndsName,str(elimit),'LIMIT','0',str(CNmass),str(qvalue),'0',str(CNcharge))
+        else:
+            print('Photons included with CN',gndsName)
 
+
+    
     if len(list(excuses.keys()))>0: print("\nReasons for exclusions:")
     for sub in list(excuses.keys()):
         if 'Highest energy' in excuses[sub]: print('   ',sub,':',excuses[sub])
