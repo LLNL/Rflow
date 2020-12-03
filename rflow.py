@@ -205,7 +205,7 @@ def T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs):
 
         
 @tf.function
-def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles):
+def T2B_transformsTFall(T_mat,AA, n_jsets,n_chans,n_angles,batches):
 
 # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
 #  T= T_mat[:,n_jsets,n_chans,n_chans]
@@ -213,10 +213,48 @@ def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles):
     # print(' AA', AA.get_shape())
     T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
     T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
-    TAT = AA * tf.math.real( tf.math.conj(T_left) * T_right )
+    
+#     TAT = AA * tf.math.real( tf.math.conj(T_left) * T_right )
+    TAT = AA * ( tf.math.real(T_left) * tf.math.real(T_right) + tf.math.imag(T_left) * tf.math.imag(T_right) )
+
+
     Ax = tf.reduce_sum(TAT,[ 1,2,3, 4,5,6])    # exlude dim=0 (ie)
                                                             
     return(Ax)
+    
+@tf.function
+def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+
+# BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
+#  T= T_mat[:,n_jsets,n_chans,n_chans]
+    if n_angles < 1:
+        return ([])
+        
+    # batches = 5
+    batch_size = n_angles //  batches + 1
+    print(batches,'batches, so make size',batch_size)
+    
+    AxList  = []
+    for b in range(batches):
+        ie_min = b*batch_size 
+        ie_max = min( (b+1)*batch_size, n_angles)
+        print('Batch',b,'is',[ie_min,ie_max],'up to',n_angles)
+        
+#         T_mab = T_mat[ie_min:ie_max, :,:]
+        
+        T_left = tf.reshape(T_mat[ie_min:ie_max,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1]) 
+        T_right= tf.reshape(T_mat[ie_min:ie_max,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  
+
+        TAT = AA[ie_min:ie_max, :,:,:, :,:,:] * tf.math.real( tf.math.conj(T_left) * T_right )
+        
+        Axb = tf.reduce_sum(TAT,[ 1,2,3, 4,5,6])
+        AxList.append(Axb)
+        
+        
+    Ax = tf.concat(AxList, 0)
+                                                            
+    return(Ax)
+    
                     
 @tf.function
 def AddCoulombsTF(A_t,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles):
@@ -244,7 +282,7 @@ def ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm):
 @tf.function        
 def FitStatusTF(searchpars, others):
 
-    L_diag, Om2_mat,POm_diag,CS_diag, LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border,E_poles_fixed_v,g_poles_fixed_v, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc,ExptAint,ExptTot,G_fact,gfac,p_mask = others
+    L_diag, Om2_mat,POm_diag,CS_diag, LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,batches,brune,S_poles,dSdE_poles,EO_poles, searchloc,border,E_poles_fixed_v,g_poles_fixed_v, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc,ExptAint,ExptTot,G_fact,gfac,p_mask = others
 
 #     print('S indices',searchloc.dtype,searchloc.shape,searchloc[:,0])
 #     print('S updates',searchpars.dtype,searchpars.get_shape(),searchpars)
@@ -270,7 +308,7 @@ def FitStatusTF(searchpars, others):
         T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles) 
         
 
-    Ax = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles)
+    Ax = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
 
     if chargedElastic:                          
         AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
@@ -291,7 +329,7 @@ def FitStatusTF(searchpars, others):
     
 
                                     
-def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list, fixedlist,norm_val,norm_info,norm_refs,effect_norm, LMatrix,
+def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list, fixedlist,norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
         Search,Iterations,restarts,Distant,Background,ReichMoore, verbose,debug,inFile,fitStyle,tag,large):
         
 #     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
@@ -542,6 +580,8 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                     B = -ch.L
                 elif bndx == 'Brune':
                     pass
+                elif bndx == 'S' or bndx is None:
+                    bndx = None
                 elif bndx is not None:              # btype='B'
                     B = float(bndx)
                 if ch.boundaryConditionOverride is not None:
@@ -926,7 +966,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         for L in range(NL):
             AA[ie, :,:,:, :,:,:] += AAL[pin,pout, :,:,:, :,:,:, L] * Pleg[ie,L]
 
-    Ax = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles)
+    Ax = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
 
 #     Angular_XS= A_t.numpy()   # =RT
     
@@ -971,7 +1011,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         print('chisq/pt=',chisqsum/(n_data),'(including)' )
 
     searchpars0 = searchpars
-    others = (L_diag, Om2_mat,POm_diag,CS_diag,    LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles,  searchloc,border,E_poles_fixed_v,g_poles_fixed_v,
+    others = (L_diag, Om2_mat,POm_diag,CS_diag,    LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,batches,brune,S_poles,dSdE_poles,EO_poles,  searchloc,border,E_poles_fixed_v,g_poles_fixed_v,
                 data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc,ExptAint,ExptTot,G_fact,gfac,p_mask)
     n_angle_integrals = n_data - n_totals - n_angles
     n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
@@ -1003,7 +1043,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             else:
                 T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
-            AxA = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles)
+            AxA = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
 
             if chargedElastic:                          
                 AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
@@ -1056,7 +1096,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                              print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],S_poles[jset,n,c],
                                      100*dSdE_poles[jset,n,c]*(EO_poles[jset,n]-EOO_poles[jset,n])/ (S_poles[jset,n,c] - SOO_poles[jset,n,c])))
                     
-                others = (L_diag, Om2_mat,POm_diag,CS_diag,    LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles,  searchloc,border,E_poles_fixed_v,g_poles_fixed_v, \
+                others = (L_diag, Om2_mat,POm_diag,CS_diag,    LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,batches,brune,S_poles,dSdE_poles,EO_poles,  searchloc,border,E_poles_fixed_v,g_poles_fixed_v, \
                             data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc,ExptAint,ExptTot,G_fact,gfac,p_mask)
                 n_angle_integrals = n_data - n_totals - n_angles
                 n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
@@ -1066,7 +1106,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
 
                 XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
                 
-                AxA = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles)
+                AxA = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
                 AxA = AddCoulombsTF(AxA,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
                 
                 XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
@@ -1291,7 +1331,8 @@ if __name__=='__main__':
     parser.add_argument("-R", "--ReichMoore", action="store_true", help="Include Reich-Moore damping widths in search")
     parser.add_argument("-L", "--LMatrix", action="store_true", help="Use level matrix method if not already Brune basis")
     parser.add_argument("-A", "--AngleBunching", type=int, default="1",  help="Max number of angles to bunch at each energy.")
-    parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to read in (to make smaller search)")
+    parser.add_argument("-G", "--GroupAngles", type=int, default="1",  help="Number of energy batches for T2B transforms, aka batches")
+    parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to read in (to make smaller search). Pos: random selection. Neg: first block")
 
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
     parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files for grace")
@@ -1337,11 +1378,13 @@ if __name__=='__main__':
 
     f = open( args.data )
     data_lines = f.readlines( )
+    n_data = len(data_lines)
     if args.maxData is not None: 
-        if args.maxData > 0:
-            data_lines = data_lines[:args.maxData]
+        if args.maxData < 0:
+            data_lines = data_lines[:abs(args.maxData)]
         else:
-            data_lines = numpy.random.choice(data_lines,abs(args.maxData))
+            data_lines = numpy.random.choice(data_lines,args.maxData)
+            print('Data size reduced from',n_data,'to',len(data_lines))
     f.close( )
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]))  )
     if args.debug or True: 
@@ -1478,7 +1521,7 @@ if __name__=='__main__':
 
     base = args.inFile
     chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
-                        norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,
+                        norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
 
@@ -1592,10 +1635,7 @@ if __name__=='__main__':
         ie = 0
         io = 0
         chisq = 0.0
-#         lchisq = 0.0
         lfac = 1.0
-#         LineData  = [{}, [[],[],[],[]] ]
-#         LineModel = [{}, [[],[],[],[]] ]
         GraphList = []
         DataLines = []
         ModelLines = []
@@ -1608,7 +1648,7 @@ if __name__=='__main__':
 #             print('For data pt',id,'group=',group,'gld=',gld)
             glds= gld.split('@')
             if groupB == glds[0]:
-                curve = glds[1]
+                curve = glds[1] if len(glds)>1 else 'Aint'
                 ptsInCurve[curve] = ptsInCurve.get(curve,0) + 1
                 
                 pin,pout = data_p[id,:]   # assume same for all data(id) in this curve!
@@ -1629,7 +1669,7 @@ if __name__=='__main__':
         if args.debug: print('\nGroup',group,'has curves:',curves)
         ncurve = 0
         for curve,fac,lfac,pin,pout,reaction in curves:
-            tag = groupB + '@' + curve
+            tag = groupB + ( ('@' + curve) if curve!='Aint' else '')
             if ptsInCurve[curve]==0: continue
 #             print('\nCurve for ',tag)
             
