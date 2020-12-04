@@ -29,6 +29,9 @@ except:
   print('TF: cannot modify virtual devices once initialized')
   pass
 
+import times
+tim = times.times()
+
 # TO DO:
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
 #   Angle batching of specified size (?)
@@ -1519,12 +1522,14 @@ if __name__=='__main__':
     fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
             derivedFrom=gnd.styles.getEvaluatedStyle().label )
 
+    print("Finish setup: ",tim.toString( ))
     base = args.inFile
     chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
 
+    print("Finish rflow call: ",tim.toString( ))
     chisqPN = chisqtot / n_data
     print('\n ChiSq/pt = %10.4f from %i points' % (chisqPN,n_data))
     
@@ -1779,3 +1784,5 @@ if __name__=='__main__':
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')' )   
     
     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
+
+print("Finish rflow: ",tim.toString( ))
