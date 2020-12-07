@@ -2,6 +2,7 @@
 
 import os,sys,copy,csv,math
 import argparse
+from CoulCF import dSoP
 from PoPs import database
 pi = math.pi
 rad = pi/180
@@ -45,6 +46,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,em
     reaction = ', '.join(["%s+%s" % (projs[ic],targs[ic]) for ic in range(len(projs)) ]) 
     CN = None
     OtherSep = -1e6
+    excitationLists = []
     partitions = []
     Lvals = None
     for ic in range(len(projs)):
@@ -86,6 +88,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,em
     
 
         print("\n &PARTITION namep='%s' massp=%s zp=%s nex=%s namet='%s' masst=%s zt=%s qval=%s prmax=%.4f/" % (p,pmass,pz,nex,t,tmass,tz,Q,prmax), file=fresco)
+        partitions.append(ic)
         mxp += 1
         excitationPairs = []
         print("  &STATES  cpot =%s jp=%s ptyp=%s ep=%s  jt=%s ptyt=%s et=%s /" % (mxp,jp,pp,ep,jt,pt,et) , file=fresco)
@@ -95,7 +98,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,em
             jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
             print("&STATES  copyp=1                      jt=%s ptyt=%s et=%s /" % (nex,jt,pt,et) , file=fresco)
             excitationPairs.append([jp,pp,ep,jt,pt,et])
-        partitions.append(excitationPairs)
+        excitationLists.append(excitationPairs)
         
     print(" &PARTITION /\n", file=fresco)
     
@@ -110,7 +113,9 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,em
     CNsep = CNsep - OtherSep
     print('Include CN resonances from threshold at %7.3f MeV excitation, up to %7.3f MeV' % (CNsep,EmaxCN))
     print('Zero pole energy in fresco is at %7.3f excitation' % Qpel,'\n')
-
+    print('Remaining partitions:',partitions)
+    print('excitationLists:',excitationLists)
+    
     cn = CN.lower()
     CNresonances = []
     for nucl in pops.keys():
@@ -123,45 +128,60 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,em
     term = 0
     nvars = 0
     for level in CNresonances:
-        jt,et = level.spin[0].float('hbar'), level.energy[0].pqu('MeV').value
+        print()
+        jt,Er = level.spin[0].float('hbar'), level.energy[0].pqu('MeV').value
         if jt<0:
-            print('Level at %s MeV of unknown spin and parity' % et, "Omit for now")
+            print('Level at %s MeV of unknown spin and parity' % Er, "Omit for now")
             continue
         try:
             pt = level.parity[0].value
         except:
-            print('Level at %s MeV of unknown parity' % et, "Omit for now")
+            print('Level at %s MeV of unknown parity' % Er, "Omit for now")
             continue
 
-        if et < CNsep or et > EmaxCN: continue
-        try:
-            print('Include',level.id,'resonance at',et,'MeV','halflife:',level.halflife[0].pqu('s').value if level.halflife is not None else None)
-        except:
-            print('Include',level.id,'resonance at',et,'MeV')
-
-        step = 0.1 # search step in MeV
-        parity = '+' if pt > 0 else '-'
-        name = 'J%s%s:E%s' % (jt,parity,et)
-        term += 1
+        if Er < CNsep or Er > EmaxCN: continue
+        
         try:
             halflife = level.halflife[0].pqu('s').value
             width = hbar/halflife*math.log(2)
         except:
             width = 0.1  # starting point for fitting
+        try:
+            print('Include',level.id,'resonance at',Er,'MeV','halflife:',level.halflife[0].pqu('s').value if level.halflife is not None else None, 'Width:',width,'MeV')
+        except:
+            print('Include',level.id,'resonance at',Er,'MeV')
+
+        step = 0.1 # search step in MeV
+        parity = '+' if pt > 0 else '-'
+        name = 'J%s%s:E%s' % (jt,parity,Er)
+        term += 1
+
             
-        et -= Qpel   # fresco convention for R-matrix poles
-        print("\n&Variable kind=3 name='%s' term=%s jtot=%s par=%s energy=%s step=%s / width ~ %s" % (name,term,jt,pt,et,step,width), file=frescoVars)
+        Epole = Er - Qpel   # fresco convention for R-matrix poles
+        print("\n&Variable kind=3 name='%s' term=%s jtot=%s par=%s energy=%s step=%s / obs width ~ %6s" % (name,term,jt,pt,Epole,step,width), file=frescoVars)
         nvars += 1
 
         JJ = jt
         pi = pt
-        ic = 0
         weight = 0
         channels = []
-        for partition in partitions:
-            ic += 1
+        icnew = -1
+        for ic in partitions:  # retained partitions only
+            p = projs[ic]
+            t = targs[ic]
+            pz = charges[p]
+            tz = charges[t]
+            pmass = masses[p];  Ap = int(pmass+0.5)
+            tmass = masses[t];  At = int(tmass+0.5)
+            prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.))
+            rmass = pmass*tmass/(pmass*tmass)
+            Q = qvalue[p]
+            print('Partition',ic,':',p,t,'so Q=',Q)
+            icnew += 1
+             
             ia = 0
-            for excitationPair in partition:
+            excitationList = excitationLists[icnew]
+            for excitationPair in excitationList:
                 ia += 1
                 jp,pp,ep,jt,pt,et = excitationPair
                 smin = abs(jt-jp)
@@ -175,20 +195,31 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,em
                     if Lvals is not None: lmax = min(lmax,lMax[icch-1])
                     for lch in range(lmin,lmax+1):
                         if pi != pp*pt*(-1)**lch: continue
-                        channels.append((ic,ia,lch,sch))
+                        channels.append((icnew+1,ia,lch,sch,ic))
                         # print(' Partial wave channels IC,IA,L,S:',ic,ia,lch,sch)
                         w = 1./(2*lch+1)**2
-                        weight += w
+                        if Epole+Q > 0.:
+                            dSoPc = dSoP(Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch)
+#                             print('dSoP(',Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch, ') = ',dSoPc)
+                            w *= ( 1 - width * dSoPc/2.)
+                            print('For ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.)
+                            weight += w
+                        else:
+                            dSoPc = 0.
+                            print('Closed ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.)
+                             
                         
         nChans = len(channels)
         c = 0
-        for icch,iach,lch,sch in channels:
-            w = 1./(2*lch+1)**2
+        for icch,iach,lch,sch,ic in channels:
+            Ec = Epole+qvalue[projs[ic]]
+            print('Ch:',icch,iach,lch,sch,ic,'with p,Q,Ec =',projs[ic],qvalue[projs[ic]],Ec)
+            w = 1./(2*lch+1)**2  if Ec > 0. else 0  # channel not open: does not contribute to widths
             wRel = w/weight
             c += 1
             stepFactor = 1e-2
             pWid = width*wRel
-            print("&Variable kind=4 name='w%s,%s' term=%s icch=%s iach=%s lch=%s sch=%s width=%s rwa=F step= %9.2e/" % (c,name,term,icch,iach,lch,sch,pWid,pWid*stepFactor), file=frescoVars)
+            print("&Variable kind=4 name='w%s,%s' term=%s icch=%s iach=%s lch=%s sch=%s width=%s rwa=F step= %9.2e/ for E=%s" % (c,name,term,icch,iach,lch,sch,pWid,pWid*stepFactor,Ec), file=frescoVars)
             nvars += 1
 
     print('%s resonance levels\n' % term)
