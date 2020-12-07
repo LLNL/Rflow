@@ -1,4 +1,4 @@
-import math,cmath
+import math,cmath,sys
 
 def cf1(x,eta,zl,eps,limit):
 #
@@ -188,3 +188,25 @@ def Pole_Shifts(S_poles,dSdE_poles, E_poles,has_widths, seg_val,lab2cm,QI,fmscal
                 dSdE_poles[jset,n,c] = zLp.real * lab2cm * c_E**2
 
     return()
+    
+    
+def dSoP(E_pole_cm, QI,fmscal,rmass,prmax, etacns,za,zb,L):  # return S'/P for converting formal to observed widths
+
+    E = E_pole_cm + QI
+    if E < 1e-3:
+        return(None)  # S'/P not defined for bound states
+    
+    sqE = cmath.sqrt(E)
+    c_E = prmax * math.sqrt(fmscal*rmass) 
+    c_eta = etacns * za*zb * cmath.sqrt(rmass)
+    
+    rho = c_E*sqE
+    eta = c_eta/sqE
+    
+    EPS=1e-10; LIMIT = 2000000; ACC8 = 1e-12; L = 0; PM = complex(0.,1.)
+
+    zL,zLp = dlde_steed(rho,eta,L,PM, EPS,LIMIT,ACC8)
+    S = zL.real
+    P = zL.imag
+    dSdE = zLp.real * c_E**2
+    return(dSdE/P)
