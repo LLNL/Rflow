@@ -1,32 +1,31 @@
 #!/usr/bin/env python
 
-TF = True
 
 import os,math,numpy,cmath,pwd,sys,time,json
-from CoulCF import cf1,cf2,csigma,dlde_steed,Pole_Shifts
+from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from pqu import PQU as PQUModule
 
 from numericalFunctions import angularMomentumCoupling
 from xData.series1d  import Legendre
 
-import fudge.gnds.styles as stylesModule
 from fudge.gnds import reactionSuite as reactionSuiteModule
-from fudge.gnds import documentation as documentationModule
+from fudge.gnds import styles        as stylesModule
+from xData.Documentation import documentation as documentationModule
+from xData.Documentation import computerCode  as computerCodeModule
 
 DBLE = numpy.double
 CMPLX = numpy.complex128
 INT = numpy.int32
 
-if TF: 
-    # import tensorflow as tf
-    import tensorflow.compat.v2 as tf
-    tf.enable_v2_behavior()
+# import tensorflow as tf
+import tensorflow.compat.v2 as tf
+tf.enable_v2_behavior()
 
-physical_devices = tf.config.list_physical_devices('GPU')
 try:
+  physical_devices = tf.config.list_physical_devices('GPU')
   tf.config.experimental.set_memory_growth(physical_devices[0], True)
 except:
-  print('TF: cannot modify virtual devices once initialized')
+  print('TF: cannot read and/or modify virtual devices')
   pass
 
 import times
@@ -235,13 +234,13 @@ def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
         
     # batches = 5
     batch_size = n_angles //  batches + 1
-    print(batches,'batches, so make size',batch_size)
+    if batches>1: print(batches,'batches, so make size',batch_size)
     
     AxList  = []
     for b in range(batches):
         ie_min = b*batch_size 
         ie_max = min( (b+1)*batch_size, n_angles)
-        print('Batch',b,'is',[ie_min,ie_max],'up to',n_angles)
+        if batches>1: print('Batch',b,'is',[ie_min,ie_max],'up to',n_angles)
         
 #         T_mab = T_mat[ie_min:ie_max, :,:]
         
@@ -1257,7 +1256,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             for i,cs in enumerate(traces):
                 chis = float(cs)/n_data
                 lowest_chisq = min(lowest_chisq, chis)
-                print(i,lowest_chisq,chis, file=tracel)
+                print(i+1,lowest_chisq,chis, file=tracel)
             tracel.close()
         
             snap = open('bfgs_minimize%s.snap'% tag,'r')
@@ -1301,7 +1300,9 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             docLines += ['  Fitted norm %12.5f for %s' % (searchpars[n+border[1]],searchnames[n+border[1]] ) for n in range(n_norms)] 
             docLines += [' '] 
         
-            gnd.documentation['Rflow'] = documentationModule.documentation( 'Rflow', '\n'.join( docLines ) )
+            computerCode = computerCodeModule.ComputerCode( label = 'Fit quality', name = 'Rflow', version = '', date = time.ctime() )
+            computerCode.note.body = '\n'.join( docLines )
+            RMatrix.documentation.computerCodes.add( computerCode )
     
         return(chisqF.numpy(),A_tF.numpy(),norm_val,n_pars)
         
@@ -1352,10 +1353,18 @@ if __name__=='__main__':
 # Previous fitted norms:
 # any variable or data namelists in the documentation?
     docVars = []
-    ddoc = None # gnd.documentation.get('Fitted_data')
-    if ddoc is not None:
-        for line in ddoc.getLines():
+    docData = []
+    RMatrix = gnd.resonances.resolved.evaluated    
+    try:
+        computerCodeFit = RMatrix.documentation.computerCodes['R-matrix fit']
+        ddoc    = computerCodeFit.inputDecks[-1]
+        for line in ddoc.body.split('\n'):
             if '&variable' in line.lower() :  docVars += [line]
+            if '&data'     in line.lower() :  docData += [line]
+        previousFit = True
+    except:
+        previousFit = False
+        
     Fitted_norm = {}
     for line in docVars:
         if 'kind=5' in line:
@@ -1363,9 +1372,6 @@ if __name__=='__main__':
             datanorm = float(line.split('datanorm=')[1].split()[0])
             Fitted_norm[name] = datanorm
             if args.debug: print("Previous norm for %-20s is %10.5f" % (name,datanorm) )
-    
-    rrr = gnd.resonances.resolved
-    RMatrix = rrr.evaluated
 
     pair = 0
     partitions = {}
@@ -1535,15 +1541,28 @@ if __name__=='__main__':
     
     if args.Search or True:  
         print('Revised norms:',norm_val)
-#         gnd.documentation['Original_data_fit'] = documentationModule.documentation( 'Original_data_fit', gnd.documentation.get('Fitted_data') )
         docLines = ['Rflow:']
         for n in range(n_norms):
             docLines.append("&variable name='%s' kind=5 dataset=0, 0 datanorm=%f step=0.01, reffile='%s'/" % ( norm_refs[n][0] ,norm_val[n], norm_refs[n][1]) ) 
         docLines.append('\n')
+        docLines.append('\n'.join(docData) )
 #         print('docLines:',docLines)
-        stuff = '\n'.join(docLines)
-#         print('Revised norms:',stuff)
-        # gnd.documentation['Fitted_data'] = documentationModule.documentation( 'Fitted_data', stuff )
+
+        if previousFit:
+            deck = 'Fitted_data'
+            deckLabels = [item.label for item in computerCodeFit.inputDecks]
+            for i in range(2,100): 
+                deckLabel = '%s %s' % (deck,i)
+                if deckLabel not in deckLabels: break
+            print('\nNew InputDeck is "%s" after' % deckLabel,deckLabels,'\n')
+        else: 
+            computerCodeFit = computerCodeModule.ComputerCode( label = 'R-matrix fit', name = 'Rflow', version = '', date = time.ctime() )
+            
+        inputDataSpecs = computerCodeModule.InputDeck( deckLabel , ('\n  %s\n' % time.ctime() )  + ('\n'.join( docLines ))+'\n' )
+        computerCodeFit.inputDecks.add( inputDataSpecs )
+
+        if not previousFit: RMatrix.documentation.computerCodes.add( computerCodeFit )
+
         info = '+S_' + args.tag
         open( base.replace('.xml','') + args.tag + '-fit.xml', mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
     else:
