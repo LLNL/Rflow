@@ -1142,8 +1142,8 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         
 
     if True:     
-        chisqF = FitMeasureTF(searchpars) [0]
-        print('\nchisq from FitMeasureTF:',chisqF.numpy())
+        # chisqF = FitMeasureTF(searchpars) [0]
+        # print('\nchisq from FitMeasureTF:',chisqF.numpy())
         
         chisqF,A_tF,Grads = FitStatusTF(searchpars, others) 
         print(  'chisq from FitStatusTF:',chisqF.numpy())
@@ -1335,7 +1335,7 @@ if __name__=='__main__':
     parser.add_argument("-F", "--Fixed", type=str, nargs="*", help="Names of variables (as regex) to keep fixed in searches")
     parser.add_argument("-1", "--norm1", action="store_true", help="Use norms=1")
     parser.add_argument("-S", "--Search", type=str, help="Search minimization method.")
-    parser.add_argument("-I", "--Iterations", type=int, default=50, help="max_iterations for search")
+    parser.add_argument("-I", "--Iterations", type=int, help="max_iterations for search")
     parser.add_argument("-r", "--restarts", type=int, default=0, help="max restarts for search")
     parser.add_argument("-D", "--Distant", type=float, default="25",  help="Pole energy (lab) above which are all distant poles. Fixed in  searches.")
     parser.add_argument("-B", "--Background", action="store_true",  help="Include BG in name of background poles")
@@ -1343,7 +1343,8 @@ if __name__=='__main__':
     parser.add_argument("-L", "--LMatrix", action="store_true", help="Use level matrix method if not already Brune basis")
     parser.add_argument("-A", "--AngleBunching", type=int, default="1",  help="Max number of angles to bunch at each energy.")
     parser.add_argument("-G", "--GroupAngles", type=int, default="1",  help="Number of energy batches for T2B transforms, aka batches")
-    parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to read in (to make smaller search). Pos: random selection. Neg: first block")
+    parser.add_argument("-a", "--anglesData", type=int, help="Max number of angular data points to use (to make smaller search). Pos: random selection. Neg: first block")
+    parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to use (to make smaller search). Pos: random selection. Neg: first block")
 
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
     parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files for grace")
@@ -1402,9 +1403,24 @@ if __name__=='__main__':
             data_lines = numpy.random.choice(data_lines,args.maxData)
             print('Data size reduced from',n_data,'to',len(data_lines))
     f.close( )
-    data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]))  )
+#     angular_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])>=0.)  )
+    angular_lines = [ x for x in data_lines if float(x.split()[1])>=0. ] 
+    tot_lines     = [ x for x in data_lines if x.split()[4]=='TOT' ] 
+    aint_lines    = [ x for x in data_lines if float(x.split()[1])<0. and x.split()[4]!='TOT'] 
+#     print('Angulars, aints, totals=',len(angular_lines),len(aint_lines),len(tot_lines) )
+    n_angular = len(angular_lines)
+    if args.anglesData is not None: 
+        if args.anglesData < 0:
+            angular_lines = angular_lines[:abs(args.anglesData)]
+        else:
+            angular_lines = list(numpy.random.choice(angular_lines,args.anglesData))
+            print('Angular data size reduced from',n_angular ,'to',len(angular_lines))
+    f.close( )    
+    data_lines = angular_lines + aint_lines + tot_lines
+    
+    data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]), float(x.split()[1]) ) )
     if args.debug and False: 
-        with open(args.data+'.sorted','w') as fout: fout.writelines(data_lines)
+        with open(args.data+'-/T/sorted','w') as fout: fout.writelines(data_lines)
     
     n_data = len(data_lines)
     data_val = numpy.zeros([n_data,5], dtype=DBLE)    # Elab,mu, datum,absError
@@ -1536,7 +1552,14 @@ if __name__=='__main__':
             derivedFrom=gnd.styles.getEvaluatedStyle().label )
 
     print("Finish setup: ",tim.toString( ))
-    base = args.inFile
+    base = args.inFile.replace('xml','')
+    base += '+%s' % args.data.replace('.data','')
+    if args.maxData    is not None: base += '_m%s' % args.maxData
+    if args.anglesData is not None: base += '_a%s' % args.anglesData
+    if args.Search     is not None: base += '+S' 
+    if args.Iterations is not None: base += '_I%s' % args.Iterations
+    dataDir = base
+    os.system('mkdir '+dataDir)
     chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
@@ -1575,15 +1598,18 @@ if __name__=='__main__':
     else:
         info = ''
 
-    plot_cmd = 'xmgr '
     ngraphAll = 0
     groups = sorted(groups)
     chisqAll = 0
+#     plot_cmds = []
+    plot_cmd = 'xmgr '
     for group in groups:
         if args.Cross_Sections:
             g_out = group+info+'-fit'
+            if '/' in g_out: g_out = dataDir + '/' + g_out.split('/')[1].replace('/','+')
             gf = open(g_out,'w')
             e_out = group+info+'-expt'
+            if '/' in e_out: e_out = dataDir + '/' + e_out.split('/')[1].replace('/','+')
             ef = open(e_out,'w')
             op = ' in file %-43s' %  g_out
         else:
@@ -1625,9 +1651,12 @@ if __name__=='__main__':
             gf.close()
             ef.close()
         print('Model %2i curve (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ngraphAll+1,io,op,chisq/io,chisq/chisqtot*100.) )
-        if args.Cross_Sections: plot_cmd += ' -graph %i -xy %s -xydy %s ' % (ngraphAll,g_out,e_out) 
+        if args.Cross_Sections: 
+            plot_cmd += ' -graph %i -xy %s -xydy %s ' % (ngraphAll,g_out,e_out) 
+#             plot_cmds.append(plot_cmd)
         chisqAll += chisq
         ngraphAll += 1
+#     plot_cmds.append(plot_cmd)
 # chi from norm_vals themselves:
     for ni in range(n_norms):
         chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
@@ -1636,8 +1665,11 @@ if __name__=='__main__':
     print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/n_data,n_data) )  
     dof = n_data + n_cnorms - n_norms - n_pars
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')\n' )   
-    if args.Cross_Sections and ngraphAll < 20: print("Plot with\n",plot_cmd,'\n with required rows and cols for',ngraphAll,'graphs')
+    if args.Cross_Sections and ngraphAll < 20: 
+         print("Plot with\n",plot_cmd,'\n with required rows and cols for',ngraphAll,'graphs')
     
+#     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
+
 
     
     X4groups = sorted(X4groups)
@@ -1657,13 +1689,15 @@ if __name__=='__main__':
         ngraphAll = 0
         if args.Cross_Sections:
             g_out = group+info+'-fit'
+            if '/' in g_out: g_out = dataDir + '/' + g_out.split('/')[1].replace('/','+')
             gf = open(g_out,'w')
             e_out = group+info+'-expt'
+            if '/' in e_out: e_out = dataDir + '/' + e_out.split('/')[1].replace('/','+')
             ef = open(e_out,'w')
             op = ' in file %-43s' %  g_out
         else:
             op = ' in group %-43s' %  group
-        ie = 0
+
         io = 0
         chisq = 0.0
         lfac = 1.0
@@ -1726,19 +1760,19 @@ if __name__=='__main__':
                 if args.Cross_Sections:
                     if cluster == 'A':
 #                         theta = math.acos(data_val[id,1])*180./pi
-                        print(Aex, xsc[ie]/ex2cm, chi, file=gf)
+                        print(Aex, xsc[id]/ex2cm, chi, file=gf)
                         print(Aex, Data, DataErr, file=ef)                   
                     elif cluster in ['E','I']:
-                        print(Ein, xsc[ie]/ex2cm, chi, file=gf)
+                        print(Ein, xsc[id]/ex2cm, chi, file=gf)
                         print(Ein, Data, DataErr, file=ef)                                
                     else:  # cluster == 'N':  xyz
 #                         theta = math.acos(data_val[id,1])*180./pi
-                        print(Ein, Aex, xsc[ie]/ex2cm, chi, file=gf)   # xyz+chi
+                        print(Ein, Aex, xsc[id]/ex2cm, chi, file=gf)   # xyz+chi
                         print(Ein, Aex, Data, DataErr, file=ef)  #xyzdz 
                 if args.Matplot:    
                     xplot = float(Ein if cluster in ['E','I'] else Aex)
                     LineModel[1][0].append(xplot)
-                    LineModel[1][1].append(xsc[ie]/ex2cm)
+                    LineModel[1][1].append(xsc[id]/ex2cm)
                     LineModel[1][2].append(0)
                     LineModel[1][3].append(0)
                     LineData[1][0].append(xplot)
@@ -1777,7 +1811,6 @@ if __name__=='__main__':
                 DataLines.append(LineData)
                 ModelLines.append(LineModel)
         
-            ie += 1
         ncurve += 1
         print('\nModel %2i %2i curves (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ncurve,ng,io,op,chisq/io,chisq/chisqtot*100.) )
         chisqAll += chisq
@@ -1787,17 +1820,19 @@ if __name__=='__main__':
             gf.close()
             ef.close()
             plot_cmd += 'xmgr -xy %s -xydy %s ' % (g_out,e_out) 
-#             plot_cmds.append(plot_cmd)
+            plot_cmds.append(plot_cmd)
 
         if args.Matplot:           # wrap up this subentry
             subtitle = "Using " + args.inFile + ' with  '+args.data+" & "+args.norm + ', Chisq/pt =%.3f' % (chisq/io)
             kind     = 'R-matrix fit of '+group.split('@')[0]+' for '+reaction+' (units mb and MeV)'
             GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
 
-            with open(group+info+'.json','w') as ofile:
+            j_out = group+info+'.json'
+            if '/' in j_out: j_out = dataDir + '/' + j_out.split('/')[1].replace('/','+')
+            with open(j_out,'w') as ofile:
                json.dump([1,1,cmd,GraphList],ofile)
                
-            plot_cmd += '\t             json2pyplot.py -w 10,8 %s' % (group+info+'.json')
+            plot_cmd += '\t             json2pyplot.py -w 10,8 %s' % j_out
             plot_cmds.append(plot_cmd)
 
 # chi from norm_vals themselves:
