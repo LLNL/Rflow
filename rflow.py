@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 import os,math,numpy,cmath,pwd,sys,time,json
@@ -207,7 +207,7 @@ def T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs):
 
         
 @tf.function
-def T2B_transformsTFall(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
 
 # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
 #  T= T_mat[:,n_jsets,n_chans,n_chans]
@@ -216,16 +216,15 @@ def T2B_transformsTFall(T_mat,AA, n_jsets,n_chans,n_angles,batches):
     T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
     T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
     
-#     TAT = AA * tf.math.real( tf.math.conj(T_left) * T_right )
-    TAT = AA * ( tf.math.real(T_left) * tf.math.real(T_right) + tf.math.imag(T_left) * tf.math.imag(T_right) )
-
+    TAT = AA * tf.math.real( tf.math.conj(T_left) * T_right )
+#     TAT = AA * ( tf.math.real(T_left) * tf.math.real(T_right) + tf.math.imag(T_left) * tf.math.imag(T_right) )
 
     Ax = tf.reduce_sum(TAT,[ 1,2,3, 4,5,6])    # exlude dim=0 (ie)
                                                             
     return(Ax)
     
 @tf.function
-def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+def T2B_transformsTFbatch(T_mat,AA, n_jsets,n_chans,n_angles,batches):
 
 # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
 #  T= T_mat[:,n_jsets,n_chans,n_chans]
@@ -315,7 +314,7 @@ def FitStatusTF(searchpars, others):
     if chargedElastic:                          
         AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
     else:
-        AxA *= Gfacc
+        AxA = Ax * Gfacc
   
     XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
     
@@ -1015,6 +1014,9 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
     searchpars0 = searchpars
     others = (L_diag, Om2_mat,POm_diag,CS_diag,    LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,batches,brune,S_poles,dSdE_poles,EO_poles,  searchloc,border,E_poles_fixed_v,g_poles_fixed_v,
                 data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc,ExptAint,ExptTot,G_fact,gfac,p_mask)
+#             L_diag, Om2_mat,POm_diag,CS_diag,    LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,batches,brune,S_poles,dSdE_poles,EO_poles,  searchloc,border,E_poles_fixed_v,g_poles_fixed_v, 
+#               data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc,ExptAint,ExptTot,G_fact,gfac,p_mask = others
+
     n_angle_integrals = n_data - n_totals - n_angles
     n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
     n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
@@ -1023,10 +1025,10 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
 #     print('\n*** chisq/pt=',chisqF.numpy()/n_data)
     if Search:
 #         trace = open('bfgs_minimize.trace','w')
-        os.system("rm -f bfgs_minimize%s.trace" % tag)
-        os.system("rm -f bfgs_minimize%s.snap" % tag)
-        trace = "file://bfgs_minimize%s.trace" % tag
-        snap = "file://bfgs_minimize%s.snap"  % tag
+        os.system("rm -f %s-bfgs_min%s.trace" % (base,tag) ) 
+        os.system("rm -f %s-bfgs_min%s.snap" % (base,tag) )
+        trace = "file://%s-bfgs_min%s.trace" % (base,tag) 
+        snap = "file://%s-bfgs_min%s.snap"  % (base,tag) 
         ndof = n_data - border[2]
         
         @tf.function        
@@ -1045,12 +1047,12 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             else:
                 T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
-            AxA = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
+            Ax = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
 
             if chargedElastic:                          
                 AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
             else:
-                AxA *= Gfacc
+                AxA =  Ax * Gfacc
             
             XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
     
@@ -1081,6 +1083,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             print('More pole energies:',searchpars[:border[0]])
             print('Before restart',restart,' objective chisq/pt',last_cppt)
             print('And objective FitMeasureTF =',FitMeasureTF(searchpars)[0].numpy()/n_data )
+            
             if brune:
                 EOO_poles = EO_poles.copy()
                 SOO_poles = S_poles.copy()
@@ -1139,7 +1142,11 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         
 
     if True:     
+        chisqF = FitMeasureTF(searchpars) [0]
+        print('\nchisq from FitMeasureTF:',chisqF.numpy())
+        
         chisqF,A_tF,Grads = FitStatusTF(searchpars, others) 
+        print(  'chisq from FitStatusTF:',chisqF.numpy())
         
 #  Write back fitted parameters into evaluation:
         E_poles = numpy.zeros([n_jsets,n_poles], dtype=DBLE) 
@@ -1235,7 +1242,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                 
             print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[2])]))
 
-            print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i' % (chisqF.numpy()/n_data,chisqF.numpy()/ndof,ndof))
+            print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %e11.3' % (chisqF.numpy()/n_data,chisqF.numpy()/ndof,ndof,chisqF.numpy()))
                     
             covariance1 = inverse_hessian
             from scipy.linalg import eigh
@@ -1248,8 +1255,8 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             else:
                 print('Covariance matrix eigenvalues:\n', numpy.array_repr(eigval1[:],max_line_width=200,precision=3, suppress_small=False) ) 
 
-            trace = open('bfgs_minimize%s.trace'% tag,'r')
-            tracel = open('bfgs_minimize%s.tracel'% tag,'w')
+            trace = open('%s-bfgs_min%s.trace'% (base,tag),'r')
+            tracel = open('%s-bfgs_min%s.tracel'% (base,tag),'w')
             traces = trace.readlines( )
             trace.close( )
             lowest_chisq = 1e6
@@ -1259,8 +1266,8 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                 print(i+1,lowest_chisq,chis, file=tracel)
             tracel.close()
         
-            snap = open('bfgs_minimize%s.snap'% tag,'r')
-            snapl = open('bfgs_minimize%s.snapl'% tag,'w')
+            snap = open('%s-bfgs_min%s.snap'% (base,tag),'r')
+            snapl = open('%s-bfgs_min%s.snapl'% (base,tag),'w')
             snaps = snap.readlines( )
             snap.close( )
             included = numpy.zeros(n_pars, dtype=INT)
@@ -1396,7 +1403,7 @@ if __name__=='__main__':
             print('Data size reduced from',n_data,'to',len(data_lines))
     f.close( )
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]))  )
-    if args.debug or True: 
+    if args.debug and False: 
         with open(args.data+'.sorted','w') as fout: fout.writelines(data_lines)
     
     n_data = len(data_lines)
@@ -1550,7 +1557,7 @@ if __name__=='__main__':
 
         if previousFit:
             deck = 'Fitted_data'
-            deckLabels = [item.label for item in computerCodeFit.inputDecks]
+            deckLabels = [item.keyValue for item in computerCodeFit.inputDecks]
             for i in range(2,100): 
                 deckLabel = '%s %s' % (deck,i)
                 if deckLabel not in deckLabels: break
