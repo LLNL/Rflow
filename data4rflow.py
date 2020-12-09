@@ -28,7 +28,7 @@ NAMELIST
  pel=1 exl=1 elab(1:2) = %s %s nlab(1)=1 /
 """
  
-def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,emin,emax,Rmatrix_radius,gammas):
+def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectiles,EminCN,EmaxCN,emin,emax,Rmatrix_radius,gammas):
 
     pops = database.database.readFile(popsicles[0])
     for p in popsicles[1:]:
@@ -69,10 +69,12 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,em
             if not gammas: continue
         else:
             OtherSep = max(OtherSep,Q)
+        if Qpel is None: Qpel = qvalue['photon'] - qvalue[p]  # first partition not excluded
+
+        if p not in Projectiles: continue    
         if emax + Q < 1.:
             print('Omitting partition %s+%s as not open even at %s MeV' % (p,t,emax))
             continue
-        if Qpel is None: Qpel = qvalue['photon'] - qvalue[p]  # first partition not excluded
 
         nex = 1
         tgs,tlevel = t.split('_e') if '_e' in t else t,0
@@ -139,7 +141,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,em
             print('Level at %s MeV of unknown parity' % Er, "Omit for now")
             continue
 
-        if Er < CNsep or Er > EmaxCN: continue
+        if Er < EminCN or Er > EmaxCN: continue
         
         try:
             halflife = level.halflife[0].pqu('s').value
@@ -215,7 +217,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,EmaxCN,em
             Ec = Epole+qvalue[projs[ic]]
             print('Ch:',icch,iach,lch,sch,ic,'with p,Q,Ec =',projs[ic],qvalue[projs[ic]],Ec)
             w = 1./(2*lch+1)**2  if Ec > 0. else 0  # channel not open: does not contribute to widths
-            wRel = w/weight
+            wRel = w/(weight+1e-10)
             c += 1
             stepFactor = 1e-2
             pWid = width*wRel
@@ -262,8 +264,9 @@ def lab2cm(mu_lab, ap,at,ae,ar, E_lab,Q):
 # Process command line options
 parser = argparse.ArgumentParser(description='Prepare data for Rflow')
 
-parser.add_argument("Projectile", type=str,  help="gnds name for projectile in GNDS file to be used. For all Elab energies.")
-parser.add_argument("EmaxCN", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
+parser.add_argument("-P", "--Projectiles", type=str, nargs='+', help="List of projectiles (gnds names). First is projectile in GNDS file")
+parser.add_argument("-B", "--EminCN", type=float, help="Minimum energy relative to gs of the compound nucleus.")
+parser.add_argument("-C", "--EmaxCN", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
 parser.add_argument("-J", "--Jmax", type=float, default=5.0, help="Maximum total J of partial wave set.")
 parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum incident lab energy in 'projectile' partition.")
 parser.add_argument("-E", "--emaxp", type=float, default=10., help="Maximum incident lab energy in 'projectile' partition.")
@@ -286,6 +289,7 @@ parser.add_argument("-f", "--Fits", type=str,  default="datafit.csv", help="list
 args = parser.parse_args()
 Dir = args.Dir + '/'
 EmaxCN = args.EmaxCN
+Projectiles = args.Projectiles
     
 scales = {-1: "nodim", 0: "fm^2", 1: "b", 2:"mb", 3:"mic-b"}
 rscales = {"nodim": -1, "fm^2":0, "b":1, "mb":2, "mic-b":3, "microbarns":3}
@@ -420,6 +424,10 @@ for datFile in args.inFiles:
     if p not in projs or (e not in projs and e != 'TOT'):
         print('SKIP',datFile,'as strange projectile')
         continue
+    if ( p not in Projectiles or (e not in Projectiles and e != 'TOT') ) and p != 'photon':
+        print('SKIP',datFile,'as',p,'or',e,'not in',Projectiles)
+        continue
+
     try:
         ia= int(x)+1
     except:
@@ -431,7 +439,7 @@ for datFile in args.inFiles:
     t = targs[index]
     r = targs[projs.index(e)] if e!= 'TOT' else 0
     
-    p_ref = args.Projectile
+    p_ref = args.Projectiles[0]
     t_ref = targs[projs.index(p_ref)]
     
     Ein_scale =  1.0
@@ -449,7 +457,7 @@ for datFile in args.inFiles:
     if e != 'TOT':
         Qvalue_masses = (masses[p] + masses[t] - masses[e]-masses[r]) * amu
         Qvalue = qvalue[e] - qvalue[p]
-        print("Q value =",Qvalue,Qvalue_masses,' Target for gnds projectile =',args.Projectile)
+        print("Q value =",Qvalue,Qvalue_masses,' Target for gnds projectile =',args.Projectile[0])
     else:
         Qvalue = 0.
     lab2cm_in = masses[t]/(masses[p]+masses[t])
@@ -756,5 +764,5 @@ if args.Sfresco:
 
 if args.pops is not None:
     print('\nFresco input file:')
-    make_fresco_input(projs,targs,masses,charges,qvalue,args.pops,args.Jmax,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,args.GammaChannel)
+    make_fresco_input(projs,targs,masses,charges,qvalue,args.pops,args.Jmax,Projectiles,args.EminCN,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,args.GammaChannel)
 

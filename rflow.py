@@ -891,6 +891,8 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                         if seg_val[jset,c] == pin:
                             L = L_val[jset,c]
                             InterferenceAmpl[ie,jset,c] = (2*J+1) * Pleg[ie,L] * 2 * rsqr4pi * CoulAmpl.conjugate()
+    else:
+        Rutherford, InterferenceAmpl = None, None
 
     
     NS = len(All_spins)
@@ -974,7 +976,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
     if chargedElastic:                          
         AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
     else:
-        AxA *= Gfacc
+        AxA = Ax * Gfacc
 
     XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
     AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
@@ -1594,7 +1596,7 @@ if __name__=='__main__':
         if not previousFit: RMatrix.documentation.computerCodes.add( computerCodeFit )
 
         info = '+S_' + args.tag
-        open( base.replace('.xml','') + args.tag + '-fit.xml', mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
+        open( base.replace('.xml','-') + args.tag + '-fit.xml', mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
     else:
         info = ''
 

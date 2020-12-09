@@ -19,7 +19,7 @@ rm -rf Data_X4
 do.dataflow Data_X4/*.dat
 
 # This expands to:
-../data4rflow.py -d Data_X4 -p datafile.props.csv n 20. -i Data_X4/*.dat --pops pops-global.xml N15-pops.xml |& tee data4rflow-Data_X4.out
+../data4rflow.py -d Data_X4 -p datafile.props.csv --Projectiles n --EminCN 10.0 --EmaxCN 20. -i Data_X4/*.dat --pops pops-global.xml N15-pops.xml |& tee data4rflow-Data_X4.out
 #
 # Make a trial R-matrix parameter set (e.g. trial.xml) SOMEHOW!!
 #
