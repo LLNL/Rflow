@@ -1608,10 +1608,12 @@ if __name__=='__main__':
     for group in groups:
         if args.Cross_Sections:
             g_out = group+info+'-fit'
-            if '/' in g_out: g_out = dataDir + '/' + g_out.split('/')[1].replace('/','+')
+            if '/' in g_out:  g_out =  g_out.split('/')[1].replace('/','+')
+            g_out = dataDir + '/' + g_out
             gf = open(g_out,'w')
             e_out = group+info+'-expt'
-            if '/' in e_out: e_out = dataDir + '/' + e_out.split('/')[1].replace('/','+')
+            if '/' in e_out: e_out = e_out.split('/')[1].replace('/','+')
+            e_out = dataDir + '/' + e_out
             ef = open(e_out,'w')
             op = ' in file %-43s' %  g_out
         else:
@@ -1691,10 +1693,12 @@ if __name__=='__main__':
         ngraphAll = 0
         if args.Cross_Sections:
             g_out = group+info+'-fit'
-            if '/' in g_out: g_out = dataDir + '/' + g_out.split('/')[1].replace('/','+')
+            if '/' in g_out: g_out = g_out.split('/')[1].replace('/','+')
+            g_out = dataDir + '/' + g_out
             gf = open(g_out,'w')
             e_out = group+info+'-expt'
-            if '/' in e_out: e_out = dataDir + '/' + e_out.split('/')[1].replace('/','+')
+            if '/' in e_out: e_out = e_out.split('/')[1].replace('/','+')
+            e_out = dataDir + '/' + e_out
             ef = open(e_out,'w')
             op = ' in file %-43s' %  g_out
         else:
@@ -1830,7 +1834,8 @@ if __name__=='__main__':
             GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
 
             j_out = group+info+'.json'
-            if '/' in j_out: j_out = dataDir + '/' + j_out.split('/')[1].replace('/','+')
+            if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
+            j_out = dataDir + '/' + j_out
             with open(j_out,'w') as ofile:
                json.dump([1,1,cmd,GraphList],ofile)
                
