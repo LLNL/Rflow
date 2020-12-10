@@ -129,6 +129,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectil
     frescoVars = open('fresco%s.vars' % gs,'w')
     term = 0
     nvars = 0
+    spinGroups = {}
     for level in CNresonances:
         print()
         jt,Er = level.spin[0].float('hbar'), level.energy[0].pqu('MeV').value
@@ -212,19 +213,46 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectil
                              
                         
         nChans = len(channels)
+        Jpi = '%s,%s' % (JJ,pi)
+        spinGroups[Jpi] = channels
         c = 0
         for icch,iach,lch,sch,ic in channels:
             Ec = Epole+qvalue[projs[ic]]
             print('Ch:',icch,iach,lch,sch,ic,'with p,Q,Ec =',projs[ic],qvalue[projs[ic]],Ec)
-            w = 1./(2*lch+1)**2  if Ec > 0. else 0  # channel not open: does not contribute to widths
-            wRel = w/(weight+1e-10)
+            w = 1./(2*lch+1)**2  # if Ec > 0. else 0  # channel not open: does not contribute to widths
+            wRel = w/(weight+1e-10) if weight > 0 else 1.0
             c += 1
             stepFactor = 1e-2
             pWid = width*wRel
             print("&Variable kind=4 name='w%s,%s' term=%s icch=%s iach=%s lch=%s sch=%s width=%s rwa=F step= %9.2e/ for E=%s" % (c,name,term,icch,iach,lch,sch,pWid,pWid*stepFactor,Ec), file=frescoVars)
             nvars += 1
-
-    print('%s resonance levels\n' % term)
+            
+    resonanceTerms = term
+    
+    BackGroundTerms = True
+    if BackGroundTerms: 
+        EBG = 30.0
+        wBG = 10
+        step = 0.1
+        for spinGroup in spinGroups.keys():
+            channels = spinGroups[spinGroup]
+            JJ,pi = spinGroup.split(',')
+            JJ,pi = float(JJ),int(pi)
+            Epole = EBG - Qpel   # fresco convention for R-matrix poles
+            term += 1
+            parity = '+' if pi > 0 else '-'
+            name = 'BG:J%s%s' % (JJ,parity)
+            print("\n&Variable kind=3 name='%s' term=%s jtot=%s par=%s energy=%s step=%s / obs width ~ %6s" % (name,term,JJ,pi,Epole,step,wBG), file=frescoVars)
+            nvars += 1 
+            c = 0
+            for icch,iach,lch,sch,ic in channels:
+                c += 1
+                print("&Variable kind=4 name='w%s,%s' term=%s icch=%s iach=%s lch=%s sch=%s width=%s rwa=F step= %9.2e/ for E=%s" % (c,name,term,icch,iach,lch,sch,wBG,wBG*step,EBG), file=frescoVars)
+                nvars += 1     
+        
+        
+        
+    print('%s resonance levels' % resonanceTerms,', with BG:',term,'\nvi ')
     fresco.close()
     frescoVars.close()
    
@@ -285,7 +313,8 @@ parser.add_argument("-p", "--Props", type=str,  default="properties", help="prop
 parser.add_argument("-a", "--Adjusts", type=str,  default="adjusts", help="list of current norm and shift adjustments")
 parser.add_argument("-f", "--Fits", type=str,  default="datafit.csv", help="list of current norm and shift adjustments")
 
-
+print('Command:',' '.join(sys.argv[:]) ,'\n')
+    
 args = parser.parse_args()
 Dir = args.Dir + '/'
 EmaxCN = args.EmaxCN
