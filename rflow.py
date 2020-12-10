@@ -1309,7 +1309,14 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             docLines += ['  Fitted norm %12.5f for %s' % (searchpars[n+border[1]],searchnames[n+border[1]] ) for n in range(n_norms)] 
             docLines += [' '] 
         
-            computerCode = computerCodeModule.ComputerCode( label = 'Fit quality', name = 'Rflow', version = '', date = time.ctime() )
+            code = 'Fit quality'
+            codeLabels = [item.keyValue for item in RMatrix.documentation.computerCodes]
+            for i in range(2,100):
+                codeLabel = '%s %s' % (code,i)
+                if codeLabel not in codeLabels: break
+            print('\nNew computerCode is "%s" after' % codeLabel,codeLabels,'\n')
+
+            computerCode = computerCodeModule.ComputerCode( label = codeLabel, name = 'Rflow', version = '', date = time.ctime() )
             computerCode.note.body = '\n'.join( docLines )
             RMatrix.documentation.computerCodes.add( computerCode )
     
@@ -1554,8 +1561,9 @@ if __name__=='__main__':
             derivedFrom=gnd.styles.getEvaluatedStyle().label )
 
     print("Finish setup: ",tim.toString( ))
-    base = args.inFile.replace('xml','')
+    base = args.inFile
     base += '+%s' % args.data.replace('.data','')
+    if args.Fixed is not None:      base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',';')
     if args.maxData    is not None: base += '_m%s' % args.maxData
     if args.anglesData is not None: base += '_a%s' % args.anglesData
     if args.Search     is not None: base += '+S' 
