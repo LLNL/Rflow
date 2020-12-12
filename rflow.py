@@ -25,7 +25,7 @@ try:
   physical_devices = tf.config.list_physical_devices('GPU')
   tf.config.experimental.set_memory_growth(physical_devices[0], True)
 except:
-  print('TF: cannot read and/or modify virtual devices')
+# print('TF: cannot read and/or modify virtual devices')
   pass
 
 import times
@@ -333,7 +333,7 @@ def FitStatusTF(searchpars, others):
 
                                     
 def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list, fixedlist,norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
-        Search,Iterations,restarts,Distant,Background,ReichMoore, verbose,debug,inFile,fitStyle,tag,large):
+        Search,Iterations,restarts,Distant,Background,ReichMoore, TransitionMatrix,verbose,debug,inFile,fitStyle,tag,large):
         
 #     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
@@ -801,7 +801,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                 for a in range(n_chans):
                     print('   ',a,'row: ',',  '.join(['{:.5f}'.format(T_mat[ie,jset,a,b].numpy()) for b in range(n_chans)]) )
 
-    if verbose or True:
+    if TransitionMatrix:
         XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
                 
         XSp_tot_n = XSp_tot.numpy()
@@ -809,6 +809,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         XSp_mat_n = XSp_mat.numpy()
         T_mat_n = T_mat.numpy()
         
+        print('Projectile abbreviations:',pname)
         for pin in range(npairs):
 
             pn = lightnuclei.get(pname[pin],pname[pin])
@@ -841,6 +842,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                 fname = base + '-fch_%s-to-%s' % (pn,po)
                 print('Partition',pin,'to',pout,': angle-integrated cross-sections to file',fname)
                 fout = open(fname,'w')
+                fouo = open(fname+'@','w')
                 
                 for ie in range(n_data):
 #                   y = 0
@@ -858,7 +860,9 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                     E = E_scat[ie]*lab2cm + QI[pin] - QI[ipair]
                     Elab = E * cm2lab[pin]
                     print(Elab,x, file=fout)
+                    print(Ein_list[ie],x, Elab,pin,ipair,lab2cm,cm2lab[pin],lab2cm*cm2lab[pin],'/',file=fouo)
                 fout.close()
+                fouo.close()
     
 ###################################################
 
@@ -1362,8 +1366,8 @@ if __name__=='__main__':
     # Process command line options
     parser = argparse.ArgumentParser(description='Compare R-matrix Cross sections with Data')
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
-    parser.add_argument('data', type=str, help='Experimental data to fit' )
-    parser.add_argument('norm', type=str, help='Experimental norms for fitting' )
+    parser.add_argument('dataFile', type=str, help='Experimental data to fit' )
+    parser.add_argument('normFile', type=str, help='Experimental norms for fitting' )
     parser.add_argument("-F", "--Fixed", type=str, nargs="*", help="Names of variables (as regex) to keep fixed in searches")
     parser.add_argument("-1", "--norm1", action="store_true", help="Use norms=1")
     parser.add_argument("-S", "--Search", type=str, help="Search minimization method.")
@@ -1381,6 +1385,7 @@ if __name__=='__main__':
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
     parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files for grace")
     parser.add_argument("-M", "--Matplot", action="store_true", help="Matplotlib data in .json output files")
+    parser.add_argument("-T", "--TransitionMatrix", action="store_true", help="Produce cross-section transition matrix functions in *tot_a and *fch_a-to-b")
     parser.add_argument("-l", "--logs", type=str, default='', help="none, x, y or xy for plots")
     parser.add_argument(      "--datasize", type=float,  metavar="size", default="0.2", help="Font size for experiment symbols. Default=0.2")
     parser.add_argument("-t", "--tag", type=str, default='', help="Tag identifier for this run")
@@ -1425,7 +1430,7 @@ if __name__=='__main__':
         pair += 1
     
 
-    f = open( args.data )
+    f = open( args.dataFile )
     data_lines = f.readlines( )
     n_data = len(data_lines)
     if args.maxData is not None: 
@@ -1452,7 +1457,7 @@ if __name__=='__main__':
     
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]), float(x.split()[1]) ) )
     if args.debug and False: 
-        with open(args.data+'-/T/sorted','w') as fout: fout.writelines(data_lines)
+        with open(args.dataFile+'-/T/sorted','w') as fout: fout.writelines(data_lines)
     
     n_data = len(data_lines)
     data_val = numpy.zeros([n_data,5], dtype=DBLE)    # Elab,mu, datum,absError
@@ -1529,7 +1534,7 @@ if __name__=='__main__':
         id += 1
     
     print('Fitted norms:',Fitted_norm)
-    f = open( args.norm )
+    f = open( args.normFile )
     norm_lines = f.readlines( )
     f.close( )    
     n_norms= len(norm_lines)
@@ -1585,7 +1590,7 @@ if __name__=='__main__':
 
     print("Finish setup: ",tim.toString( ))
     base = args.inFile
-    base += '+%s' % args.data.replace('.data','')
+    base += '+%s' % args.dataFile.replace('.data','')
     if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',';')
     if args.maxData    is not None: base += '_m%s' % args.maxData
     if args.anglesData is not None: base += '_a%s' % args.anglesData
@@ -1597,7 +1602,7 @@ if __name__=='__main__':
     chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
-                        args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
+                        args.TransitionMatrix, args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
 
     print("Finish rflow call: ",tim.toString( ))
     chisqPN = chisqtot / n_data
@@ -1671,14 +1676,14 @@ if __name__=='__main__':
                     Aex = Aex_list[id]
                     if cluster == 'A':
 #                         theta = math.acos(data_val[id,1])*180./pi
-                        print(Aex, xsc[ie]/ex2cm, chi, file=gf)
+                        print(Aex, xsc[id]/ex2cm, chi, file=gf)
                         print(Aex, Data, DataErr, file=ef)                   
                     elif cluster in ['E','I']:
-                        print(Ein, xsc[ie]/ex2cm, chi, file=gf)
+                        print(Ein, xsc[id]/ex2cm, 'chi=',chi, 'Es=',data_val[id,0],file=gf)
                         print(Ein, Data, DataErr, file=ef)                                
                     else:  # cluster == 'N':  xyz
 #                         theta = math.acos(data_val[id,1])*180./pi
-                        print(Ein, Aex, xsc[ie]/ex2cm, chi, file=gf)   # xyz+chi
+                        print(Ein, Aex, xsc[id]/ex2cm, chi, file=gf)   # xyz+chi
                         print(Ein, Aex, Data, DataErr, file=ef)  #xyzdz 
                         
                 chisq += chi**2
@@ -1862,7 +1867,7 @@ if __name__=='__main__':
             plot_cmds.append(plot_cmd)
 
         if args.Matplot:           # wrap up this subentry
-            subtitle = "Using " + args.inFile + ' with  '+args.data+" & "+args.norm + ', Chisq/pt =%.3f' % (chisq/io)
+            subtitle = "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile + ', Chisq/pt =%.3f' % (chisq/io)
             kind     = 'R-matrix fit of '+group.split('@')[0]+' for '+reaction+' (units mb and MeV)'
             GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
 
