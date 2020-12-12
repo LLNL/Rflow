@@ -39,6 +39,7 @@ tim = times.times()
 # Search options:
 #   Fix Reich-Moore widths
 #   Fixing norms 
+#   Command input, e.g. as with Sfresco?
 
 # Doing:
 
@@ -53,6 +54,7 @@ fmscal = 2e0 * amu / hbc**2
 etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
+lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
 plcolor = {0:"black", 1:"red", 2:"green", 3: "blue", 4:"yellow", 5:"brown", 6: "grey", 7:"violet",
             8:"cyan", 9:"magenta", 10:"orange", 11:"indigo", 12:"maroon", 13:"turquoise", 14:"darkgreen"}
@@ -404,10 +406,13 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
     jt = numpy.zeros(np)
     tt = numpy.zeros(np)
     et = numpy.zeros(np)
+    cm2lab  = numpy.zeros(np)
+    pname = ['' for i in range(np)]
+    tname = ['' for i in range(np)]
     
     channels = {}
     pair = 0
-    ipair = None
+    inpair = None
     for partition in RMatrix.resonanceReactions:
         kp = partition.label
         if partition.eliminated:  
@@ -416,6 +421,8 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         channels[pair] = kp
         reaction = partition.reactionLink.link
         p,t = partition.ejectile,partition.residual
+        pname[pair] = p
+        tname[pair] = t
         projectile = PoPs[p];
         target     = PoPs[t];
         pMass = projectile.getMass('amu');   tMass =     target.getMass('amu');
@@ -437,6 +444,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             lab2cm = tMass / (pMass + tMass)
             w_factor = 1. #/lab2cm**0.5 if IFG else 1.0
             ipair = pair  # incoming
+        cm2lab[pair] = (pMass + tMass) / tMass
             
         jp[pair],pt[pair],ep[pair] = projectile.spin[0].float('hbar'), projectile.parity[0].value, 0.0
         try:
@@ -634,17 +642,18 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
     n_Epoles_z = numpy.count_nonzero(E_poles != 0 ) 
     n_Epoles = numpy.count_nonzero( (E_poles != 0) ) #& (abs(E_poles) < Distant) ) 
     n_gpoles = numpy.count_nonzero(g_poles != 0 ) 
+    z_gpoles = numpy.count_nonzero(g_poles == 0 ) 
     n_pars  = n_Epoles+n_gpoles+n_norms
     n_Efixed = n_Epoles_z - n_Epoles
-    print('Variable E,g,n:',n_Epoles,n_gpoles,n_norms,' =',n_pars,'  with',n_Efixed,'E fixed:') 
+    print('Variable E,w (non-zero, non-Distant) norms:',n_Epoles,n_gpoles,n_norms,' =',n_pars,'  with',n_Efixed,'E fixed:') 
     print('Variable fixed list:',fixedlist)
-    # print('# Searchable parameters =',n_pars)
+    print('# zero widths  =',z_gpoles)
     searchnames = []
     searchpars = numpy.zeros(n_pars, dtype=DBLE)
     searchloc  = numpy.zeros([n_pars,1], dtype=INT)   
     fixednames = []
-    fixedpars = numpy.zeros(n_pars, dtype=DBLE)
-    fixedloc  = numpy.zeros([n_pars,1], dtype=INT)   
+    fixedpars = numpy.zeros(n_pars+z_gpoles, dtype=DBLE)
+    fixedloc  = numpy.zeros([n_pars+z_gpoles,1], dtype=INT)   
 
     
     ip = 0
@@ -677,6 +686,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                     print('    Fixed %5.1f%1s pole %2i at E = %7.3f MeV' % (J_set[jset],parity,n,E) )
                 if nam not in fixedlistex and Background:
                     nam='BG:%.1f%s' % (J_set[jset],parity)
+                # print('E[',jset,n,'] is fixed',ifixed,'at',E_poles[jset,n])
                 fixedpars[ifixed] = E_poles[jset,n]
                 fixedloc[ifixed,0] = i
                 fixednames += [nam]
@@ -711,6 +721,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                     ip += 1
                 else:   # fixed
                     fixedlistex.add(wnam)
+                    # print('g[',jset,n,c,'] is fixed',ifixed,'at',g_poles[jset,n,c])
                     fixedpars[ifixed] = g_poles[jset,n,c]
                     g_poles_fixed[jset,n,c] = g_poles[jset,n,c]
                     fixedloc[ifixed,0] = i
@@ -790,7 +801,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                 for a in range(n_chans):
                     print('   ',a,'row: ',',  '.join(['{:.5f}'.format(T_mat[ie,jset,a,b].numpy()) for b in range(n_chans)]) )
 
-    if verbose:
+    if verbose or True:
         XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
                 
         XSp_tot_n = XSp_tot.numpy()
@@ -799,23 +810,35 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         T_mat_n = T_mat.numpy()
         
         for pin in range(npairs):
-            fname = base + '-tot_%i' % pin
-            cname = base + '-cap_%i' % pin
+
+            pn = lightnuclei.get(pname[pin],pname[pin])
+            tn = lightnuclei.get(tname[pin],tname[pin])
+            neut = za[pin]*zb[pin] == 0    # calculate total cross-sections for neutrons
+            fname = base + '-ftot_%s' % pn
+            cname = base + '-fcap_%s' % pn
+                    
             print('Total cross-sections for incoming',pin,'to file',fname,' and capture to',cname)
             fout = open(fname,'w')
             cout = open(cname,'w')
             for ie in range(n_data):
-                E = E_scat[ie]      # lab incident energy
-                E = Ein_list[ie]    # incident energy in EXFOR experiment
+#           E_scat[ie]      is lab incident energy in nominal entrance partition  ipair
+#                 E = E_scat[ie]      # lab incident energy
+#                 E = Ein_list[ie]    # incident energy in EXFOR experiment
+                E = E_scat[ie]*lab2cm + QI[pin] - QI[ipair]
+                Elab = E * cm2lab[pin]
+                
                 x = XSp_tot_n[ie,pin] 
-                print(E,x, file=fout)
+                print(Elab,x, file=fout)
                 c = XSp_cap_n[ie,pin] 
-                print(E,c, file=cout)
+                print(Elab,c, file=cout)
             fout.close()
             cout.close()
 
             for pout in range(npairs):
-                fname = base + '-ch_%i-to-%i' % (pin,pout)
+                if pin==pout and not neut: continue
+                po = lightnuclei.get(pname[pout],pname[pout])
+                to = lightnuclei.get(tname[pout],tname[pout])
+                fname = base + '-fch_%s-to-%s' % (pn,po)
                 print('Partition',pin,'to',pout,': angle-integrated cross-sections to file',fname)
                 fout = open(fname,'w')
                 
@@ -830,9 +853,11 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
 #                               y += gfac[ie,jset,c_in] * abs(T_mat_n[ie,jset,c_out,c_in])**2
                                                         
                     x = XSp_mat_n[ie,pout,pin]
-                    E = E_scat[ie]
-                    E = Ein_list[ie]
-                    print(E,x, file=fout)
+#                     E = E_scat[ie]
+#                     E = Ein_list[ie]
+                    E = E_scat[ie]*lab2cm + QI[pin] - QI[ipair]
+                    Elab = E * cm2lab[pin]
+                    print(Elab,x, file=fout)
                 fout.close()
     
 ###################################################
@@ -921,14 +946,14 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
 
     for rr_in in RMatrix.resonanceReactions:
         if rr_in.eliminated: continue
-        ipair = partitions[rr_in.label]
+        inpair = partitions[rr_in.label]
 
         for rr_out in RMatrix.resonanceReactions:
             if rr_out.eliminated: continue
             pair = partitions[rr_out.label]
                 
             for S_out in Spins[pair]:
-                for S_in in Spins[ipair]:
+                for S_in in Spins[inpair]:
 #                     print('>> S_in:',S_in)
                     for iS,S in enumerate(All_spins):
                         for iSo,So in enumerate(All_spins):
@@ -939,7 +964,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                             for jset1 in range(n_jsets):
                                 J1 = J_set[jset1]
                                 for c1 in range(n_chans):
-                                    if seg_val[jset1,c1] != ipair: continue
+                                    if seg_val[jset1,c1] != inpair: continue
                                     if abs(S_val[jset1,c1]-S) > 0.1 : continue
 
                                     for c1_out in range(n_chans):
@@ -949,7 +974,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                                         for jset2 in range(n_jsets):
                                             J2 = J_set[jset2]
                                             for c2 in range(n_chans):
-                                                if seg_val[jset2,c2] != ipair: continue
+                                                if seg_val[jset2,c2] != inpair: continue
                                                 if abs(S_val[jset2,c2]-S) > 0.1 : continue
 
                                                 for c2_out in range(n_chans):
@@ -958,7 +983,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         
                                                     for L in range(NL):
                                                         ZZ = ZZbar[L,iS,jset2,c2,jset1,c1] * ZZbar[L,iSo,jset2,c2_out,jset1,c1_out] 
-                                                        AAL[ipair,pair, jset2,c2_out,c2, jset1,c1_out,c1,L] += phase * ZZ / pi 
+                                                        AAL[inpair,pair, jset2,c2_out,c2, jset1,c1_out,c1,L] += phase * ZZ / pi 
 
     AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans  ], dtype=DBLE)
     cc = (n_jsets*n_chans**2)**2
@@ -1115,9 +1140,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                 
                 AxA = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
                 AxA = AddCoulombsTF(AxA,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
-                
-                XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
-    
+                    
                 AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
                 AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
                     
@@ -1563,13 +1586,14 @@ if __name__=='__main__':
     print("Finish setup: ",tim.toString( ))
     base = args.inFile
     base += '+%s' % args.data.replace('.data','')
-    if args.Fixed is not None:      base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',';')
+    if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',';')
     if args.maxData    is not None: base += '_m%s' % args.maxData
     if args.anglesData is not None: base += '_a%s' % args.anglesData
     if args.Search     is not None: base += '+S' 
     if args.Iterations is not None: base += '_I%s' % args.Iterations
     dataDir = base
-    os.system('mkdir '+dataDir)
+    if args.Cross_Sections or args.Matplot  : os.system('mkdir '+dataDir)
+ 
     chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
@@ -1597,6 +1621,7 @@ if __name__=='__main__':
             print('\nNew InputDeck is "%s" after' % deckLabel,deckLabels,'\n')
         else: 
             computerCodeFit = computerCodeModule.ComputerCode( label = 'R-matrix fit', name = 'Rflow', version = '', date = time.ctime() )
+            deckLabel = 'Fitted_data'
             
         inputDataSpecs = computerCodeModule.InputDeck( deckLabel , ('\n  %s\n' % time.ctime() )  + ('\n'.join( docLines ))+'\n' )
         computerCodeFit.inputDecks.add( inputDataSpecs )

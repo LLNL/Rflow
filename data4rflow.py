@@ -198,6 +198,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectil
                     if Lvals is not None: lmax = min(lmax,lMax[icch-1])
                     for lch in range(lmin,lmax+1):
                         if pi != pp*pt*(-1)**lch: continue
+                        if Epole < 0 and lch > abs(pz) : continue                   # only allow s-wave neutrons, s,p-wave protons, etc in closed channels
                         channels.append((icnew+1,ia,lch,sch,ic))
                         # print(' Partial wave channels IC,IA,L,S:',ic,ia,lch,sch)
                         w = 1./(2*lch+1)**2
@@ -329,8 +330,9 @@ amu   = 931.4940954e0             # 1 amu/c^2 in MeV
 
 sf = open(Dir + 'sfresco.split','w')
 plotd = open(Dir + 'sfresco.split.plotd','w')
-output = open(args.Out,'w')
-noutput = open(args.Norms,'w')
+if args.inFiles is not None:
+    output = open(args.Out,'w')
+    noutput = open(args.Norms,'w')
 z_errorOut = open(Dir + 'Zero-errors.log','w')
 z_errors = set()
 nsf = 0
@@ -434,6 +436,9 @@ idlast = 0
 idfirst = 1
 ffirst = 1
 flast  = 0
+
+if args.inFiles is None: args.inFiles = []
+
 for datFile in args.inFiles:
     if '@' in datFile: continue
     baseFile = datFile.split(Dir)[1]
@@ -486,7 +491,7 @@ for datFile in args.inFiles:
     if e != 'TOT':
         Qvalue_masses = (masses[p] + masses[t] - masses[e]-masses[r]) * amu
         Qvalue = qvalue[e] - qvalue[p]
-        print("Q value =",Qvalue,Qvalue_masses,' Target for gnds projectile =',args.Projectile[0])
+        print("Q value =",Qvalue,Qvalue_masses,' Target for gnds projectile =',args.Projectiles[0])
     else:
         Qvalue = 0.
     lab2cm_in = masses[t]/(masses[p]+masses[t])
