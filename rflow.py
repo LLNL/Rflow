@@ -332,13 +332,12 @@ def FitStatusTF(searchpars, others):
     
 
                                     
-def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list, fixedlist,norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
+def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list, fixedlist,norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
         Search,Iterations,restarts,Distant,Background,ReichMoore, TransitionMatrix,verbose,debug,inFile,fitStyle,tag,large):
         
 #     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
 
-    print('\nRflow')
     PoPs = gnd.PoPs
     projectile = gnd.PoPs[gnd.projectile]
     target     = gnd.PoPs[gnd.target]
@@ -370,20 +369,6 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
     n_totals = n_data - n_angles - n_angle_integrals
     n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
     n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
-    
-#     print('Reconstruction emin,emax =',emin,emax,'with',n_data,'energies')
-    E_scat  = data_val[:,0]
-    if debug: print('Energy grid (lab):',E_scat)
-    Elarge = 0.0
-    nExcluded = 0
-    for i in range(n_data):
-        if not max(emin,Elarge) <= E_scat[i] <= emax:
-            # print('Datum at energy %10.4f MeV outside evaluation range [%.4f,%.4f]' % (E_scat[i],emin,emax))
-            Elarge = E_scat[i]
-            nExcluded += 1
-    if nExcluded > 0: print('\n %5i points excluded as outside range [%s, %s]' % (nExcluded,emin,emax))
-
-    mu_val = data_val[:,1]
 
     n_jsets = len(RMatrix.spinGroups)
     n_poles = 0
@@ -440,11 +425,13 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             prmax[pair] =  partition.scatteringRadius.getValueAs('fm')
         else:
             prmax[pair] = Rm_global
+
         if partition.label == elasticChannel:
-            lab2cm = tMass / (pMass + tMass)
-            w_factor = 1. #/lab2cm**0.5 if IFG else 1.0
             ipair = pair  # incoming
         cm2lab[pair] = (pMass + tMass) / tMass
+
+        if p == projectile4LabEnergies:
+            dlabpair = pair # frame for incoming data_val[:,0]
             
         jp[pair],pt[pair],ep[pair] = projectile.spin[0].float('hbar'), projectile.parity[0].value, 0.0
         try:
@@ -453,13 +440,32 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             jt[pair],tt[pair],et[pair] = 0.,1,0.
         print(pair,":",kp,' Q =',QI[pair],'R =',prmax[pair])
         pair += 1
-    if verbose: print("\nElastic channel is",elasticChannel,'so w factor=',w_factor,'as IFG=',IFG)
+    if verbose: print("\nElastic channel is",elasticChannel,'with IFG=',IFG)
     npairs  = pair
     if not IFG:
         print("Not yet coded for IFG =",IFG)
         sys.exit()
     
 #  FIRST: for array sizes:
+#
+# Find energies in the lab frame of partition 'ipair' as needed for the R-matrix pole energies, not data lab frame:
+#
+    print('Transform main energy vector from',pname[dlabpair],'to',pname[ipair],' projectile lab frames')
+    data_val[:,0]  = (data_val[:,0]/cm2lab[dlabpair] + QI[ipair] - QI[dlabpair]) * cm2lab[ipair]
+    E_scat  = data_val[:,0]
+
+    if debug: print('Energy grid (lab in partition',ipair,'):\n',E_scat)
+    Elarge = 0.0
+    nExcluded = 0
+    for i in range(n_data):
+        if not max(emin,Elarge) <= E_scat[i] <= emax:
+            # print('Datum at energy %10.4f MeV outside evaluation range [%.4f,%.4f]' % (E_scat[i],emin,emax))
+            Elarge = E_scat[i]
+            nExcluded += 1
+    if nExcluded > 0: print('\n %5i points excluded as outside range [%s, %s]' % (nExcluded,emin,emax))
+    
+    mu_val = data_val[:,1]
+
     Lmax = 0
     for Jpi in RMatrix.spinGroups:
         R = Jpi.resonanceParameters.table
@@ -507,7 +513,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
 #  Calculate Coulomb functions on data Energy Grid
     for pair in range(npairs):
         for ie in range(n_data):
-            E = E_scat[ie]*lab2cm + QI[pair]
+            E = E_scat[ie]/cm2lab[ipair] + QI[pair]
             if rmass[pair]!=0:
                 k = cmath.sqrt(fmscal * rmass[pair] * E)
             else: # photon!
@@ -571,7 +577,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
             pair = partitions.get(rr,None)
             if pair is None: continue
             m = ch.columnIndex - 1
-            g_poles[jset,:rows,n] = numpy.asarray(widths[m][:],  dtype=DBLE) * w_factor
+            g_poles[jset,:rows,n] = numpy.asarray(widths[m][:],  dtype=DBLE) 
             L_val[jset,n] = ch.L
             S = float(ch.channelSpin)
             S_val[jset,n] = S
@@ -624,7 +630,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
         dSdE_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=DBLE)
 #         EO_poles =  numpy.zeros([n_jsets,n_poles]) 
         EO_poles = E_poles.copy()
-        Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,lab2cm,QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+        Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
     else:
         S_poles = None
         dSdE_poles = None
@@ -825,7 +831,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
 #           E_scat[ie]      is lab incident energy in nominal entrance partition  ipair
 #                 E = E_scat[ie]      # lab incident energy
 #                 E = Ein_list[ie]    # incident energy in EXFOR experiment
-                E = E_scat[ie]*lab2cm + QI[pin] - QI[ipair]
+                E = E_scat[ie]/cm2lab[ipair] + QI[pin] - QI[ipair]
                 Elab = E * cm2lab[pin]
                 
                 x = XSp_tot_n[ie,pin] 
@@ -857,10 +863,10 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                     x = XSp_mat_n[ie,pout,pin]
 #                     E = E_scat[ie]
 #                     E = Ein_list[ie]
-                    E = E_scat[ie]*lab2cm + QI[pin] - QI[ipair]
+                    E = E_scat[ie]/cm2lab[ipair] + QI[pin] - QI[ipair]
                     Elab = E * cm2lab[pin]
                     print(Elab,x, file=fout)
-                    print(Ein_list[ie],x, Elab,pin,ipair,lab2cm,cm2lab[pin],lab2cm*cm2lab[pin],'/',file=fouo)
+                    print(Ein_list[ie],x, Elab,pin,ipair,1./cm2lab[ipair],cm2lab[pin],cm2lab[pin]/cm2lab[ipair],ie,'/',file=fouo)
                 fout.close()
                 fouo.close()
     
@@ -1122,7 +1128,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
                     i = searchloc[ip,0]
                     jset = i//n_poles;  n = i%n_poles
                     EO_poles[jset,n] = searchpars[ip]
-                Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,lab2cm,QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+                Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
                 
 
                 for jset in range(n_jsets):
@@ -1359,6 +1365,7 @@ def Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_lis
 if __name__=='__main__':
     import argparse,re
 
+    print('\nRflow')
     # print('\nrflow2-v1i.py\n')
     cmd = ' '.join(sys.argv[:])
     print('Command:',cmd ,'\n')
@@ -1432,7 +1439,9 @@ if __name__=='__main__':
 
     f = open( args.dataFile )
     data_lines = f.readlines( )
+    projectile4LabEnergies = data_lines[0].split()[0]; data_lines.pop(0)
     n_data = len(data_lines)
+    print(n_data,'data lines after lab energies defined by projectile',projectile4LabEnergies)
     if args.maxData is not None: 
         if args.maxData < 0:
             data_lines = data_lines[:abs(args.maxData)]
@@ -1599,7 +1608,7 @@ if __name__=='__main__':
     dataDir = base
     if args.Cross_Sections or args.Matplot  : os.system('mkdir '+dataDir)
  
-    chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
+    chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.TransitionMatrix, args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
@@ -1679,7 +1688,8 @@ if __name__=='__main__':
                         print(Aex, xsc[id]/ex2cm, chi, file=gf)
                         print(Aex, Data, DataErr, file=ef)                   
                     elif cluster in ['E','I']:
-                        print(Ein, xsc[id]/ex2cm, 'chi=',chi, 'Es=',data_val[id,0],file=gf)
+                        print(Ein, xsc[id]/ex2cm, 'chi=',chi, 'd0=',data_val[id,0],id,file=gf)
+                        # print(data_val[id,0], xsc[id]/ex2cm, 'chi=',chi, 'Ein',Ein,id,file=gf)
                         print(Ein, Data, DataErr, file=ef)                                
                     else:  # cluster == 'N':  xyz
 #                         theta = math.acos(data_val[id,1])*180./pi
