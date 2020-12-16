@@ -12,10 +12,23 @@ from fudge.gnds import reactionSuite as reactionSuiteModule
 from fudge.gnds import styles        as stylesModule
 from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
+from functools import singledispatch
 
-DBLE = numpy.double
+@singledispatch
+def to_serializable(val):
+    """Used by default."""
+    return str(val)
+
+
+@to_serializable.register(numpy.float32)
+def ts_float32(val):
+    """Used if *val* is an instance of numpy.float32."""
+    return numpy.float64(val)
+
+REAL = numpy.double
 CMPLX = numpy.complex128
 INT = numpy.int32
+realSize = 8  # bytes
 
 # import tensorflow as tf
 import tensorflow.compat.v2 as tf
@@ -27,6 +40,7 @@ try:
 except:
 # print('TF: cannot read and/or modify virtual devices')
   pass
+# tf.logging.set_verbosity(tf.logging.ERROR)
 
 import times
 tim = times.times()
@@ -95,7 +109,7 @@ def R2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_
 def Ainv(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles):  # FOR DEBUGGING ONL,Y
 # Use Level Matrix A to get T=1-S:
 #     print('g_poles',g_poles.dtype,g_poles.get_shape())
-    Z = tf.constant(0.0, dtype=DBLE)
+    Z = tf.constant(0.0, dtype=REAL)
     GL = tf.reshape(g_poles,[1,n_jsets,n_poles,1,n_chans]) #; print('GL',GL.dtype,GL.get_shape())
     GR = tf.reshape(g_poles,[1,n_jsets,1,n_poles,n_chans]) #; print('GR',GR.dtype,GR.get_shape())
     LDIAG = tf.reshape(L_diag,[-1,n_jsets,1,1,n_chans]) #; print('LDIAG',LDIAG.dtype,LDIAG.get_shape())
@@ -138,7 +152,7 @@ def LM2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n
     GR = tf.reshape(g_poles,[1,n_jsets,1,n_poles,n_chans]) #; print('GR',GR.dtype,GR.get_shape())
     LDIAG = tf.reshape(L_diag,[-1,n_jsets,1,1,n_chans]) #; print('LDIAG',LDIAG.dtype,LDIAG.get_shape())
     GLG = tf.reduce_sum( GL * LDIAG * GR , 4)    # giving [ie,J,n',ncd Rf]
-    Z = tf.constant(0.0, dtype=DBLE)
+    Z = tf.constant(0.0, dtype=REAL)
     if brune:   # add extra terms to GLG
         SE_poles = S_poles + tf.expand_dims(tf.math.real(E_poles)-EO_poles,2) * dSdE_poles
         POLES_L = tf.reshape(E_poles, [1,n_jsets,n_poles,1,1])  # same for all energies and channel matrix
@@ -181,7 +195,7 @@ def LM2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n
     return(T_mat)
             
 @tf.function
-def T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs):
+def T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs):
                     
     Tmod2 = tf.math.real(  T_mat * tf.math.conj(T_mat) )   # ie,jset,a1,a2
 
@@ -190,7 +204,7 @@ def T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs):
     XS_mat = Tmod2 * G_fac                          # ie,jset,a1,a2   
     
     G_fact = tf.reshape(gfac, [-1,n_jsets,n_chans])
-    TOT_mat = tf.math.real(tf.linalg.diag_part(T_mat))   #  ie,jset,a  for  1 - Re(S) = Re(1-S) = Re(T)
+    TOT_mat = tf.math.real(tf.linalg.diag_part(T_mat)* tf.math.conj(CS_diag)**2)   #  ie,jset,a  for  1 - Re(S) = Re(1-S) = Re(T), removing Coulomb phases for TOT
     XS_tot  = TOT_mat * G_fact                           #  ie,jset,a
     p_mask1_in = tf.reshape(p_mask, [-1,npairs,n_jsets,n_chans] )   # convert pair,jset,a to  ie,pair,jset,a
     XSp_tot = 2. *  tf.reduce_sum( tf.expand_dims(XS_tot,1) * p_mask1_in , [2,3])     # convert ie,pair,jset,a to ie,pair by summing over jset,a
@@ -268,7 +282,7 @@ def AddCoulombsTF(A_t,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles):
 def ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm):
     
 # chi from cross-sections
-    one = tf.constant(1.0, dtype=DBLE)
+    one = tf.constant(1.0, dtype=REAL)
     fac = tf.reduce_sum(tf.expand_dims(norm_val[:]-one,1) * effect_norm, 0) + one
 
     chi = (A_t/fac/data_val[:,4] - data_val[:,2])/data_val[:,3]
@@ -301,9 +315,9 @@ def FitStatusTF(searchpars, others):
     g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
     norm_val = searchpars[border[1]:border[2]]
     
-    E_cpoles = tf.complex(tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=DBLE)) 
-    g_cpoles = tf.complex(tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=DBLE))
-    E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=DBLE)) 
+    E_cpoles = tf.complex(tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
+    g_cpoles = tf.complex(tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
+    E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
     
     if not LMatrix:
         T_mat = R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans ) 
@@ -318,7 +332,7 @@ def FitStatusTF(searchpars, others):
     else:
         AxA = Ax * Gfacc
   
-    XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
+    XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
     
     AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
     AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
@@ -380,18 +394,18 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         print('Exclude Reich-Moore channel')
         ReichMoore = True
         np -= 1   # exclude Reich-Moore channel here
-    prmax = numpy.zeros(np)
-    QI = numpy.zeros(np)
-    rmass = numpy.zeros(np)
-    za = numpy.zeros(np)
-    zb = numpy.zeros(np)
-    jp = numpy.zeros(np)
-    pt = numpy.zeros(np)
-    ep = numpy.zeros(np)
-    jt = numpy.zeros(np)
-    tt = numpy.zeros(np)
-    et = numpy.zeros(np)
-    cm2lab  = numpy.zeros(np)
+    prmax = numpy.zeros(np, dtype=REAL)
+    QI = numpy.zeros(np, dtype=REAL)
+    rmass = numpy.zeros(np, dtype=REAL)
+    za = numpy.zeros(np, dtype=REAL)
+    zb = numpy.zeros(np, dtype=REAL)
+    jp = numpy.zeros(np, dtype=REAL)
+    pt = numpy.zeros(np, dtype=REAL)
+    ep = numpy.zeros(np, dtype=REAL)
+    jt = numpy.zeros(np, dtype=REAL)
+    tt = numpy.zeros(np, dtype=REAL)
+    et = numpy.zeros(np, dtype=REAL)
+    cm2lab  = numpy.zeros(np, dtype=REAL)
     pname = ['' for i in range(np)]
     tname = ['' for i in range(np)]
     
@@ -477,30 +491,30 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             Lmax = max(Lmax,ch.L)
     print('Need %i energies in %i Jpi sets with %i poles max, and %i channels max. Lmax=%i' % (n_data,n_jsets,n_poles,n_chans,Lmax))
 
-    E_poles = numpy.zeros([n_jsets,n_poles], dtype=DBLE)
-    E_poles_fixed = numpy.zeros([n_jsets,n_poles], dtype=DBLE)    # fixed in search
+    E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL)
+    E_poles_fixed = numpy.zeros([n_jsets,n_poles], dtype=REAL)    # fixed in search
     has_widths = numpy.zeros([n_jsets,n_poles], dtype=INT)
-    g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=DBLE)
-    g_poles_fixed = numpy.zeros([n_jsets,n_poles,n_chans], dtype=DBLE) # fixed in search
-    J_set = numpy.zeros(n_jsets, dtype=DBLE)
+    g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
+    g_poles_fixed = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL) # fixed in search
+    J_set = numpy.zeros(n_jsets, dtype=REAL)
     pi_set = numpy.zeros(n_jsets, dtype=INT)
     L_val  =  numpy.zeros([n_jsets,n_chans], dtype=INT)
-    S_val  =  numpy.zeros([n_jsets,n_chans], dtype=DBLE)
-    p_mask =  numpy.zeros([npairs,n_jsets,n_chans], dtype=DBLE)
+    S_val  =  numpy.zeros([n_jsets,n_chans], dtype=REAL)
+    p_mask =  numpy.zeros([npairs,n_jsets,n_chans], dtype=REAL)
     seg_val=  numpy.zeros([n_jsets,n_chans], dtype=INT) - 1 
     seg_col=  numpy.zeros([n_jsets], dtype=INT) 
 
-    rksq_val  = numpy.zeros([n_data,npairs], dtype=DBLE)
-    velocity  = numpy.zeros([n_data,npairs], dtype=DBLE)
+    rksq_val  = numpy.zeros([n_data,npairs], dtype=REAL)
+    velocity  = numpy.zeros([n_data,npairs], dtype=REAL)
     
-    eta_val = numpy.zeros([n_data,npairs], dtype=DBLE)   # for E>0 only
+    eta_val = numpy.zeros([n_data,npairs], dtype=REAL)   # for E>0 only
     
-    CF1_val =  numpy.zeros([n_data,np,Lmax+1], dtype=DBLE)
+    CF1_val =  numpy.zeros([n_data,np,Lmax+1], dtype=REAL)
     CF2_val =  numpy.zeros([n_data,np,Lmax+1], dtype=CMPLX)
-    csigma_v=  numpy.zeros([n_data,np,Lmax+1], dtype=DBLE)
+    csigma_v=  numpy.zeros([n_data,np,Lmax+1], dtype=REAL)
     Csig_exp=  numpy.zeros([n_data,np,Lmax+1], dtype=CMPLX)
-#     Shift         = numpy.zeros([n_data,n_jsets,n_chans], dtype=DBLE)
-#     Penetrability = numpy.zeros([n_data,n_jsets,n_chans], dtype=DBLE)
+#     Shift         = numpy.zeros([n_data,n_jsets,n_chans], dtype=REAL)
+#     Penetrability = numpy.zeros([n_data,n_jsets,n_chans], dtype=REAL)
     L_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
     POm_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
     Om2_mat = numpy.zeros([n_data,n_jsets,n_chans,n_chans], dtype=CMPLX)
@@ -566,7 +580,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         rows = R.nRows
         cols = R.nColumns - 1  # ignore energy col
         seg_col[jset] = cols
-        E_poles[jset,:rows] = numpy.asarray( R.getColumn('energy','MeV') , dtype=DBLE)   # lab MeV
+        E_poles[jset,:rows] = numpy.asarray( R.getColumn('energy','MeV') , dtype=REAL)   # lab MeV
         widths = [R.getColumn( col.name, 'MeV' ) for col in R.columns if col.name != 'energy']
 
 #         if verbose:  print("\n".join(R.toXMLList()))       
@@ -577,7 +591,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             pair = partitions.get(rr,None)
             if pair is None: continue
             m = ch.columnIndex - 1
-            g_poles[jset,:rows,n] = numpy.asarray(widths[m][:],  dtype=DBLE) 
+            g_poles[jset,:rows,n] = numpy.asarray(widths[m][:],  dtype=REAL) 
             L_val[jset,n] = ch.L
             S = float(ch.channelSpin)
             S_val[jset,n] = S
@@ -626,9 +640,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         jset += 1   
 
     if brune:  # S_poles: Shift functions at pole positions for Brune basis   
-        S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=DBLE)
-        dSdE_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=DBLE)
-#         EO_poles =  numpy.zeros([n_jsets,n_poles]) 
+        S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
+        dSdE_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
+#         EO_poles =  numpy.zeros([n_jsets,n_poles], dtype=REAL) 
         EO_poles = E_poles.copy()
         Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
     else:
@@ -655,10 +669,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Variable fixed list:',fixedlist)
     print('# zero widths  =',z_gpoles)
     searchnames = []
-    searchpars = numpy.zeros(n_pars, dtype=DBLE)
+    searchpars = numpy.zeros(n_pars, dtype=REAL)
     searchloc  = numpy.zeros([n_pars,1], dtype=INT)   
     fixednames = []
-    fixedpars = numpy.zeros(n_pars+z_gpoles, dtype=DBLE)
+    fixedpars = numpy.zeros(n_pars+z_gpoles, dtype=REAL)
     fixedloc  = numpy.zeros([n_pars+z_gpoles,1], dtype=INT)   
 
     
@@ -770,10 +784,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     E_poles = tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles])
     g_poles = tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans])
     
-    E_cpoles = tf.complex(E_poles,tf.constant(0., dtype=DBLE)) 
-    g_cpoles = tf.complex(g_poles,tf.constant(0., dtype=DBLE))
+    E_cpoles = tf.complex(E_poles,tf.constant(0., dtype=REAL)) 
+    g_cpoles = tf.complex(g_poles,tf.constant(0., dtype=REAL))
     
-    E_cscat = tf.complex(E_scat,tf.constant(0., dtype=DBLE)) 
+    E_cscat = tf.complex(E_scat,tf.constant(0., dtype=REAL)) 
     
     if not LMatrix:
         T_mat = R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans ) 
@@ -783,7 +797,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             print('Ainv_mat:\n',Ainv_mat.numpy()[0,:,:,:] )
         T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
-    gfac = numpy.zeros([n_data,n_jsets,n_chans])
+    gfac = numpy.zeros([n_data,n_jsets,n_chans], dtype=REAL)
     for jset in range(n_jsets):
         for c_in in range(n_chans):   # incoming partial wave
             pair = seg_val[jset,c_in]      # incoming partition
@@ -800,20 +814,22 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #                 print('Energy',E_scat[ie],'  J=',J_set[jset],pi_set[jset],'\n R-matrix is size',seg_col[jset])
 #                 for a in range(n_chans):
 #                     print('   ',a,'row: ',',  '.join(['{:.5f}'.format(RMATC[ie,jset,a,b].numpy()) for b in range(n_chans)]) )
-    
+        T_mat_n = T_mat.numpy()
+        SMAT = numpy.zeros(n_chans, dtype=CMPLX)
         for ie in range(n_data):
             for jset in range(n_jsets):
-                print('Energy',E_scat[ie],'  J=',J_set[jset],pi_set[jset],'\n T-matrix is size',seg_col[jset])
+                print('Energy',E_scat[ie],'  J=',J_set[jset],pi_set[jset],'\n S-matrix is size',seg_col[jset])
                 for a in range(n_chans):
-                    print('   ',a,'row: ',',  '.join(['{:.5f}'.format(T_mat[ie,jset,a,b].numpy()) for b in range(n_chans)]) )
+                    for b in range(n_chans):
+                        SMAT[b] = (1 if a==b else 0) - numpy.conj(CS_diag[ie,jset,a]) * T_mat_n[ie,jset,a,b] * numpy.conj(CS_diag[ie,jset,a])  # remove Coulomb phases
+                    print('   ',a,'row: ',',  '.join(['{:.5f}'.format(SMAT[b]) for b in range(n_chans)]) )
 
     if TransitionMatrix:
-        XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
+        XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
                 
         XSp_tot_n = XSp_tot.numpy()
         XSp_cap_n = XSp_cap.numpy()
         XSp_mat_n = XSp_mat.numpy()
-        T_mat_n = T_mat.numpy()
         
         print('Projectile abbreviations:',pname)
         for pin in range(npairs):
@@ -842,13 +858,13 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             cout.close()
 
             for pout in range(npairs):
-                if pin==pout and not neut: continue
+#                 if pin==pout and not neut: continue
                 po = lightnuclei.get(pname[pout],pname[pout])
                 to = lightnuclei.get(tname[pout],tname[pout])
                 fname = base + '-fch_%s-to-%s' % (pn,po)
                 print('Partition',pin,'to',pout,': angle-integrated cross-sections to file',fname)
                 fout = open(fname,'w')
-                fouo = open(fname+'@','w')
+#                 fouo = open(fname+'@','w')
                 
                 for ie in range(n_data):
 #                   y = 0
@@ -866,19 +882,19 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     E = E_scat[ie]/cm2lab[ipair] + QI[pin] - QI[ipair]
                     Elab = E * cm2lab[pin]
                     print(Elab,x, file=fout)
-                    print(Ein_list[ie],x, Elab,pin,ipair,1./cm2lab[ipair],cm2lab[pin],cm2lab[pin]/cm2lab[ipair],ie,'/',file=fouo)
+#                     print(Ein_list[ie],x, Elab,pin,ipair,1./cm2lab[ipair],cm2lab[pin],cm2lab[pin]/cm2lab[ipair],ie,'/',file=fouo)
                 fout.close()
-                fouo.close()
+#                 fouo.close()
     
 ###################################################
 
        
-    Gfacc = numpy.zeros(n_angles, dtype=DBLE)    
+    Gfacc = numpy.zeros(n_angles, dtype=REAL)    
     G_fact = tf.reshape(gfac, [-1,n_jsets,n_chans])
     NL = 2*Lmax + 1
-    Pleg = numpy.zeros([n_angles,NL])
-    ExptAint = numpy.zeros([n_angle_integrals,npairs, npairs], dtype=DBLE)
-    ExptTot = numpy.zeros([n_totals,npairs], dtype=DBLE)
+    Pleg = numpy.zeros([n_angles,NL], dtype=REAL)
+    ExptAint = numpy.zeros([n_angle_integrals,npairs, npairs], dtype=REAL)
+    ExptTot = numpy.zeros([n_totals,npairs], dtype=REAL)
 
     for ie in range(n_angles):
         pin = data_p[ie,0]
@@ -903,7 +919,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         ExptTot[ie,pin] = 1.
         
     if chargedElastic:
-        Rutherford = numpy.zeros([n_angles], dtype=DBLE)
+        Rutherford = numpy.zeros([n_angles], dtype=REAL)
         InterferenceAmpl = numpy.zeros([n_angles, n_jsets, n_chans], dtype=CMPLX)
         
         for ie in range(n_angles):
@@ -931,7 +947,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     
     NS = len(All_spins)
-    ZZbar = numpy.zeros([NL,NS,n_jsets,n_chans,n_jsets,n_chans])
+    ZZbar = numpy.zeros([NL,NS,n_jsets,n_chans,n_jsets,n_chans], dtype=REAL)
 
     def n2(x): return(int(2*x + 0.5))
     def i2(i): return(2*i)
@@ -951,8 +967,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                         for L in range(NL):                    
                             ZZbar[L,iS,jset2,c2,jset1,c1] = angularMomentumCoupling.zbar_coefficient(i2(L1),n2(J1),i2(L2),n2(J2),n2(S),i2(L))
 
-    BB = numpy.zeros([n_data,NL])
-    AAL = numpy.zeros([npairs,npairs, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans ,NL], dtype=DBLE)
+    BB = numpy.zeros([n_data,NL], dtype=REAL)
+    AAL = numpy.zeros([npairs,npairs, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans ,NL], dtype=REAL)
 
     for rr_in in RMatrix.resonanceReactions:
         if rr_in.eliminated: continue
@@ -995,9 +1011,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                                                         ZZ = ZZbar[L,iS,jset2,c2,jset1,c1] * ZZbar[L,iSo,jset2,c2_out,jset1,c1_out] 
                                                         AAL[inpair,pair, jset2,c2_out,c2, jset1,c1_out,c1,L] += phase * ZZ / pi 
 
-    AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans  ], dtype=DBLE)
+    AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans  ], dtype=REAL)
     cc = (n_jsets*n_chans**2)**2
-    print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,n_chans))
+    print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*realSize/1e9, cc*n_angles*realSize/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,n_chans))
     for ie in range(n_angles):
         pin = data_p[ie,0]
         pout= data_p[ie,1]
@@ -1013,7 +1029,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     else:
         AxA = Ax * Gfacc
 
-    XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
+    XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
     AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
     
     AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
@@ -1075,9 +1091,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
             norm_val = searchpars[border[1]:border[2]]
     
-            E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=DBLE)) 
-            g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=DBLE))
-            E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=DBLE)) 
+            E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
+            g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
+            E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
 
             if not LMatrix:
                 T_mat = R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans ) 
@@ -1091,7 +1107,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             else:
                 AxA =  Ax * Gfacc
             
-            XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
+            XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
     
             AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
             AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
@@ -1146,7 +1162,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                                 
                 T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
-                XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,gfac,p_mask, n_jsets,n_chans,npairs)
+                XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
                 
                 AxA = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
                 AxA = AddCoulombsTF(AxA,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
@@ -1184,8 +1200,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         print(  'chisq from FitStatusTF:',chisqF.numpy())
         
 #  Write back fitted parameters into evaluation:
-        E_poles = numpy.zeros([n_jsets,n_poles], dtype=DBLE) 
-        g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=DBLE)
+        E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) 
+        g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
             
         newname = {}
         for ip in range(border[0]): #### Extract parameters after previous search:
@@ -1391,6 +1407,7 @@ if __name__=='__main__':
 
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
     parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files for grace")
+    parser.add_argument("-c", "--compound", action="store_true", help="Plot -M and -C energies on scale of E* of compound system")
     parser.add_argument("-M", "--Matplot", action="store_true", help="Matplotlib data in .json output files")
     parser.add_argument("-T", "--TransitionMatrix", action="store_true", help="Produce cross-section transition matrix functions in *tot_a and *fch_a-to-b")
     parser.add_argument("-l", "--logs", type=str, default='', help="none, x, y or xy for plots")
@@ -1398,7 +1415,14 @@ if __name__=='__main__':
     parser.add_argument("-t", "--tag", type=str, default='', help="Tag identifier for this run")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("-d", "--debug", action="store_true", help="Debugging output (more than verbose)")
+    parser.add_argument("-s", "--single", action="store_true", help="Single precision: float32, complex64")
     args = parser.parse_args()
+
+    if args.single:
+        REAL = numpy.float32
+        CMPLX = numpy.complex64
+        INT = numpy.int32
+        realSize = 4  # bytes
 
     gnd=reactionSuiteModule.readXML(args.inFile)
     
@@ -1469,7 +1493,7 @@ if __name__=='__main__':
         with open(args.dataFile+'-/T/sorted','w') as fout: fout.writelines(data_lines)
     
     n_data = len(data_lines)
-    data_val = numpy.zeros([n_data,5], dtype=DBLE)    # Elab,mu, datum,absError
+    data_val = numpy.zeros([n_data,5], dtype=REAL)    # Elab,mu, datum,absError
     data_p   = numpy.zeros([n_data,2], dtype=INT)    # pin,pout
     
     if args.AngleBunching > 1:
@@ -1547,8 +1571,8 @@ if __name__=='__main__':
     norm_lines = f.readlines( )
     f.close( )    
     n_norms= len(norm_lines)
-    norm_val = numpy.zeros(n_norms, dtype=DBLE)  # norm,step,expect,syserror
-    norm_info = numpy.zeros([n_norms,2], dtype=DBLE)  # norm,step,expect,syserror
+    norm_val = numpy.zeros(n_norms, dtype=REAL)  # norm,step,expect,syserror
+    norm_info = numpy.zeros([n_norms,2], dtype=REAL)  # norm,step,expect,syserror
     norm_refs= []    
     ni = 0
     n_cnorms = 0
@@ -1573,7 +1597,7 @@ if __name__=='__main__':
     print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals',
         '\nData groups:',len(groups),'\nX4 groups:',len(X4groups),'\nVariable norms:',n_norms,' of which constrained:',n_cnorms)
     
-    effect_norm = numpy.zeros([n_norms,n_data])
+    effect_norm = numpy.zeros([n_norms,n_data], dtype=REAL)
     for ni in range(n_norms):
         reffile = norm_refs[ni][1]
         pattern = re.compile(reffile)
@@ -1599,8 +1623,9 @@ if __name__=='__main__':
 
     print("Finish setup: ",tim.toString( ))
     base = args.inFile
+    if args.single: base += 's'
     base += '+%s' % args.dataFile.replace('.data','')
-    if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',';')
+    if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',':')
     if args.maxData    is not None: base += '_m%s' % args.maxData
     if args.anglesData is not None: base += '_a%s' % args.anglesData
     if args.Search     is not None: base += '+S' 
@@ -1643,7 +1668,7 @@ if __name__=='__main__':
         if not previousFit: RMatrix.documentation.computerCodes.add( computerCodeFit )
 
         info = '+S_' + args.tag
-        open( base.replace('.xml','-') + args.tag + '-fit.xml', mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
+        open( base  + args.tag + '-fit.xml', mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
     else:
         info = ''
 
@@ -1714,7 +1739,7 @@ if __name__=='__main__':
         chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
         print('Norm scale   %10.6f         %-30s ~ %10.5f :    chisq    =%9.3f  %8.3f %%' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chi**2, chi**2/chisqtot*100.) )
         chisqAll += chi**2
-    print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/n_data,n_data) )  
+    print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  
     dof = n_data + n_cnorms - n_norms - n_pars
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')\n' )   
     if args.Cross_Sections and ngraphAll < 20: 
@@ -1885,7 +1910,7 @@ if __name__=='__main__':
             if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
             j_out = dataDir + '/' + j_out
             with open(j_out,'w') as ofile:
-               json.dump([1,1,cmd,GraphList],ofile)
+               json.dump([1,1,cmd,GraphList],ofile, default=to_serializable)
                
             plot_cmd += '\t             json2pyplot.py -w 10,8 %s' % j_out
             plot_cmds.append(plot_cmd)
@@ -1895,7 +1920,7 @@ if __name__=='__main__':
         chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
         print('Norm scale   %10.6f         %-30s ~ %10.5f :     chisq    =%9.3f  %8.3f %%' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chi**2, chi**2/chisqtot*100.) )
         chisqAll += chi**2
-    print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/n_data,n_data) )  
+    print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  
     dof = n_data + n_cnorms - n_norms - n_pars
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')' )   
     
