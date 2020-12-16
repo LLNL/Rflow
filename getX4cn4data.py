@@ -32,7 +32,7 @@ rescale_e3 = ['20920']  # Scobel data should be label b, not mb
 excludeSE = ['F0005002','10547002','11182002','11164003','10755003']
 
 from PoPs import database as databaseModule
-pops = databaseModule.database.readFile( 'pops-global.xml' )
+pops = databaseModule.database.readFile( '../pops-global.xml' )
 
 pi = math.pi
 rad = 180/pi

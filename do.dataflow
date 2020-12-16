@@ -1,2 +1,2 @@
 #
-../data4rflow.py -d Data_X4 -p datafile.props.csv --Projectiles n --EminCN 10. --EmaxCN 20. -i $* --pops ../ripl2pops_to_Z8.xml |& tee data4rflow-Data_X4.out
+../data4rflow.py -d Data_X4 -C datafile.props.csv --Projectiles n --EminCN 10. --EmaxCN 20.  --pops ../ripl2pops_to_Z8.xml -i $* |& tee data4rflow-Data_X4.out

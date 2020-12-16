@@ -28,7 +28,8 @@ NAMELIST
  pel=1 exl=1 elab(1:2) = %s %s nlab(1)=1 /
 """
  
-def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectiles,EminCN,EmaxCN,emin,emax,Rmatrix_radius,gammas):
+def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectiles,EminCN,EmaxCN,emin,emax,
+        Rmatrix_radius,jdef,pidef,widef,Term0,gammas):
 
     pops = database.database.readFile(popsicles[0])
     for p in popsicles[1:]:
@@ -127,20 +128,21 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectil
     if len(CNresonances)==0: return
     
     frescoVars = open('fresco%s.vars' % gs,'w')
-    term = 0
+    term = Term0
     nvars = 0
     spinGroups = {}
     for level in CNresonances:
         print()
         jt,Er = level.spin[0].float('hbar'), level.energy[0].pqu('MeV').value
         if jt<0:
-            print('Level at %s MeV of unknown spin and parity' % Er, "Omit for now")
-            continue
+            print('Level at %s MeV of unknown spin and parity' % Er, "Set to",jdef)
+            jt = jdef
+            
         try:
             pt = level.parity[0].value
         except:
-            print('Level at %s MeV of unknown parity' % Er, "Omit for now")
-            continue
+            print('Level at %s MeV of unknown parity' % Er, "Set to",pidef)
+            pt = pidef
 
         if Er < EminCN or Er > EmaxCN: continue
         
@@ -148,7 +150,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectil
             halflife = level.halflife[0].pqu('s').value
             width = hbar/halflife*math.log(2)
         except:
-            width = 0.1  # starting point for fitting
+            width = widef  # starting point for fitting
         try:
             print('Include',level.id,'resonance at',Er,'MeV','halflife:',level.halflife[0].pqu('s').value if level.halflife is not None else None, 'Width:',width,'MeV')
         except:
@@ -253,7 +255,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectil
         
         
         
-    print('%s resonance levels' % resonanceTerms,', with BG:',term,'\nvi ')
+    print('%s resonance levels' % resonanceTerms,', with BG:',term,'\n')
     fresco.close()
     frescoVars.close()
    
@@ -301,6 +303,9 @@ parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum inci
 parser.add_argument("-E", "--emaxp", type=float, default=10., help="Maximum incident lab energy in 'projectile' partition.")
 parser.add_argument("-R", "--Rmatrix_radius", type=float, default=1.4, help="Reduced R-matrix radius: factor of (A1^1/3+A2^1/3).")
 parser.add_argument("-G", "--GammaChannel", action="store_true", help="Include discrete gamma channel")
+parser.add_argument("-j", "--jdef", type=float, default=2.0, help="Default spins for unknown RIPL states")
+parser.add_argument("-p", "--pidef", type=int, default=1, help="Default spins for unknown RIPL states")
+parser.add_argument("-w", "--widef", type=float, default=0.10, help="Default width (MeV) for unknown RIPL states")
 
 parser.add_argument('-i', '--inFiles', type=str, nargs="+", help='cross-section data files: E,angle,expt,err as desribed in property file.')
 parser.add_argument('--pops', type=str, nargs='+', help='pops files for nuclear levels data')
@@ -309,8 +314,9 @@ parser.add_argument("-d", "--Dir", type=str,  default="Data", help="output data 
 parser.add_argument("-o", "--Out", type=str,  default="flow.data", help="output data file")
 parser.add_argument("-n", "--Norms", type=str,  default="flow.norms", help="output normalization file")
 parser.add_argument("-S", "--Sfresco", action="store_true", help="Outputs for Sfresco")
+parser.add_argument("-T", "--Term0", type=int, default=0, help="First 'term' in Sfresco output")
 
-parser.add_argument("-p", "--Props", type=str,  default="properties", help="property datafile.props.csv in args.Dir")
+parser.add_argument(      "--CSV", type=str,  default="properties", help="property datafile.props.csv in args.Dir")
 parser.add_argument("-a", "--Adjusts", type=str,  default="adjusts", help="list of current norm and shift adjustments")
 parser.add_argument("-f", "--Fits", type=str,  default="datafit.csv", help="list of current norm and shift adjustments")
 
@@ -333,21 +339,22 @@ plotd = open(Dir + 'sfresco.split.plotd','w')
 if args.inFiles is not None:
     output = open(args.Out,'w')
     noutput = open(args.Norms,'w')
+    print(args.Projectiles[0],' : projectile defining the lab energy in first column', file=output)
 z_errorOut = open(Dir + 'Zero-errors.log','w')
 z_errors = set()
 nsf = 0
 
-print("\nProperty dictionary from '%s'" % args.Props)
+print("\nProperty dictionary from '%s'" % args.CSV)
 print("                           p e r  ang-int     %    %   expect  group  split  lab    abs   iscale   Aflip   Ein rRuth Sfactor Escale Eshift Ecalib split run")
 print("           File                              sys  stat norm    an/en  norms  a,xs   err   units                                      shifts              directory")
-csv_out = open(Dir + args.Props + '-o.csv','w')
+csv_out = open(Dir + args.CSV + '-o.csv','w')
 headings = ['projectile','ejectile','residual','file','integrated','sys-error','stat-error','norm','group','splitnorms','lab','abserr','scale','filedir','Aflip','Ein','ratioRuth','Sfactor','eshift','ecalib','splitshifts']
 print(','.join(headings), file=csv_out)
 
 props = {}
 
 # csv     #   SPREADSHEET !
-csvf =  open(Dir + args.Props,'r')
+csvf =  open(Dir + args.CSV,'r')
 projs = [];    targs = []; elimits = []; masses={}; qvalue = {}; charges={}
 for prop in csv.DictReader(csvf):
     projectile = prop['projectile']
@@ -798,5 +805,7 @@ if args.Sfresco:
 
 if args.pops is not None:
     print('\nFresco input file:')
-    make_fresco_input(projs,targs,masses,charges,qvalue,args.pops,args.Jmax,Projectiles,args.EminCN,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,args.GammaChannel)
+    make_fresco_input(projs,targs,masses,charges,qvalue,args.pops,args.Jmax,Projectiles,
+        args.EminCN,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,
+        args.jdef,args.pidef,args.widef,args.Term0,args.GammaChannel)
 
