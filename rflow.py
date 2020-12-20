@@ -1310,7 +1310,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             tracel = open('%s-bfgs_min%s.tracel'% (base,tag),'w')
             traces = trace.readlines( )
             trace.close( )
-            lowest_chisq = 1e6
+            lowest_chisq = 1e8
             for i,cs in enumerate(traces):
                 chis = float(cs)/n_data
                 lowest_chisq = min(lowest_chisq, chis)

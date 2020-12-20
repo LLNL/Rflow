@@ -897,56 +897,19 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             A_t = tf.concat([AxA,AxI,AxT], 0)
             chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
 
-            Grads = tf.gradients(chisq, searchpars) #, unconnected_gradients=tf.UnconnectedGradients.ZERO)
-        #     Grads = numpy.zeros([1,searchpars.get_shape()[0]*5])
+            Grads = tf.gradients(chisq, searchpars) 
 
             return(chisq,A_t,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap)
-
-#         E_pole_v = tf.scatter_nd (searchloc[:border[0],:] , searchpars[:border[0]], [n_jsets*n_poles] )
-#         g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
-#         norm_val = searchpars[border[1]:border[2]]
-# 
-#         E_poles = tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles])
-#         g_poles = tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans])
-#     
-#         E_cpoles = tf.complex(E_poles,tf.constant(0., dtype=REAL)) 
-#         g_cpoles = tf.complex(g_poles,tf.constant(0., dtype=REAL))
-#     
-#         E_cscat = tf.complex(E_scat,tf.constant(0., dtype=REAL)) 
-#     
-#         if not LMatrix:
-#             T_mat = R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans ) 
-#         else:
-#             if debug:
-#                 Ainv_mat = Ainv(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
-#                 print('Ainv_mat:\n',Ainv_mat.numpy()[0,:,:,:] )
-#             T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
-# 
-#         Ax = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
-# 
-#         if chargedElastic:                          
-#             AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
-#         else:
-#             AxA = Ax * Gfacc
-# 
-#         XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
-#         AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
-#     
-#         AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
-# 
-#         A_t = tf.concat([AxA, AxI, AxT], 0)
-# 
-#         chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
-#         
-#         Grads = tf.gradients(chisq, searchpars) #, unconnected_gradients=tf.UnconnectedGradients.ZERO)
         
         chisq,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars, others)                 
-     
-        print('\nFirst run:',chisq.numpy()/n_data)  
+        A_tF_n = A_tF.numpy()
+        chisq_n = chisq.numpy()
+        print('\nFirst run:',chisq_n/n_data)  
         if TransitionMatrix:
+        
             printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base,n_data,E_scat,cm2lab,ipair )   
-             
-        print('Grads:',Grads[0].numpy())
+        grad0 = Grads[0].numpy()
+        print('Grads:',grad0)
  ###################################################
 
         if debug:
@@ -1032,7 +995,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             initial_objective = FitMeasureTF(searchpars) 
             chisq = initial_objective[0]
             grad0 = initial_objective[1].numpy()
-            print('Initial position:',chisq.numpy()/n_data )
+            chisq_n = chisq.numpy()
+            print('Initial position:',chisq_n/n_data )
             print('Initial grad:',grad0 )
     
             import tensorflow_probability as tfp   
@@ -1088,7 +1052,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     A_t = tf.concat([AxA, AxI, AxT], 0) 
     
                     chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
-                    print('And ChiSqTF again =',chisq.numpy()/n_data )
+                    print('And ChiSqTF again =',chisq_n/n_data )
                 
                 optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
                         max_iterations=Iterations, tolerance=float(Search))
@@ -1110,7 +1074,11 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         # print('\nchisq from FitMeasureTF:',chisqF.numpy())
         
         chisqF,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars, others) 
-        print(  'chisq from FitStatusTF:',chisqF.numpy())
+        chisqF_n = chisqF.numpy()
+        A_tF_n = A_tF.numpy()
+        grad1 = Grads[0].numpy()
+        print(  'chisq from FitStatusTF:',chisqF_n)
+#  END OF TENSORFLOW
         
     if True:     
 #  Write back fitted parameters into evaluation:
@@ -1178,11 +1146,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", "\n".join(R.toXMLList()))
             jset += 1
                 
-#         print('gradient:\n',Grads[0].numpy())
         print('\nR-matrix parameters:')
          
         if not Search:
-            grad0 = Grads[0].numpy()
             fmt = '%4i %4i   S: %10.5f %10.5f   %15s     %s'
             print('   P  Loc   Start:    V       grad    Parameter         new name')
             for p in range(n_pars):   
@@ -1190,10 +1156,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if newRname == searchnames[p]: newRname = ''
                 print(fmt % (p,searchloc[p,0],searchpars0[p],grad0[p],searchnames[p],newRname) )
 #             fmt2 = '%4i %4i   S: %10.5f   %s') )
-            print('\n*** chisq/pt=',chisqF.numpy()/n_data)
+            print('\n*** chisq/pt=',chisqF_n/n_data)
             
         else:
-            grad1 = Grads[0].numpy()
             fmt = '%4i %4i   S: %10.5f %10.5f  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
             print('   P  Loc   Start:    V       grad    Final:     V      grad        1sig   Percent error     Parameter        new name')
             if frontier[2]>0: print('Varying:')
@@ -1207,7 +1172,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 
             print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[2])]))
 
-            print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %e11.3' % (chisqF.numpy()/n_data,chisqF.numpy()/ndof,ndof,chisqF.numpy()))
+            print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %e11.3' % (chisqF_n/n_data,chisqF_n/ndof,ndof,chisqF_n))
                     
             covariance1 = inverse_hessian
             from scipy.linalg import eigh
@@ -1224,7 +1189,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             tracel = open('%s-bfgs_min%s.tracel'% (base,tag),'w')
             traces = trace.readlines( )
             trace.close( )
-            lowest_chisq = 1e6
+            lowest_chisq = 1e8
             for i,cs in enumerate(traces):
                 chis = float(cs)/n_data
                 lowest_chisq = min(lowest_chisq, chis)
@@ -1267,8 +1232,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
           
             docLines = [' ','Fitted by Rflow','   '+inFile,time.ctime(),pwd.getpwuid(os.getuid())[4],' ',' ']
-            docLines += [' Initial chisq/pt: %12.5f' % ( chisq.numpy()/n_data)]
-            docLines += [' Final   chisq/pt: %12.5f' % (chisqF.numpy()/n_data),' /dof= %12.5f for %i' % (chisqF.numpy()/ndof,ndof),' ']
+            docLines += [' Initial chisq/pt: %12.5f' % ( chisq_n/n_data)]
+            docLines += [' Final   chisq/pt: %12.5f' % (chisqF_n/n_data),' /dof= %12.5f for %i' % (chisqF_n/ndof,ndof),' ']
             docLines += ['  Fitted norm %12.5f for %s' % (searchpars[n+border[1]],searchnames[n+border[1]] ) for n in range(n_norms)] 
             docLines += [' '] 
         
@@ -1283,12 +1248,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             computerCode.note.body = '\n'.join( docLines )
             RMatrix.documentation.computerCodes.add( computerCode )
     
-        return(chisqF.numpy(),A_tF.numpy(),norm_val,n_pars)
+        return(chisqF_n,A_tF_n,norm_val,n_pars)
         
     else:
-        return(chisq.numpy(),Ax.numpy(),norm_val,n_pars)
-
-#             print('Chisq :',chisq.numpy()/n_data)
+        return(chisq_n,A_tF_n,norm_val,n_pars)
 
 ############################################## main
 
