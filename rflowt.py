@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import times
+tim = times.times()
 
 import os,math,numpy,cmath,pwd,sys,time,json
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
@@ -31,8 +33,8 @@ CMPLX = numpy.complex128
 INT = numpy.int32
 realSize = 8  # bytes
 
-import times
-tim = times.times()
+print("First imports done rflow: ",tim.toString( ))
+
 
 # TO DO:
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
@@ -526,6 +528,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     for n in range(n_norms):
         searchnames += [norm_refs[n][0]]
     n_pars = border[2]
+    ndof = n_data - n_pars
         
 #     print('\n Search variables:',' '.join(searchnames)) 
     print('Variable fixed list expanded:',fixedlistex)
@@ -693,38 +696,42 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     searchpars0 = searchparms
     print('Number of search parameters:',searchpars0.shape[0])
 
+    print("To start tf: ",tim.toString( ))
+
 ################################################################    
 ## TENSORFLOW:
 
     ComputerPrecisions = (REAL, CMPLX, INT)
 
-    CoulombFunctions_data = (L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac)    # batch n_data
-    CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles)                                                  # batch n_jsets
+    CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
+    CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles]                                                  # batch n_jsets
 
-    Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_totals,NL,batches)
-    Logicals = (LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose)
+    Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches]
+    Logicals = [LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose]
 
-    Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL)
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,tag, Search,Iterations,restarts]
 
-    Data_Control = (Pleg, ExptAint,ExptTot)     # batch n_angle_integrals,  n_totals  
+    Data_Control = [Pleg, ExptAint,ExptTot]     # batch n_angle_integrals,  n_totals  
     
-    searchpars_n, chisqF_n, A_tF_n, grad0,grad1 = evaluate_tf(ComputerPrecisions,
+    searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_tf(ComputerPrecisions,
         CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
-        Search_Control,Data_Control, searchpars0, data_val)
+        Search_Control,Data_Control, searchpars0, data_val, tim)
+        
+    print("Finished tf: ",tim.toString( ))
 #  END OF TENSORFLOW
         
     if True:     
 #  Write back fitted parameters into evaluation:
         E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) 
         g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
-        norm_val = searchpars[border[1]:border[2]]
+        norm_val = searchpars_n[border[1]:border[2]]
 
         newname = {}
         for ip in range(border[0]): #### Extract parameters after previous search:
             i = searchloc[ip,0]
             jset = i//n_poles;  n = i%n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
-            E_poles[jset,n] = searchpars[ip]
+            E_poles[jset,n] = searchpars_n[ip]
             varying = abs(E_poles[jset,n]) < Distant and searchnames[ip] not in fixedlistex
             nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  searchnames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
@@ -746,7 +753,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             i = searchloc[ip,0]
             c = i%n_chans;  n = ( (i-c)//n_chans )%n_poles; jset = ((i-c)//n_chans -n)//n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
-            g_poles[jset,n,c] = searchpars[ip]
+            g_poles[jset,n,c] = searchpars_n[ip]
             nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  searchnames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
             wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
@@ -798,7 +805,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             if frontier[2]>0: print('Varying:')
             for p in range(n_pars):   
                 sig = inverse_hessian[p,p]**0.5
-                print(fmt % (p,searchloc[p,0],searchpars0[p],grad0[p],searchpars[p],grad1[p],sig, sig/searchpars[p],searchnames[p],newname.get(searchnames[p],'') ) )
+                print(fmt % (p,searchloc[p,0],searchpars0[p],grad0[p],searchpars_n[p],grad1[p],sig, sig/searchpars_n[p],searchnames[p],newname.get(searchnames[p],'') ) )
             fmt2 = '%4i %4i   S: %10.5f   %s     %s'
             if frontier[2]>0: print('Fixed:')
             for p in range(frontier[2]):   
@@ -866,9 +873,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
           
             docLines = [' ','Fitted by Rflow','   '+inFile,time.ctime(),pwd.getpwuid(os.getuid())[4],' ',' ']
-            docLines += [' Initial chisq/pt: %12.5f' % ( chisq_n/n_data)]
+            docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n/n_data)]
             docLines += [' Final   chisq/pt: %12.5f' % (chisqF_n/n_data),' /dof= %12.5f for %i' % (chisqF_n/ndof,ndof),' ']
-            docLines += ['  Fitted norm %12.5f for %s' % (searchpars[n+border[1]],searchnames[n+border[1]] ) for n in range(n_norms)] 
+            docLines += ['  Fitted norm %12.5f for %s' % (searchpars_n[n+border[1]],searchnames[n+border[1]] ) for n in range(n_norms)] 
             docLines += [' '] 
         
             code = 'Fit quality'
@@ -1438,4 +1445,4 @@ if __name__=='__main__':
     
     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
 
-print("Finish rflow: ",tim.toString( ))
+print("Final rflow: ",tim.toString( ))

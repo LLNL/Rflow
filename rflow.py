@@ -1926,4 +1926,4 @@ if __name__=='__main__':
     
     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
 
-print("Finish rflow: ",tim.toString( ))
+print("Final rflow: ",tim.toString( ))

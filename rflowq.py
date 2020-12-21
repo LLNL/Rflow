@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import times
+tim = times.times()
 
 import os,math,numpy,cmath,pwd,sys,time,json
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
@@ -45,8 +47,7 @@ except:
 
 strategy = tf.distribute.MirroredStrategy()
 
-import times
-tim = times.times()
+print("Imports done rflow: ",tim.toString( ))
 
 # TO DO:
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
@@ -126,6 +127,7 @@ def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, 
                 print(Elab,x, file=fout)
 #                         print(Ein_list[ie],x, Elab,pin,ipair,1./cm2lab[ipair],cm2lab[pin],cm2lab[pin]/cm2lab[ipair],ie,'/',file=fouo)
             fout.close()
+    return
                                     
 def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list, fixedlist,norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
         Search,Iterations,restarts,Distant,Background,ReichMoore, TransitionMatrix,verbose,debug,inFile,fitStyle,tag,large):
@@ -706,6 +708,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     searchpars0 = searchparms
     print('Number of search parameters:',searchpars0.shape[0])
+    print("To start tf: ",tim.toString( ))
 
 ################################################################    
 ## TENSORFLOW:
@@ -901,15 +904,19 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
             return(chisq,A_t,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap)
         
+        print("First FitStatusTF: ",tim.toString( ))
         chisq,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars, others)                 
         A_tF_n = A_tF.numpy()
         chisq_n = chisq.numpy()
         print('\nFirst run:',chisq_n/n_data)  
+        print("First tf: ",tim.toString( ))
+        chisq,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars, others)                 
+        print("Second tf: ",tim.toString( ))
         if TransitionMatrix:
         
             printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base,n_data,E_scat,cm2lab,QI,ipair )   
         grad0 = Grads[0].numpy()
-        print('Grads:',grad0)
+        if verbose: print('Grads:',grad0)
  ###################################################
 
         if debug:
@@ -949,6 +956,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             print('chisq/pt=',chisqsum/(n_data),'(including)' )
  ###################################################
 
+        print("Finished tf: ",tim.toString( ))
         if Search:
             os.system("rm -f %s-bfgs_min%s.trace" % (base,tag) ) 
             os.system("rm -f %s-bfgs_min%s.snap" % (base,tag) )
@@ -1069,9 +1077,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             if not verbose: print('inverse_hessian: shape=',inverse_hessian.shape ,'\ndiagonal:',[inverse_hessian[i,i] for i in range(n_pars)] )
             searchpars = optim_results.position.numpy()
         
-        # chisqF = FitMeasureTF(searchpars) [0]
-        # print('\nchisq from FitMeasureTF:',chisqF.numpy())
         
+        print("Wrapup tf: ",tim.toString( ))
         chisqF,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars, others) 
         chisqF_n = chisqF.numpy()
         A_tF_n = A_tF.numpy()
@@ -1627,7 +1634,7 @@ if __name__=='__main__':
 
 
     
-    X4groups = sorted(X4groups)
+    g = sorted(X4groups)
     print('\nX4groups sorted:',X4groups)
 #     if len(X4groups)<1: sys.exit()
     print('Data grouped by X4 subentry:')
@@ -1686,6 +1693,7 @@ if __name__=='__main__':
                     for ni in range(n_norms):
                         fac += (norm_val[ni]-1.) * effect_norm[ni,id]
                 lfac = (fac-1)*100
+#                 print('Curve:',curve,fac,lfac,pin,pout,reaction)
                 curves.add((curve,fac,lfac,pin,pout,reaction))
      
         if args.debug: print('\nGroup',group,'has curves:',curves)
@@ -1804,4 +1812,4 @@ if __name__=='__main__':
     
     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
 
-print("Finish rflow: ",tim.toString( ))
+print("Final rflow: ",tim.toString( ))

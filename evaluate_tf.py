@@ -1,4 +1,5 @@
 
+import numpy,os
 
 # import tensorflow as tf
 import tensorflow.compat.v2 as tf
@@ -15,7 +16,7 @@ except:
 
 strategy = tf.distribute.MirroredStrategy()
 
-def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, Search_Control,Data_Control, searchpars0, data_val):
+def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, Search_Control,Data_Control, searchpars0, data_val,tim):
 
 
 #     ComputerPrecisions = (REAL, CMPLX, INT)
@@ -23,26 +24,27 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
 #     CoulombFunctions_data = (L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac)    # batch n_data
 #     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles)                                                  # batch n_jsets
 # 
-#     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_totals,NL,batches)
+#     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches)
 #     Logicals = (LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose)
 # 
-#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL)
+#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,tag, Search,Iterations,restarts)
 # 
 #     Data_Control = (Pleg, ExptAint,ExptTot)     # batch n_angle_integrals,  n_totals  
                                                 #   (Pleg, AAL) or AA
 #     searchpars0  # initial values
 #  
 #     Dataset = data_val                              # batch n_data 
+#     tim
 
     REAL, CMPLX, INT = ComputerPrecisions
 
     L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac = CoulombFunctions_data   # batch n_data
     S_poles,dSdE_poles,EO_poles = CoulombFunctions_poles                                                  # batch n_jsets
 
-    n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_totals,NL,batches = Dimensions
+    n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches = Dimensions
     LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose = Logicals
 
-    searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL = Search_Control
+    searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,tag, Search,Iterations,restarts = Search_Control
 
     Pleg, ExptAint,ExptTot = Data_Control
 
@@ -54,6 +56,12 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
         for L in range(NL):
             AA[ie, :,:,:, :,:,:] += AAL[pin,pout, :,:,:, :,:,:, L] * Pleg[ie,L]
 
+    n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
+    n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
+    n_angle_integrals = n_data - n_totals - n_angles
+                   
+    print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals')
+
 
 ################################################################    
 ## TENSORFLOW:
@@ -62,13 +70,7 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
     if True:
         
         searchpars = tf.Variable(searchpars0)
-
-# Auxiliary model constants during searches:
             
-        others = (L_diag, Om2_mat,POm_diag,CS_diag,  LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,batches,brune,S_poles,dSdE_poles,EO_poles,  
-                    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,
-                    data_val, norm_info,effect_norm,AA, chargedElastic, Rutherford, InterferenceAmpl, ExptAint,ExptTot,gfac,p_mask)
-                       
  
         @tf.function
         def R2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans):
@@ -206,16 +208,8 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
             return (chisq)
                         
         @tf.function
-        def FitStatusTF(searchpars, others):
+        def FitStatusTF(searchpars):
 
-            L_diag, Om2_mat,POm_diag,CS_diag, LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,batches,brune,S_poles,dSdE_poles,EO_poles, searchloc,border,E_poles_fixed_v,g_poles_fixed_v, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc,ExptAint,ExptTot,gfac,p_mask = others
-
-            n_angle_integrals = n_data - n_totals - n_angles
-            n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
-            n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
-            print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals')
-
-                   
             E_pole_v = tf.scatter_nd (searchloc[:border[0],:] ,          searchpars[:border[0]],          [n_jsets*n_poles] )
             g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
             norm_val = searchpars[border[1]:border[2]]
@@ -237,10 +231,7 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
             else:
                 AxA = Ax * Gfacc
                 
-            if TransitionMatrix:
-                XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
-            else: 
-                XSp_mat,XSp_tot,XSp_cap  = None,None,None
+            XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
                 
             AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
             AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
@@ -252,16 +243,23 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
 
             return(chisq,A_t,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap)
         
-        chisq,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars, others)                 
+        print("First FitStatusTF: ",tim.toString( ))
+
+        chisq0,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars)                 
         A_tF_n = A_tF.numpy()
-        chisq_n = chisq.numpy()
-        print('\nFirst run:',chisq_n/n_data)  
-        
+        chisq0_n = chisq0.numpy()
+
+        print('\nFirst run:',chisq0_n/n_data)  
+        print("End FitStatusTF: ",tim.toString( ))
+
+#       chisq,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars)                 
+#       print("Second tf: ",tim.toString( ))
+                
         if TransitionMatrix:
             printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base,n_data,E_scat,cm2lab,ipair )   
 
         grad0 = Grads[0].numpy()
-        print('Grads:',grad0)
+        if verbose: print('Grads:',grad0)
  ###################################################
 
         if debug:
@@ -306,7 +304,8 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
             os.system("rm -f %s-bfgs_min%s.snap" % (base,tag) )
             trace = "file://%s-bfgs_min%s.trace" % (base,tag) 
             snap = "file://%s-bfgs_min%s.snap"  % (base,tag) 
-            ndof = n_data - border[2]
+            n_pars = border[2]
+            ndof = n_data - n_pars
         
             @tf.function        
             def FitMeasureTF(searchpars):
@@ -345,10 +344,10 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
                 return(chisq, tf.gradients(chisq, searchpars)[0] )
     
             initial_objective = FitMeasureTF(searchpars) 
-            chisq = initial_objective[0]
+            chisq0 = initial_objective[0]
             grad0 = initial_objective[1].numpy()
-            chisq_n = chisq.numpy()
-            print('Initial position:',chisq_n/n_data )
+            chisq0_n = chisq0.numpy()
+            print('Initial position:',chisq0_n/n_data )
             print('Initial grad:',grad0 )
     
             import tensorflow_probability as tfp   
@@ -384,14 +383,10 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
                                  print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],S_poles[jset,n,c],
                                          100*dSdE_poles[jset,n,c]*(EO_poles[jset,n]-EOO_poles[jset,n])/ (S_poles[jset,n,c] - SOO_poles[jset,n,c])))
                     
-                    # put back into 'other' set:
-                    others = (L_diag, Om2_mat,POm_diag,CS_diag,    LMatrix,npairs,n_jsets,n_poles,n_chans,n_totals,batches,brune,S_poles,dSdE_poles,EO_poles,  searchloc,border,E_poles_fixed_v,g_poles_fixed_v, \
-                                data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc,ExptAint,ExptTot,gfac,p_mask)
-
                     # Check Chisq value
-                    n_angle_integrals = n_data - n_totals - n_angles
-                    n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
-                    n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
+                    # n_angle_integrals = n_data - n_totals - n_angles
+                    # n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
+                    # n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
                                 
                     T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
@@ -406,7 +401,7 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
                     A_t = tf.concat([AxA, AxI, AxT], 0) 
     
                     chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
-                    print('And ChiSqTF again =',chisq_n/n_data )
+                    print('And ChiSqTF again =',chisq.numpy()/n_data )
                 
                 optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
                         max_iterations=Iterations, tolerance=float(Search))
@@ -429,11 +424,15 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
             inverse_hessian = optim_results.inverse_hessian_estimate.numpy()
             print('inverse_hessian: shape=',inverse_hessian.shape ,'\ndiagonal:',[inverse_hessian[i,i] for i in range(n_pars)] )
         
-        chisqF,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars, others) 
+        else:
+            searchpars_n = searchpars0
+        
+        print("Wrapup tf: ",tim.toString( ))
+        chisqF,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars) 
         chisqF_n = chisqF.numpy()
         A_tF_n = A_tF.numpy()
         grad1 = Grads[0].numpy()
         print(  'chisq from FitStatusTF:',chisqF_n)
 #  END OF TENSORFLOW
 
-    return( searchpars_n, chisqF_n, A_tF_n, grad0,grad1 )
+    return( searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian,  chisq0_n,grad0)
