@@ -58,9 +58,11 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
 
     n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
     n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
-    n_angle_integrals = n_data - n_totals - n_angles
                    
-    print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals')
+    n_pars = border[2]
+    print('Search parameters :',n_pars)
+    ndof = n_data - n_pars
+    print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals. Dof=',ndof)
 
 
 ################################################################    
@@ -338,8 +340,8 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
                 A_t = tf.concat([AxA, AxI, AxT], 0)
                 chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
             
-                tf.print(chisq,         output_stream=trace)
-                tf.print(chisq, searchpars,  summarize=-1,   output_stream=snap)
+                tf.print(chisq/n_data,         output_stream=trace)
+                tf.print(chisq/n_data, searchpars,  summarize=-1,   output_stream=snap)
             
                 return(chisq, tf.gradients(chisq, searchpars)[0] )
     
@@ -383,11 +385,6 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
                                  print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],S_poles[jset,n,c],
                                          100*dSdE_poles[jset,n,c]*(EO_poles[jset,n]-EOO_poles[jset,n])/ (S_poles[jset,n,c] - SOO_poles[jset,n,c])))
                     
-                    # Check Chisq value
-                    # n_angle_integrals = n_data - n_totals - n_angles
-                    # n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
-                    # n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
-                                
                     T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
                     XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
