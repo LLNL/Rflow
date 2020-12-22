@@ -12,6 +12,7 @@ lightZ      = {'photon':0, 'n':0, '2n':0, 'H1':1, 'H2':1, 'H3':1, 'He3':2, 'He4'
 classes = ['INL','NON','G']
 
 debug = False
+print('Command:',' '.join(sys.argv[:]) ,'\n')
 
 # print(list(elementsSymbolZ.keys()))
 #
@@ -113,6 +114,7 @@ if __name__ == "__main__":
             qvalue = 0.0
             Tmass = pmass + tmass
             e0limit = EmaxLimit * tmass/Tmass + qvalue
+            print('Set e0limit =',e0limit,'for projectile',p)
             elimit = e0limit
         else:
             Partmass = pmass + tmass
@@ -132,6 +134,7 @@ if __name__ == "__main__":
             reaction = pn + ',' + pon
             projectile,ejectile = (pn,pon)
             if ejectile == 'EL': ejectile=projectile
+            shape_data = None
         
             if ejectile == 'N': continue
             if ejectile == 'G': continue
@@ -254,10 +257,11 @@ if __name__ == "__main__":
                                 excuses[subent] = 'only relative data 0 ' + Reaction
                                 print(20*' ',excuses[subent])
                                 continue
-                        if 'Relative data' in Reaction:
-                            shape_data = True
-                        else:
-                            shape_data = False
+                        if shape_data is None:
+                            if 'Relative data' in Reaction:
+                                shape_data = True
+                            else:
+                                shape_data = False
 
                         labels = ds[d].labels
                         units  = ds[d].units 
@@ -635,10 +639,10 @@ if __name__ == "__main__":
                         data_output.close()
                         npts = str(npoints)
                     
-                        residual = str(0)
+                        residual = '0'
                         if ejectile == 'INL':
                              ejectile=projectile
-                             residual = str(1)
+                             residual = '*'
                         sys_error = str(5)  if not shape_data else str(-1)
                         stat_error= str(10) #  for when pointwise errors are 0.0
                         angle_integrated = 'TRUE' if obs=='CS' else 'FALSE'

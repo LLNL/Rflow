@@ -758,7 +758,6 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     searchpars[border[1]:border[2]] = norm_val   
     for n in range(n_norms):
         searchnames += [norm_refs[n][0]]
-    n_pars = border[2]
         
 #     print('\n Search variables:',' '.join(searchnames)) 
     print('Variable fixed list expanded:',fixedlistex)
@@ -773,6 +772,11 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                                  
     print('Searching on pole energies:',searchpars[:border[0]])
 ## EVALUATE R-MATRIX:
+    n_pars = border[2]
+    print('Search parameters :',n_pars)
+    ndof = n_data - n_pars
+    print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals. Dof=',ndof)
+
               
     E_poles_fixed_v = numpy.ravel(E_poles_fixed)
     g_poles_fixed_v = numpy.ravel(g_poles_fixed)

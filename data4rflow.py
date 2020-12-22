@@ -455,7 +455,7 @@ for datFile in args.inFiles:
 
     dr = datFile.split('.dat')[0]
     projectile,ejectile,residual,integrated,syserror,staterror,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir = props[baseFile]
-    print("\nRead ",datFile," write root:",filedir + dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth)
+    print("\nRead ",datFile," write root:",dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth)
     
     if projectile=='photon' and not args.GammaChannel:
         continue
