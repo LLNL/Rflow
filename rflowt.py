@@ -39,6 +39,7 @@ print("First imports done rflow: ",tim.toString( ))
 # TO DO:
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
 #   Angle batching of specified size (?)
+#   Put excitation functions etc in dataDir
 #   Fit specific Legendre orders
 
 # Search options:
@@ -67,53 +68,6 @@ pldashes = {0:'solid', 1:'dashed', 2:'dashdot', 3:'dotted'}
 plsymbol = {0:".", 1:"o", 2:"s", 3: "D", 4:"^", 5:"<", 6: "v", 7:">",
             8:"P", 9:"x", 10:"*", 11:"p", 12:"1", 13:"2", 14:"3"}
 
-def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base,n_data,E_scat,cm2lab,QI,ipair):
-        
-#     print('Projectile abbreviations:',pname)
-    
-    for pin in range(npairs):
-
-        pn = lightnuclei.get(pname[pin],pname[pin])
-        tn = lightnuclei.get(tname[pin],tname[pin])
-        neut = za[pin]*zb[pin] == 0    # calculate total cross-sections for neutrons
-        fname = base + '-ftot_%s' % pn
-        cname = base + '-fcap_%s' % pn
-            
-        print('Total cross-sections for incoming',pin,'to file',fname,' and capture to',cname)
-        fout = open(fname,'w')
-        cout = open(cname,'w')
-        for ie in range(n_data):
-#           E_scat[ie]      is lab incident energy in nominal entrance partition  ipair
-#                 E = E_scat[ie]      # lab incident energy
-#                 E = Ein_list[ie]    # incident energy in EXFOR experiment
-            E = E_scat[ie]/cm2lab[ipair] + QI[pin] - QI[ipair]
-            Elab = E * cm2lab[pin]
-        
-            x = XSp_tot_n[ie,pin] 
-            print(Elab,x, file=fout)
-            c = XSp_cap_n[ie,pin] 
-            print(Elab,c, file=cout)
-        fout.close()
-        cout.close()
-
-        for pout in range(npairs):
-            if pin==pout and not neut: continue
-            po = lightnuclei.get(pname[pout],pname[pout])
-            to = lightnuclei.get(tname[pout],tname[pout])
-            fname = base + '-fch_%s-to-%s' % (pn,po)
-            print('Partition',pin,'to',pout,': angle-integrated cross-sections to file',fname)
-            fout = open(fname,'w')
-#                     fouo = open(fname+'@','w')
-        
-            for ie in range(n_data):
-                x = XSp_mat_n[ie,pout,pin]
-#                     E = E_scat[ie]
-#                     E = Ein_list[ie]
-                E = E_scat[ie]/cm2lab[ipair] + QI[pin] - QI[ipair]
-                Elab = E * cm2lab[pin]
-                print(Elab,x, file=fout)
-#                         print(Ein_list[ie],x, Elab,pin,ipair,1./cm2lab[ipair],cm2lab[pin],cm2lab[pin]/cm2lab[ipair],ie,'/',file=fouo)
-            fout.close()
                                     
 def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list, fixedlist,norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
         Search,Iterations,restarts,Distant,Background,ReichMoore, TransitionMatrix,verbose,debug,inFile,fitStyle,tag,large):
@@ -703,6 +657,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     ComputerPrecisions = (REAL, CMPLX, INT)
 
+    Channels = [ipair,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val]
     CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
     CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles]                                                  # batch n_jsets
 
@@ -713,7 +668,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     Data_Control = [Pleg, ExptAint,ExptTot]     # batch n_angle_integrals,  n_totals  
     
-    searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_tf(ComputerPrecisions,
+    searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_tf(ComputerPrecisions, Channels,
         CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
         Search_Control,Data_Control, searchpars0, data_val, tim)
         

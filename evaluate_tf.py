@@ -1,5 +1,6 @@
 
 import numpy,os
+from printExcitationFunctions import *
 
 # import tensorflow as tf
 import tensorflow.compat.v2 as tf
@@ -16,11 +17,13 @@ except:
 
 strategy = tf.distribute.MirroredStrategy()
 
-def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, Search_Control,Data_Control, searchpars0, data_val,tim):
+def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+                 Search_Control,Data_Control, searchpars0, data_val,tim):
 
 
 #     ComputerPrecisions = (REAL, CMPLX, INT)
 # 
+#     Channels = [ipair,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val]
 #     CoulombFunctions_data = (L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac)    # batch n_data
 #     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles)                                                  # batch n_jsets
 # 
@@ -38,6 +41,7 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
 
     REAL, CMPLX, INT = ComputerPrecisions
 
+    ipair,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val = Channels
     L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac = CoulombFunctions_data   # batch n_data
     S_poles,dSdE_poles,EO_poles = CoulombFunctions_poles                                                  # batch n_jsets
 
@@ -256,9 +260,6 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
 
 #       chisq,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars)                 
 #       print("Second tf: ",tim.toString( ))
-                
-        if TransitionMatrix:
-            printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base,n_data,E_scat,cm2lab,ipair )   
 
         grad0 = Grads[0].numpy()
         if verbose: print('Grads:',grad0)
@@ -350,7 +351,7 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
             grad0 = initial_objective[1].numpy()
             chisq0_n = chisq0.numpy()
             print('Initial position:',chisq0_n/n_data )
-            print('Initial grad:',grad0 )
+            if verbose: print('Initial grad:',grad0 )
     
             import tensorflow_probability as tfp   
             optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
@@ -430,6 +431,10 @@ def evaluate_tf(ComputerPrecisions,CoulombFunctions_data,CoulombFunctions_poles,
         A_tF_n = A_tF.numpy()
         grad1 = Grads[0].numpy()
         print(  'chisq from FitStatusTF:',chisqF_n)
+
+        if TransitionMatrix:
+            printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base,n_data,data_val[:,],cm2lab,QI,ipair )   
+
 #  END OF TENSORFLOW
 
     return( searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian,  chisq0_n,grad0)
