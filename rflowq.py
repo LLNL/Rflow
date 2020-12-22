@@ -472,7 +472,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             i = jset*n_poles+n
             E = E_poles[jset,n]
             if E == 0: continue   # invalid energy: filler
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E)
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E)
             varying = abs(E) < Distant             
             for pattern in patterns:
                  varying = varying and not pattern.match(nam) 

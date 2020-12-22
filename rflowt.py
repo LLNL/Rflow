@@ -412,7 +412,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             i = jset*n_poles+n
             E = E_poles[jset,n]
             if E == 0: continue   # invalid energy: filler
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E)
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E)
             varying = abs(E) < Distant             
             for pattern in patterns:
                  varying = varying and not pattern.match(nam) 
@@ -664,7 +664,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches]
     Logicals = [LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,tag, Search,Iterations,restarts]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base, Search,Iterations,restarts]
 
     Data_Control = [Pleg, ExptAint,ExptTot]     # batch n_angle_integrals,  n_totals  
     
@@ -781,8 +781,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             else:
                 print('Covariance matrix eigenvalues:\n', numpy.array_repr(eigval1[:],max_line_width=200,precision=3, suppress_small=False) ) 
 
-            trace = open('%s-bfgs_min%s.trace'% (base,tag),'r')
-            tracel = open('%s-bfgs_min%s.tracel'% (base,tag),'w')
+            trace = open('%s/%s-bfgs_min.trace'% (base,base),'r')
+            tracel = open('%s/%s-bfgs_min.tracel'% (base,base),'w')
             traces = trace.readlines( )
             trace.close( )
             lowest_chisq = 1e8
@@ -792,8 +792,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 print(i+1,lowest_chisq,chis, file=tracel)
             tracel.close()
         
-            snap = open('%s-bfgs_min%s.snap'% (base,tag),'r')
-            snapl = open('%s-bfgs_min%s.snapl'% (base,tag),'w')
+            snap = open('%s/%s-bfgs_min.snap'% (base,base),'r')
+            snapl = open('%s/%s-bfgs_min.snapl'% (base,base),'w')
             snaps = snap.readlines( )
             snap.close( )
             included = numpy.zeros(n_pars, dtype=INT)
@@ -1142,7 +1142,7 @@ if __name__=='__main__':
         if not previousFit: RMatrix.documentation.computerCodes.add( computerCodeFit )
 
         info = '+S_' + args.tag
-        open( base  + args.tag + '-fit.xml', mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
+        open( base  + '-fit.xml', mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
     else:
         info = ''
 
@@ -1287,7 +1287,7 @@ if __name__=='__main__':
         if args.debug: print('\nGroup',group,'has curves:',curves)
         ncurve = 0
         for curve,fac,lfac,pin,pout,reaction in curves:
-            tag = groupB + ( ('@' + curve) if curve!='Aint' else '')
+            tag = groupB + ( ('+' + curve) if curve!='Aint' else '')
             if ptsInCurve[curve]==0: continue
 #             print('\nCurve for ',tag)
             

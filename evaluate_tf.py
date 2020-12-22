@@ -30,7 +30,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 #     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches)
 #     Logicals = (LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose)
 # 
-#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,tag, Search,Iterations,restarts)
+#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,Search,Iterations,restarts)
 # 
 #     Data_Control = (Pleg, ExptAint,ExptTot)     # batch n_angle_integrals,  n_totals  
                                                 #   (Pleg, AAL) or AA
@@ -48,7 +48,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
     n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches = Dimensions
     LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose = Logicals
 
-    searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,tag, Search,Iterations,restarts = Search_Control
+    searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,Search,Iterations,restarts = Search_Control
 
     Pleg, ExptAint,ExptTot = Data_Control
 
@@ -278,7 +278,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 #                         print('   ',a,'row: ',',  '.join(['{:.5f}'.format(T_mat[ie,jset,a,b].numpy()) for b in range(n_chans)]) )
     
         if verbose:
-            if n_angles>0: xsFile = open(base + '.xsa','w')
+            if n_angles>0: xsFile = open(base + '/' + base + '.xsa','w')
             Angular_XS = A_tF.numpy()
             chisqsum = 0.0      
             for ie in range(n_angles):
@@ -303,10 +303,10 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
  ###################################################
 
         if Search:
-            os.system("rm -f %s-bfgs_min%s.trace" % (base,tag) ) 
-            os.system("rm -f %s-bfgs_min%s.snap" % (base,tag) )
-            trace = "file://%s-bfgs_min%s.trace" % (base,tag) 
-            snap = "file://%s-bfgs_min%s.snap"  % (base,tag) 
+            os.system("rm -f %s/%s-bfgs_min.trace" % (base,base) ) 
+            os.system("rm -f %s/%s-bfgs_min.snap" % (base,base) )
+            trace = "file://%s/%s-bfgs_min.trace" % (base,base)
+            snap = "file://%s/%s-bfgs_min.snap"  % (base,base) 
             n_pars = border[2]
             ndof = n_data - n_pars
         
@@ -433,7 +433,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
         print(  'chisq from FitStatusTF:',chisqF_n)
 
         if TransitionMatrix:
-            printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base,n_data,data_val[:,],cm2lab,QI,ipair )   
+            printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,],cm2lab,QI,ipair )   
 
 #  END OF TENSORFLOW
 
