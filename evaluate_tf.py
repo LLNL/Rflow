@@ -423,6 +423,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             print('inverse_hessian: shape=',inverse_hessian.shape ,'\ndiagonal:',[inverse_hessian[i,i] for i in range(n_pars)] )
         
         else:
+            inverse_hessian = None
             searchpars_n = searchpars0
         
         print("Wrapup tf: ",tim.toString( ))
@@ -433,7 +434,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
         print(  'chisq from FitStatusTF:',chisqF_n)
 
         if TransitionMatrix:
-            printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,],cm2lab,QI,ipair )   
+            printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],cm2lab,QI,ipair )   
 
 #  END OF TENSORFLOW
 

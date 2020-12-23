@@ -38,14 +38,17 @@ print("First imports done rflow: ",tim.toString( ))
 
 # TO DO:
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
-#   Angle batching of specified size (?)
-#   Put excitation functions etc in dataDir
-#   Fit specific Legendre orders
+#   Search norm values on their log value (so always positive!)
+#   Multiple GPU strategies
 
 # Search options:
-#   Fix Reich-Moore widths
+#   Fix or search on Reich-Moore widths
 #   Fixing norms 
 #   Command input, e.g. as with Sfresco?
+
+Maybe:
+#   Angle batching of specified size (?)
+#   Fit specific Legendre orders
 
 # Doing:
 
@@ -1103,7 +1106,7 @@ if __name__=='__main__':
     if args.anglesData is not None: base += '_a%s' % args.anglesData
     if args.Search     is not None: base += '+S' 
     if args.Iterations is not None: base += '_I%s' % args.Iterations
-    base = base + '_'+args.tag
+    if args.tag != '': base = base + '_'+args.tag
     dataDir = base 
     if args.Cross_Sections or args.Matplot  : os.system('mkdir '+dataDir)
  
