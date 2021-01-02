@@ -1145,7 +1145,9 @@ if __name__=='__main__':
         if not previousFit: RMatrix.documentation.computerCodes.add( computerCodeFit )
 
         info = '+S_' + args.tag
-        open( base  + '-fit.xml', mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
+        newFitFile = base  + args.tag + '-fit.xml'
+        open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
+        print('Written new fit file:',newFitFile)
     else:
         info = ''
 
@@ -1155,6 +1157,12 @@ if __name__=='__main__':
 #     plot_cmds = []
     plot_cmd = 'xmgr '
     for group in groups:
+ 
+        found = False
+        for id in range(n_data):
+            if cluster_list[id]!='I': found = True    # not duplicate of later
+        if not found: continue
+
         if args.Cross_Sections:
             g_out = group+info+'-fit'
             if '/' in g_out:  g_out =  g_out.split('/')[1].replace('/','+')
