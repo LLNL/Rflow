@@ -4,6 +4,7 @@
 import os,math,numpy,cmath,pwd,sys,time,json
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from pqu import PQU as PQUModule
+from wrapup import plotOut
 
 from numericalFunctions import angularMomentumCoupling
 from xData.series1d  import Legendre
@@ -313,7 +314,7 @@ def FitStatusTF(searchpars, others):
                    
     E_pole_v = tf.scatter_nd (searchloc[:border[0],:] ,          searchpars[:border[0]],          [n_jsets*n_poles] )
     g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
-    norm_val = searchpars[border[1]:border[2]]
+    norm_val = tf.exp( searchpars[border[1]:border[2]] )
     
     E_cpoles = tf.complex(tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
     g_cpoles = tf.complex(tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
@@ -755,7 +756,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Variable borders:',border,'and Fixed frontiers:',frontier)
 #     print('Norms: val',norm_val,'refs',norm_refs)
 #     print(border[1],border[2],border[2]-border[1],searchpars[border[1]:border[2]], norm_val)
-    searchpars[border[1]:border[2]] = norm_val   
+    searchpars[border[1]:border[2]] = numpy.log(norm_val)   
     for n in range(n_norms):
         searchnames += [norm_refs[n][0]]
         
@@ -783,7 +784,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         
     E_pole_v = tf.scatter_nd (searchloc[:border[0],:] , searchpars[:border[0]], [n_jsets*n_poles] )
     g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
-    norm_val = searchpars[border[1]:border[2]]
+    norm_val = numpy.exp( searchpars[border[1]:border[2]] )
 
     E_poles = tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles])
     g_poles = tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans])
@@ -1093,7 +1094,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
             E_pole_v = tf.scatter_nd (searchloc[:border[0],:] ,          searchpars[:border[0]],          [n_jsets*n_poles] )
             g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
-            norm_val = searchpars[border[1]:border[2]]
+            norm_val = tf.exp( searchpars[border[1]:border[2]] )
     
             E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
             g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
@@ -1193,8 +1194,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         inverse_hessian = optim_results.inverse_hessian_estimate.numpy()
         if not verbose: print('inverse_hessian: shape=',inverse_hessian.shape ,'\ndiagonal:',[inverse_hessian[i,i] for i in range(n_pars)] )
         searchpars = optim_results.position.numpy()
-        norm_val = searchpars[border[1]:border[2]]
-        
+        norm_val = numpy.exp(searchpars[border[1]:border[2]])
 
     if True:     
         # chisqF = FitMeasureTF(searchpars) [0]
@@ -1278,7 +1278,11 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             for p in range(n_pars):   
                 newRname = newname.get(searchnames[p],'')
                 if newRname == searchnames[p]: newRname = ''
-                print(fmt % (p,searchloc[p,0],searchpars0[p],grad0[p],searchnames[p],newRname) )
+                sp = searchpars0[p]; sg = grad0[p]
+                if p >= border[1]: 
+                    sp = math.exp(sp)
+                    sg /= sp
+                print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p],newRname) )
 #             fmt2 = '%4i %4i   S: %10.5f   %s') )
             print('\n*** chisq/pt=',chisqF.numpy()/n_data)
             
@@ -1646,6 +1650,45 @@ if __name__=='__main__':
     chisqPN = chisqtot / n_data
     print('\n ChiSq/pt = %10.4f from %i points' % (chisqPN,n_data))
     
+    
+    if args.Search or True:  
+        print('Revised norms:',norm_val)
+        docLines = ['Rflow:']
+        for n in range(n_norms):
+            docLines.append("&variable name='%s' kind=5 dataset=0, 0 datanorm=%f step=0.01, reffile='%s'/" % ( norm_refs[n][0] ,norm_val[n], norm_refs[n][1]) ) 
+        docLines.append('\n')
+        docLines.append('\n'.join(docData) )
+#         print('docLines:',docLines)
+
+        if previousFit:
+            deck = 'Fitted_data'
+            deckLabels = [item.keyValue for item in computerCodeFit.inputDecks]
+            for i in range(2,100): 
+                deckLabel = '%s %s' % (deck,i)
+                if deckLabel not in deckLabels: break
+            print('\nNew InputDeck is "%s" after' % deckLabel,deckLabels,'\n')
+        else: 
+            computerCodeFit = computerCodeModule.ComputerCode( label = 'R-matrix fit', name = 'Rflow', version = '', date = time.ctime() )
+            deckLabel = 'Fitted_data'
+            
+        inputDataSpecs = computerCodeModule.InputDeck( deckLabel , ('\n  %s\n' % time.ctime() )  + ('\n'.join( docLines ))+'\n' )
+        computerCodeFit.inputDecks.add( inputDataSpecs )
+
+        if not previousFit: RMatrix.documentation.computerCodes.add( computerCodeFit )
+
+        info = '+S_' + args.tag
+        newFitFile = base  + args.tag + '-fit.xml'
+        open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
+        print('Written new fit file:',newFitFile)
+    else:
+        info = ''
+
+    dof = n_data + n_cnorms - n_norms - n_pars
+    plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, gnd.evaluation,cmd )
+    print("Final rflow: ",tim.toString( ))
+    sys.exit()
+    
     if args.Search or True:  
         print('Revised norms:',norm_val)
         docLines = ['Rflow:']
@@ -1685,10 +1728,10 @@ if __name__=='__main__':
     plot_cmd = 'xmgr '
     for group in groups:
 
-        found = False
-        for id in range(n_data):
-            if cluster_list[id]!='I': found = True    # not duplicate of later
-        if not found: continue
+#       found = False
+#       for id in range(n_data):
+#           if group == group_list[id] and cluster_list[id]!='I': found = True    # not duplicate of later
+#       if not found: continue
 
         if args.Cross_Sections:
             g_out = group+info+'-fit'
@@ -1825,7 +1868,7 @@ if __name__=='__main__':
         if args.debug: print('\nGroup',group,'has curves:',curves)
         ncurve = 0
         for curve,fac,lfac,pin,pout,reaction in curves:
-            tag = groupB + ( ('@' + curve) if curve!='Aint' else '')
+            tag = groupB + ( ('+' + curve) if curve!='Aint' else '')
             if ptsInCurve[curve]==0: continue
 #             print('\nCurve for ',tag)
             

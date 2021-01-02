@@ -6,6 +6,7 @@ tim = times.times()
 import os,math,numpy,cmath,pwd,sys,time,json
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from evaluate_tf import evaluate_tf
+from wrapup import plotOut,saveNorms2gnds
 from pqu import PQU as PQUModule
 
 from numericalFunctions import angularMomentumCoupling
@@ -46,7 +47,7 @@ print("First imports done rflow: ",tim.toString( ))
 #   Fixing norms 
 #   Command input, e.g. as with Sfresco?
 
-Maybe:
+# Maybe:
 #   Angle batching of specified size (?)
 #   Fit specific Legendre orders
 
@@ -63,13 +64,6 @@ fmscal = 2e0 * amu / hbc**2
 etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
-lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
-
-plcolor = {0:"black", 1:"red", 2:"green", 3: "blue", 4:"yellow", 5:"brown", 6: "grey", 7:"violet",
-            8:"cyan", 9:"magenta", 10:"orange", 11:"indigo", 12:"maroon", 13:"turquoise", 14:"darkgreen"}
-pldashes = {0:'solid', 1:'dashed', 2:'dashdot', 3:'dotted'}
-plsymbol = {0:".", 1:"o", 2:"s", 3: "D", 4:"^", 5:"<", 6: "v", 7:">",
-            8:"P", 9:"x", 10:"*", 11:"p", 12:"1", 13:"2", 14:"3"}
 
                                     
 def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list, fixedlist,norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
@@ -479,9 +473,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     frontier[1] = ifixed
     frontier[2] = frontier[1] + 0  # no fixed norms yet.
     print('Variable borders:',border,'and Fixed frontiers:',frontier)
-#     print('Norms: val',norm_val,'refs',norm_refs)
-#     print(border[1],border[2],border[2]-border[1],searchparms[border[1]:border[2]], norm_val)
-    searchparms[border[1]:border[2]] = norm_val   
+    searchparms[border[1]:border[2]] = numpy.log( norm_val )
+
     for n in range(n_norms):
         searchnames += [norm_refs[n][0]]
     n_pars = border[2]
@@ -682,7 +675,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #  Write back fitted parameters into evaluation:
         E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) 
         g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
-        norm_val = searchpars_n[border[1]:border[2]]
+        norm_val = numpy.exp( searchpars_n[border[1]:border[2]] )
 
         newname = {}
         for ip in range(border[0]): #### Extract parameters after previous search:
@@ -753,7 +746,11 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             for p in range(n_pars):   
                 newRname = newname.get(searchnames[p],'')
                 if newRname == searchnames[p]: newRname = ''
-                print(fmt % (p,searchloc[p,0],searchpars0[p],grad0[p],searchnames[p],newRname) )
+                sp = searchpars0[p]; sg = grad0[p]
+                if p >= border[1]:
+                    sp = math.exp(sp)
+                    sg /= sp
+                print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p],newRname) )
 #             fmt2 = '%4i %4i   S: %10.5f   %s') )
             print('\n*** chisq/pt=',chisqF_n/n_data)
             
@@ -763,7 +760,15 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             if frontier[2]>0: print('Varying:')
             for p in range(n_pars):   
                 sig = inverse_hessian[p,p]**0.5
-                print(fmt % (p,searchloc[p,0],searchpars0[p],grad0[p],searchpars_n[p],grad1[p],sig, sig/searchpars_n[p],searchnames[p],newname.get(searchnames[p],'') ) )
+                sp0 = searchpars0[p]; sg0 = grad0[p]
+                if p >= border[1]:
+                    sp0 = math.exp(sp0)
+                    sg0 /= sp0
+                sp1 = searchpars_n[p]; sg1 = grad1[p]
+                if p >= border[1]:
+                    sp1 = math.exp(sp1)
+                    sg1 /= sp1
+                print(fmt % (p,searchloc[p,0],sp0,sg0,sp1,sg1,sig, sig/searchpars_n[p],searchnames[p],newname.get(searchnames[p],'') ) )
             fmt2 = '%4i %4i   S: %10.5f   %s     %s'
             if frontier[2]>0: print('Fixed:')
             for p in range(frontier[2]):   
@@ -1097,7 +1102,6 @@ if __name__=='__main__':
     fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
             derivedFrom=gnd.styles.getEvaluatedStyle().label )
 
-    print("Finish setup: ",tim.toString( ))
     base = args.inFile
     if args.single: base += 's'
     base += '+%s' % args.dataFile.replace('.data','')
@@ -1109,6 +1113,7 @@ if __name__=='__main__':
     if args.tag != '': base = base + '_'+args.tag
     dataDir = base 
     if args.Cross_Sections or args.Matplot  : os.system('mkdir '+dataDir)
+    print("Finish setup: ",tim.toString( ))
  
     chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
@@ -1121,28 +1126,7 @@ if __name__=='__main__':
     
     if args.Search or True:  
         print('Revised norms:',norm_val)
-        docLines = ['Rflow:']
-        for n in range(n_norms):
-            docLines.append("&variable name='%s' kind=5 dataset=0, 0 datanorm=%f step=0.01, reffile='%s'/" % ( norm_refs[n][0] ,norm_val[n], norm_refs[n][1]) ) 
-        docLines.append('\n')
-        docLines.append('\n'.join(docData) )
-#         print('docLines:',docLines)
-
-        if previousFit:
-            deck = 'Fitted_data'
-            deckLabels = [item.keyValue for item in computerCodeFit.inputDecks]
-            for i in range(2,100): 
-                deckLabel = '%s %s' % (deck,i)
-                if deckLabel not in deckLabels: break
-            print('\nNew InputDeck is "%s" after' % deckLabel,deckLabels,'\n')
-        else: 
-            computerCodeFit = computerCodeModule.ComputerCode( label = 'R-matrix fit', name = 'Rflow', version = '', date = time.ctime() )
-            deckLabel = 'Fitted_data'
-            
-        inputDataSpecs = computerCodeModule.InputDeck( deckLabel , ('\n  %s\n' % time.ctime() )  + ('\n'.join( docLines ))+'\n' )
-        computerCodeFit.inputDecks.add( inputDataSpecs )
-
-        if not previousFit: RMatrix.documentation.computerCodes.add( computerCodeFit )
+        saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm_refs)
 
         info = '+S_' + args.tag
         newFitFile = base  + args.tag + '-fit.xml'
@@ -1151,264 +1135,8 @@ if __name__=='__main__':
     else:
         info = ''
 
-    ngraphAll = 0
-    groups = sorted(groups)
-    chisqAll = 0
-#     plot_cmds = []
-    plot_cmd = 'xmgr '
-    for group in groups:
- 
-        found = False
-        for id in range(n_data):
-            if cluster_list[id]!='I': found = True    # not duplicate of later
-        if not found: continue
-
-        if args.Cross_Sections:
-            g_out = group+info+'-fit'
-            if '/' in g_out:  g_out =  g_out.split('/')[1].replace('/','+')
-            g_out = dataDir + '/' + g_out
-            gf = open(g_out,'w')
-            e_out = group+info+'-expt'
-            if '/' in e_out: e_out = e_out.split('/')[1].replace('/','+')
-            e_out = dataDir + '/' + e_out
-            ef = open(e_out,'w')
-            op = ' in file %-43s' %  g_out
-        else:
-            op = ' in group %-43s' %  group
-        ie = 0
-        io = 0
-        chisq = 0.0
-        for id in range(n_data):
-            if group == group_list[id]:
-                fac = 1.0
-                if not args.norm1:
-                    for ni in range(n_norms):
-                        fac += (norm_val[ni]-1.) * effect_norm[ni,id]
-                Data = data_val[id,2]*fac
-                DataErr = data_val[id,3]*fac  
-                ex2cm = data_val[id,4] 
-                chi = (xsc[id]/fac/ex2cm-data_val[id,2])/data_val[id,3] 
-                
-                if args.Cross_Sections:
-                    cluster = cluster_list[id]
-                    Ein = Ein_list[id]
-                    Aex = Aex_list[id]
-                    if cluster == 'A':
-#                         theta = math.acos(data_val[id,1])*180./pi
-                        print(Aex, xsc[id]/ex2cm, chi, file=gf)
-                        print(Aex, Data, DataErr, file=ef)                   
-                    elif cluster in ['E','I']:
-                        print(Ein, xsc[id]/ex2cm, 'chi=',chi, 'd0=',data_val[id,0],id,file=gf)
-                        # print(data_val[id,0], xsc[id]/ex2cm, 'chi=',chi, 'Ein',Ein,id,file=gf)
-                        print(Ein, Data, DataErr, file=ef)                                
-                    else:  # cluster == 'N':  xyz
-#                         theta = math.acos(data_val[id,1])*180./pi
-                        print(Ein, Aex, xsc[id]/ex2cm, chi, file=gf)   # xyz+chi
-                        print(Ein, Aex, Data, DataErr, file=ef)  #xyzdz 
-                        
-                chisq += chi**2
-                io += 1
-            ie += 1
-        if args.Cross_Sections:
-            gf.close()
-            ef.close()
-        print('Model %2i curve (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ngraphAll+1,io,op,chisq/io,chisq/chisqtot*100.) )
-        if args.Cross_Sections: 
-            plot_cmd += ' -graph %i -xy %s -xydy %s ' % (ngraphAll,g_out,e_out) 
-#             plot_cmds.append(plot_cmd)
-        chisqAll += chisq
-        ngraphAll += 1
-#     plot_cmds.append(plot_cmd)
-# chi from norm_vals themselves:
-    for ni in range(n_norms):
-        chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
-        print('Norm scale   %10.6f         %-30s ~ %10.5f :    chisq    =%9.3f  %8.3f %%' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chi**2, chi**2/chisqtot*100.) )
-        chisqAll += chi**2
-    print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  
     dof = n_data + n_cnorms - n_norms - n_pars
-    print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')\n' )   
-    if args.Cross_Sections and ngraphAll < 20: 
-         print("Plot with\n",plot_cmd,'\n with required rows and cols for',ngraphAll,'graphs')
-    
-#     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
-
-
-    
-    X4groups = sorted(X4groups)
-    print('\nX4groups sorted:',X4groups)
-#     if len(X4groups)<1: sys.exit()
-    print('Data grouped by X4 subentry:')
-    chisqAll = 0
-    plot_cmds = []
-    legendsize = 1.0 # 0.5 # default
-    evaluation = gnd.evaluation 
-    info = info.replace('_','')
-    
-    for group in X4groups:
-        groupB = group.split('@')[0]
-        ng = 0
-        plot_cmd = ''
-        ngraphAll = 0
-        if args.Cross_Sections:
-            g_out = group+info+'-fit'
-            if '/' in g_out: g_out = g_out.split('/')[1].replace('/','+')
-            g_out = dataDir + '/' + g_out
-            gf = open(g_out,'w')
-            e_out = group+info+'-expt'
-            if '/' in e_out: e_out = e_out.split('/')[1].replace('/','+')
-            e_out = dataDir + '/' + e_out
-            ef = open(e_out,'w')
-            op = ' in file %-43s' %  g_out
-        else:
-            op = ' in group %-43s' %  group
-
-        io = 0
-        chisq = 0.0
-        lfac = 1.0
-        GraphList = []
-        DataLines = []
-        ModelLines = []
-        ng = 0
+    plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, gnd.evaluation,cmd )
         
-        curves = set()
-        ptsInCurve = {}  # to be list of curves for given group base (groupB)
-        for id in range(n_data):
-            gld = group_list[id]
-#             print('For data pt',id,'group=',group,'gld=',gld)
-            glds= gld.split('@')
-            if groupB == glds[0]:
-                curve = glds[1] if len(glds)>1 else 'Aint'
-                ptsInCurve[curve] = ptsInCurve.get(curve,0) + 1
-                
-                pin,pout = data_p[id,:]   # assume same for all data(id) in this curve!
-                if pout == -1:
-                    reaction = 'total'
-                elif pout == pin:
-                    reaction = 'elastic'
-                else:
-                    reaction = pins[pin]+'->'+pins[pout]
-                    
-                fac = 1.0 # assume same for all data(id) in this curve!
-                if not args.norm1:
-                    for ni in range(n_norms):
-                        fac += (norm_val[ni]-1.) * effect_norm[ni,id]
-                lfac = (fac-1)*100
-                curves.add((curve,fac,lfac,pin,pout,reaction))
-     
-        if args.debug: print('\nGroup',group,'has curves:',curves)
-        ncurve = 0
-        for curve,fac,lfac,pin,pout,reaction in curves:
-            tag = groupB + ( ('+' + curve) if curve!='Aint' else '')
-            if ptsInCurve[curve]==0: continue
-#             print('\nCurve for ',tag)
-            
-            lchisq = 0.
-            if args.Matplot:
-                LineData  = [{}, [[],[],[],[]] ]
-                LineModel = [{}, [[],[],[],[]] ]
-
-            for id in range(n_data):
-                gld = group_list[id]
-                if gld != tag: continue
-     
-#                 pin,pout = data_p[id,:]
-#                 reaction = pins[pin]+('->'+pins[pout] if pout!=pin else ' elastic')
-                Data = data_val[id,2]*fac
-                DataErr = data_val[id,3]*fac        
-                ex2cm = data_val[id,4] 
-                chi = (xsc[id]/fac/ex2cm-data_val[id,2])/data_val[id,3] 
-                
-                cluster = cluster_list[id]
-                Ein = Ein_list[id]
-                Aex = Aex_list[id]
-                if args.Cross_Sections:
-                    if cluster == 'A':
-#                         theta = math.acos(data_val[id,1])*180./pi
-                        print(Aex, xsc[id]/ex2cm, chi, file=gf)
-                        print(Aex, Data, DataErr, file=ef)                   
-                    elif cluster in ['E','I']:
-                        print(Ein, xsc[id]/ex2cm, chi, file=gf)
-                        print(Ein, Data, DataErr, file=ef)                                
-                    else:  # cluster == 'N':  xyz
-#                         theta = math.acos(data_val[id,1])*180./pi
-                        print(Ein, Aex, xsc[id]/ex2cm, chi, file=gf)   # xyz+chi
-                        print(Ein, Aex, Data, DataErr, file=ef)  #xyzdz 
-                if args.Matplot:    
-                    xplot = float(Ein if cluster in ['E','I'] else Aex)
-                    LineModel[1][0].append(xplot)
-                    LineModel[1][1].append(xsc[id]/ex2cm)
-                    LineModel[1][2].append(0)
-                    LineModel[1][3].append(0)
-                    LineData[1][0].append(xplot)
-                    LineData[1][1].append(Data)
-                    LineData[1][2].append(0)
-                    LineData[1][3].append(DataErr)
-                    
-                chisq += chi**2
-                lchisq += chi**2
-                io += 1
-            if args.Cross_Sections:   # end of curve
-                print('&', file=gf)
-                print('&', file=ef)
-                
-            if args.Matplot:    # end of curve
-                if len(LineModel[1][0])==1:  # extend model line +-5% if only 1 data points
-                    LineModel[1][0].append(LineModel[1][0][0]*0.99); LineModel[1][0].append(LineModel[1][0][0]*1.01)
-                    LineModel[1][1].append(LineModel[1][1][0]);      LineModel[1][1].append(LineModel[1][1][0])
-                    LineModel[1][2].append(0); LineModel[1][2].append(0)
-                    LineModel[1][3].append(0); LineModel[1][3].append(0)
-                    
-                ng += 1
-                ic = (ng-1) % 15 +1  # for colors
-                leg = curve
-#                         if type(leg) is list and len(leg)>1: leg=leg[1]
-                legtag = leg if len(leg) < 8 else leg[:8]
-                legend = legtag + '  X2/pt=%.2f' % (lchisq/ptsInCurve[curve])
-                if lfac!=0.0: legend += ' n%s%.2f%%' % ('+' if lfac>0 else '-', abs(lfac))
-                LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
-                    'symbol': plsymbol[ng%7], 'symbolsize':args.datasize   }
-                LineModel[0] = {'kind':'Model', 'color':plcolor[ic-1], 'linestyle': pldashes[(ng-1)%4], 'evaluation':''} # evaluation.split()[0] }
-#                 DataLines.append(LineData)
-#                 ModelLines.append(LineModel)
-                if args.debug: print('Finishing new curve',ng,'for',curve,'with legend',legend,'with',ptsInCurve[curve],'pts')
-
-                DataLines.append(LineData)
-                ModelLines.append(LineModel)
-        
-        ncurve += 1
-        print('\nModel %2i %2i curves (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ncurve,ng,io,op,chisq/io,chisq/chisqtot*100.) )
-        chisqAll += chisq
-        ngraphAll += 1
-        
-        if args.Cross_Sections:    # wrap up this subentry
-            gf.close()
-            ef.close()
-            plot_cmd += 'xmgr -xy %s -xydy %s ' % (g_out,e_out) 
-            plot_cmds.append(plot_cmd)
-
-        if args.Matplot:           # wrap up this subentry
-            subtitle = "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile + ', Chisq/pt =%.3f' % (chisq/io)
-            kind     = 'R-matrix fit of '+group.split('@')[0]+' for '+reaction+' (units mb and MeV)'
-            GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
-
-            j_out = group+info+'.json'
-            if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
-            j_out = dataDir + '/' + j_out
-            with open(j_out,'w') as ofile:
-               json.dump([1,1,cmd,GraphList],ofile, default=to_serializable)
-               
-            plot_cmd += '\t             json2pyplot.py -w 10,8 %s' % j_out
-            plot_cmds.append(plot_cmd)
-
-# chi from norm_vals themselves:
-    for ni in range(n_norms):
-        chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
-        print('Norm scale   %10.6f         %-30s ~ %10.5f :     chisq    =%9.3f  %8.3f %%' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chi**2, chi**2/chisqtot*100.) )
-        chisqAll += chi**2
-    print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  
-    dof = n_data + n_cnorms - n_norms - n_pars
-    print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')' )   
-    
-    for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
-
-print("Final rflow: ",tim.toString( ))
+    print("Final rflow: ",tim.toString( ))
