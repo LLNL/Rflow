@@ -218,7 +218,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
             E_pole_v = tf.scatter_nd (searchloc[:border[0],:] ,          searchpars[:border[0]],          [n_jsets*n_poles] )
             g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
-            norm_val = tf.exp( searchpars[border[1]:border[2]] )
+            norm_val = searchpars[border[1]:border[2]] ** 2
     
             E_cpoles = tf.complex(tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
             g_cpoles = tf.complex(tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
@@ -315,7 +315,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
                 E_pole_v = tf.scatter_nd (searchloc[:border[0],:] ,          searchpars[:border[0]],          [n_jsets*n_poles] )
                 g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
-                norm_val = tf.exp( searchpars[border[1]:border[2]] )
+                norm_val = searchpars[border[1]:border[2]] ** 2
     
                 E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
                 g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))

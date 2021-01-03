@@ -473,7 +473,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     frontier[1] = ifixed
     frontier[2] = frontier[1] + 0  # no fixed norms yet.
     print('Variable borders:',border,'and Fixed frontiers:',frontier)
-    searchparms[border[1]:border[2]] = numpy.log( norm_val )
+    searchparms[border[1]:border[2]] = numpy.sqrt( norm_val )   # search on p = n**0.5 so n=p^2 is always positive
 
     for n in range(n_norms):
         searchnames += [norm_refs[n][0]]
@@ -675,7 +675,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #  Write back fitted parameters into evaluation:
         E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) 
         g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
-        norm_val = numpy.exp( searchpars_n[border[1]:border[2]] )
+        norm_val = searchpars_n[border[1]:border[2]] ** 2
 
         newname = {}
         for ip in range(border[0]): #### Extract parameters after previous search:
@@ -748,8 +748,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if newRname == searchnames[p]: newRname = ''
                 sp = searchpars0[p]; sg = grad0[p]
                 if p >= border[1]:
-                    sp = math.exp(sp)
-                    sg /= sp
+                    sg /= 2.*sp
+                    sp = sp**2
                 print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p],newRname) )
 #             fmt2 = '%4i %4i   S: %10.5f   %s') )
             print('\n*** chisq/pt=',chisqF_n/n_data)
@@ -762,12 +762,12 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 sig = inverse_hessian[p,p]**0.5
                 sp0 = searchpars0[p]; sg0 = grad0[p]
                 if p >= border[1]:
-                    sp0 = math.exp(sp0)
-                    sg0 /= sp0
+                    sg0 /= 2.*sp0
+                    sp0 = sp0**2
                 sp1 = searchpars_n[p]; sg1 = grad1[p]
                 if p >= border[1]:
-                    sp1 = math.exp(sp1)
-                    sg1 /= sp1
+                    sg1 /= 2.*sp1
+                    sp1 = sp1**2
                 print(fmt % (p,searchloc[p,0],sp0,sg0,sp1,sg1,sig, sig/searchpars_n[p],searchnames[p],newname.get(searchnames[p],'') ) )
             fmt2 = '%4i %4i   S: %10.5f   %s     %s'
             if frontier[2]>0: print('Fixed:')

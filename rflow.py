@@ -314,7 +314,7 @@ def FitStatusTF(searchpars, others):
                    
     E_pole_v = tf.scatter_nd (searchloc[:border[0],:] ,          searchpars[:border[0]],          [n_jsets*n_poles] )
     g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
-    norm_val = tf.exp( searchpars[border[1]:border[2]] )
+    norm_val = searchpars[border[1]:border[2]] ** 2
     
     E_cpoles = tf.complex(tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
     g_cpoles = tf.complex(tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
@@ -756,7 +756,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Variable borders:',border,'and Fixed frontiers:',frontier)
 #     print('Norms: val',norm_val,'refs',norm_refs)
 #     print(border[1],border[2],border[2]-border[1],searchpars[border[1]:border[2]], norm_val)
-    searchpars[border[1]:border[2]] = numpy.log(norm_val)   
+    searchpars[border[1]:border[2]] = numpy.sqrt(norm_val)   
     for n in range(n_norms):
         searchnames += [norm_refs[n][0]]
         
@@ -784,7 +784,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         
     E_pole_v = tf.scatter_nd (searchloc[:border[0],:] , searchpars[:border[0]], [n_jsets*n_poles] )
     g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
-    norm_val = numpy.exp( searchpars[border[1]:border[2]] )
+    norm_val = searchpars[border[1]:border[2]] ** 2
 
     E_poles = tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles])
     g_poles = tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans])
@@ -1094,7 +1094,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
             E_pole_v = tf.scatter_nd (searchloc[:border[0],:] ,          searchpars[:border[0]],          [n_jsets*n_poles] )
             g_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] , searchpars[border[0]:border[1]], [n_jsets*n_poles*n_chans] )
-            norm_val = tf.exp( searchpars[border[1]:border[2]] )
+            norm_val = searchpars[border[1]:border[2]] ** 2
     
             E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
             g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
@@ -1194,7 +1194,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         inverse_hessian = optim_results.inverse_hessian_estimate.numpy()
         if not verbose: print('inverse_hessian: shape=',inverse_hessian.shape ,'\ndiagonal:',[inverse_hessian[i,i] for i in range(n_pars)] )
         searchpars = optim_results.position.numpy()
-        norm_val = numpy.exp(searchpars[border[1]:border[2]])
+        norm_val = searchpars[border[1]:border[2]] ** 2
 
     if True:     
         # chisqF = FitMeasureTF(searchpars) [0]
@@ -1280,8 +1280,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if newRname == searchnames[p]: newRname = ''
                 sp = searchpars0[p]; sg = grad0[p]
                 if p >= border[1]: 
-                    sp = math.exp(sp)
-                    sg /= sp
+                    sg /= 2*sp
+                    sp = sp**2
                 print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p],newRname) )
 #             fmt2 = '%4i %4i   S: %10.5f   %s') )
             print('\n*** chisq/pt=',chisqF.numpy()/n_data)
@@ -1293,7 +1293,15 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             if frontier[2]>0: print('Varying:')
             for p in range(n_pars):   
                 sig = inverse_hessian[p,p]**0.5
-                print(fmt % (p,searchloc[p,0],searchpars0[p],grad0[p],searchpars[p],grad1[p],sig, sig/searchpars[p],searchnames[p],newname.get(searchnames[p],'') ) )
+                sp0 = searchpars0[p]; sg0 = grad0[p]
+                if p >= border[1]:
+                    sg0 /= 2.*sp0
+                    sp0 = sp0**2
+                sp1 = searchpars[p]; sg1 = grad1[p]
+                if p >= border[1]:
+                    sg1 /= 2.*sp1
+                    sp1 = sp1**2
+                print(fmt % (p,searchloc[p,0],sp0,sg0,sp1,sg1,sig, sig/searchpars[p],searchnames[p],newname.get(searchnames[p],'') ) )
             fmt2 = '%4i %4i   S: %10.5f   %s     %s'
             if frontier[2]>0: print('Fixed:')
             for p in range(frontier[2]):   
@@ -1638,6 +1646,7 @@ if __name__=='__main__':
     if args.anglesData is not None: base += '_a%s' % args.anglesData
     if args.Search     is not None: base += '+S' 
     if args.Iterations is not None: base += '_I%s' % args.Iterations
+    if args.tag != '': base = base + '_'+args.tag
     dataDir = base
     if args.Cross_Sections or args.Matplot  : os.system('mkdir '+dataDir)
  
