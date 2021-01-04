@@ -111,10 +111,9 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
         def LM2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles):
         # Use Level Matrix A to get T=1-S:
         #     print('g_poles',g_poles.dtype,g_poles.get_shape())
-            GL = tf.reshape(g_poles,[1,n_jsets,n_poles,1,n_chans]) #; print('GL',GL.dtype,GL.get_shape())
-            GR = tf.reshape(g_poles,[1,n_jsets,1,n_poles,n_chans]) #; print('GR',GR.dtype,GR.get_shape())
-            LDIAG = tf.reshape(L_diag,[-1,n_jsets,1,1,n_chans]) #; print('LDIAG',LDIAG.dtype,LDIAG.get_shape())
-            GLG = tf.reduce_sum( GL * LDIAG * GR , 4)    # giving [ie,J,n',ncd Rf]
+
+            W = tf.reshape(L_diag,[-1,n_jsets,1,1,n_chans]) #; print('LDIAG',LDIAG.dtype,LDIAG.get_shape())
+
             Z = tf.constant(0.0, dtype=REAL)
             if brune:   # add extra terms to GLG
                 SE_poles = S_poles + tf.expand_dims(tf.math.real(E_poles)-EO_poles,2) * dSdE_poles
@@ -128,9 +127,12 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                 DEN = POLES_L - POLES_R
                 W_offdiag = tf.math.divide_no_nan( NUM , DEN )  
                 W_diag    = tf.reshape( tf.eye(n_poles, dtype=CMPLX), [1,1,n_poles,n_poles,1]) * tf.complex(SHIFT_R,Z) 
-                W = W_diag + W_offdiag
-                GLG = GLG - tf.reduce_sum( GL * W * GR , 4)
+                W = W - W_diag - W_offdiag
 
+            GL = tf.reshape(g_poles,[1,n_jsets,n_poles,1,n_chans]) #; print('GL',GL.dtype,GL.get_shape())
+            GR = tf.reshape(g_poles,[1,n_jsets,1,n_poles,n_chans]) #; print('GR',GR.dtype,GR.get_shape())
+
+            GLG = tf.reduce_sum( GL * W * GR , 4)    # giving [ie,J,n',n]
             POLES = tf.reshape(E_poles, [1,n_jsets,n_poles,1])  # same for all energies and channel matrix
             SCAT  = tf.reshape(E_scat,  [-1,1,1,1])             # vary only for scattering energies
             Ainv_mat = tf.eye(n_poles, dtype=CMPLX) * (POLES - SCAT) - GLG    # print('Ainv_mat',Ainv_mat.dtype,Ainv_mat.get_shape())
@@ -176,7 +178,8 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
         
         @tf.function
-        def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+        def T2B_transformsTF_all(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+#         def T2B_transformsTF(T_mat,AA, n_qjsets,n_chans,n_angles,batches):
 
         # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
         #  T= T_mat[:,n_jsets,n_chans,n_chans]
@@ -190,8 +193,45 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
             Ax = tf.reduce_sum(TAT,[ 1,2,3, 4,5,6])    # exlude dim=0 (ie)
             return(Ax)
+ 
+        @tf.function
+        def T2B_transformsTF_split2(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+#         def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+
+        # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
+        #  T= T_mat[:,n_jsets,n_chans,n_chans]
+
+            # print(' AA', AA.get_shape())
+            T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
+            T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
     
-                    
+            Ax = tf.zeros( AA.shape[0], dtype=REAL)
+            for jl in range(n_jsets):
+                T_L_conj = tf.math.conj(T_left[:, jl,:,:, 0,:,:])
+                for jr in range(n_jsets):
+                    TAT = AA[:,jl,:,:,jr,:,:] * tf.math.real( T_L_conj * T_right[:, 0,:,:, jr,:,:] )
+                    Ax += tf.reduce_sum(TAT,[ 1,2, 3,4])    # exlude dim=0 (ie)
+                
+            return(Ax)   
+ 
+        @tf.function
+#         def T2B_transformsTF_split1(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+        def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+
+        # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
+        #  T= T_mat[:,n_jsets,n_chans,n_chans]
+
+            # print(' AA', AA.get_shape())
+            T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
+            T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
+    
+            Ax = tf.zeros( AA.shape[0], dtype=REAL)
+            for jl in range(n_jsets):
+                TAT = AA[:,jl,:,:,:,:,:] * tf.math.real( tf.math.conj(T_left[:, jl,:,:, :,:,:]) * T_right[:, 0,:,:, :,:,:] )
+                Ax += tf.reduce_sum(TAT,[ 1,2, 3,4,5])    # exlude dim=0 (ie)
+                
+            return(Ax)  
+                                
         @tf.function
         def AddCoulombsTF(A_t,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles):
         
@@ -230,7 +270,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                 T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles) 
         
 
-            Ax = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
+            Ax = T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches)
 
             if chargedElastic:                          
                 AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
@@ -326,7 +366,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                 else:
                     T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
-                Ax = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
+                Ax = T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches)
 
                 if chargedElastic:                          
                     AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
@@ -390,7 +430,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
                     XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(T_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs)
                 
-                    AxA = T2B_transformsTF(T_mat,AA[:, :,:,:, :,:,:], n_jsets,n_chans,n_angles,batches)
+                    AxA = T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches)
                     AxA = AddCoulombsTF(AxA,  Rutherford, InterferenceAmpl, T_mat, Gfacc, n_angles)
                     
                     AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
@@ -426,7 +466,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             inverse_hessian = None
             searchpars_n = searchpars0
         
-        print("Wrapup tf: ",tim.toString( ))
+        print("Second FitStatusTF start: ",tim.toString( ))
         chisqF,A_tF,Grads, T_mat,XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars) 
         chisqF_n = chisqF.numpy()
         A_tF_n = A_tF.numpy()
@@ -437,5 +477,6 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],cm2lab,QI,ipair )   
 
 #  END OF TENSORFLOW
+    print("Ending tf: ",tim.toString( ))
 
     return( searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian,  chisq0_n,grad0)

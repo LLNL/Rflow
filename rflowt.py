@@ -291,14 +291,17 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             
 #  SECOND: fill in arrays:
     jset = 0
+    tot_channels = 0; tot_poles = 0
     for Jpi in RMatrix.spinGroups:
         J_set[jset] = Jpi.spin
         pi_set[jset] = Jpi.parity
         parity = '+' if pi_set[jset] > 0 else '-'
-        if True: print('J,pi =',J_set[jset],parity)
         R = Jpi.resonanceParameters.table
-        rows = R.nRows
         cols = R.nColumns - 1  # ignore energy col
+        rows = R.nRows
+        if True: print('J,pi =%5.1f %s, channels %3i, poles %3i' % (J_set[jset],parity,cols,rows) )
+        tot_channels += cols
+        tot_poles    += rows
         seg_col[jset] = cols
         E_poles[jset,:rows] = numpy.asarray( R.getColumn('energy','MeV') , dtype=REAL)   # lab MeV
         widths = [R.getColumn( col.name, 'MeV' ) for col in R.columns if col.name != 'energy']
@@ -358,6 +361,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             print('J set %i: E_poles \n' % jset,E_poles[jset,:])
             print('g_poles \n',g_poles[jset,:,:])
         jset += 1   
+
+    print(' Total channels',tot_channels,' and total poles',tot_poles,'\n')
 
     if brune:  # S_poles: Shift functions at pole positions for Brune basis   
         S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
@@ -920,6 +925,7 @@ if __name__=='__main__':
             if '&data'     in line.lower() :  docData += [line]
         previousFit = True
     except:
+        computerCodeFit = None
         previousFit = False
         
     Fitted_norm = {}

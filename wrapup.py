@@ -43,7 +43,9 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
     inputDataSpecs = computerCodeModule.InputDeck( deckLabel , ('\n  %s\n' % time.ctime() )  + ('\n'.join( docLines ))+'\n' )
     computerCodeFit.inputDecks.add( inputDataSpecs )
 
-    if not previousFit: RMatrix.documentation.computerCodes.add( computerCodeFit )
+    if not previousFit: 
+        RMatrix = gnd.resonances.resolved.evaluated    
+        RMatrix.documentation.computerCodes.add( computerCodeFit )
     return
 
 def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
