@@ -53,12 +53,16 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
     Pleg, ExptAint,ExptTot = Data_Control
 
 
-    AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans], dtype=REAL)
-    for ie in range(n_angles):
-        pin = data_p[ie,0]
-        pout= data_p[ie,1]
-        for L in range(NL):
-            AA[ie, :,:,:, :,:,:] += AAL[pin,pout, :,:,:, :,:,:, L] * Pleg[ie,L]
+#     AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans], dtype=REAL)
+    AA = []
+    for jl in range(n_jsets):
+        AA_jl =  numpy.zeros([n_angles, n_chans,n_chans, n_jsets,n_chans,n_chans], dtype=REAL)
+        for ie in range(n_angles):
+            pin = data_p[ie,0]
+            pout= data_p[ie,1]
+            for L in range(NL):
+                AA_jl[ie, :,:, :,:,:] += AAL[pin,pout, jl,:,:, :,:,:, L] * Pleg[ie,L]
+        AA.append(AA_jl)
 
     n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
     n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
@@ -177,57 +181,54 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             return(XSp_mat,XSp_tot,XSp_cap) 
 
         
-        @tf.function
-        def T2B_transformsTF_all(T_mat,AA, n_jsets,n_chans,n_angles,batches):
-#         def T2B_transformsTF(T_mat,AA, n_qjsets,n_chans,n_angles,batches):
-
-        # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
-        #  T= T_mat[:,n_jsets,n_chans,n_chans]
-
-            # print(' AA', AA.get_shape())
-            T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
-            T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
-    
-            TAT = AA * tf.math.real( tf.math.conj(T_left) * T_right )
-        #     TAT = AA * ( tf.math.real(T_left) * tf.math.real(T_right) + tf.math.imag(T_left) * tf.math.imag(T_right) )
-
-            Ax = tf.reduce_sum(TAT,[ 1,2,3, 4,5,6])    # exlude dim=0 (ie)
-            return(Ax)
- 
-        @tf.function
-        def T2B_transformsTF_split2(T_mat,AA, n_jsets,n_chans,n_angles,batches):
-#         def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
-
-        # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
-        #  T= T_mat[:,n_jsets,n_chans,n_chans]
-
-            # print(' AA', AA.get_shape())
-            T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
-            T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
-    
-            Ax = tf.zeros( AA.shape[0], dtype=REAL)
-            for jl in range(n_jsets):
-                T_L_conj = tf.math.conj(T_left[:, jl,:,:, 0,:,:])
-                for jr in range(n_jsets):
-                    TAT = AA[:,jl,:,:,jr,:,:] * tf.math.real( T_L_conj * T_right[:, 0,:,:, jr,:,:] )
-                    Ax += tf.reduce_sum(TAT,[ 1,2, 3,4])    # exlude dim=0 (ie)
-                
-            return(Ax)   
+#         @tf.function
+#         def T2B_transformsTF_all(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+# #         def T2B_transformsTF(T_mat,AA, n_qjsets,n_chans,n_angles,batches):
+# 
+#         # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
+#         #  T= T_mat[:,n_jsets,n_chans,n_chans]
+# 
+#             # print(' AA', AA.get_shape())
+#             T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
+#             T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
+#     
+#             TAT = AA * tf.math.real( tf.math.conj(T_left) * T_right )
+#         #     TAT = AA * ( tf.math.real(T_left) * tf.math.real(T_right) + tf.math.imag(T_left) * tf.math.imag(T_right) )
+# 
+#             Ax = tf.reduce_sum(TAT,[ 1,2,3, 4,5,6])    # exlude dim=0 (ie)
+#             return(Ax)
+#  
+#         @tf.function
+#         def T2B_transformsTF_split2(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+# #         def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+# 
+#         # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
+#         #  T= T_mat[:,n_jsets,n_chans,n_chans]
+# 
+#             # print(' AA', AA.get_shape())
+#             T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
+#             T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
+#     
+#             Ax = tf.zeros( AA.shape[0], dtype=REAL)
+#             for jl in range(n_jsets):
+#                 T_L_conj = tf.math.conj(T_left[:, jl,:,:, 0,:,:])
+#                 for jr in range(n_jsets):
+#                     TAT = AA[:,jl,:,:,jr,:,:] * tf.math.real( T_L_conj * T_right[:, 0,:,:, jr,:,:] )
+#                     Ax += tf.reduce_sum(TAT,[ 1,2, 3,4])    # exlude dim=0 (ie)
+#                 
+#             return(Ax)   
  
         @tf.function
 #         def T2B_transformsTF_split1(T_mat,AA, n_jsets,n_chans,n_angles,batches):
         def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
 
-        # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
         #  T= T_mat[:,n_jsets,n_chans,n_chans]
-
-            # print(' AA', AA.get_shape())
             T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
             T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
     
-            Ax = tf.zeros( AA.shape[0], dtype=REAL)
+            Ax = tf.zeros( AA[0].shape[0], dtype=REAL)
             for jl in range(n_jsets):
-                TAT = AA[:,jl,:,:,:,:,:] * tf.math.real( tf.math.conj(T_left[:, jl,:,:, :,:,:]) * T_right[:, 0,:,:, :,:,:] )
+                TAT = AA[jl][:,:,:,:,:,:] * tf.math.real( tf.math.conj(T_left[:, jl,:,:, :,:,:]) * T_right[:, 0,:,:, :,:,:] )
                 Ax += tf.reduce_sum(TAT,[ 1,2, 3,4,5])    # exlude dim=0 (ie)
                 
             return(Ax)  
