@@ -114,6 +114,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         print('Exclude Reich-Moore channel')
         ReichMoore = True
         np -= 1   # exclude Reich-Moore channel here
+        
     prmax = numpy.zeros(np, dtype=REAL)
     QI = numpy.zeros(np, dtype=REAL)
     rmass = numpy.zeros(np, dtype=REAL)
@@ -128,7 +129,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     cm2lab  = numpy.zeros(np, dtype=REAL)
     pname = ['' for i in range(np)]
     tname = ['' for i in range(np)]
-    
+
     channels = {}
     pair = 0
     inpair = None
@@ -211,6 +212,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             Lmax = max(Lmax,ch.L)
     print('Need %i energies in %i Jpi sets with %i poles max, and %i channels max. Lmax=%i' % (n_data,n_jsets,n_poles,n_chans,Lmax))
 
+    nch = numpy.zeros(n_jsets, dtype=INT)
+    npl = numpy.zeros(n_jsets, dtype=INT)
     E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL)
     E_poles_fixed = numpy.zeros([n_jsets,n_poles], dtype=REAL)    # fixed in search
     has_widths = numpy.zeros([n_jsets,n_poles], dtype=INT)
@@ -299,6 +302,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         R = Jpi.resonanceParameters.table
         cols = R.nColumns - 1  # ignore energy col
         rows = R.nRows
+        nch[jset] = cols
+        npl[jset] = rows
         if True: print('J,pi =%5.1f %s, channels %3i, poles %3i' % (J_set[jset],parity,cols,rows) )
         tot_channels += cols
         tot_poles    += rows
@@ -307,21 +312,22 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         widths = [R.getColumn( col.name, 'MeV' ) for col in R.columns if col.name != 'energy']
 
 #         if verbose:  print("\n".join(R.toXMLList()))       
-        n = 0
+        n = None
+        c = 0
         All_spins = set()
         for ch in Jpi.channels:
             rr = ch.resonanceReaction
             pair = partitions.get(rr,None)
             if pair is None: continue
             m = ch.columnIndex - 1
-            g_poles[jset,:rows,n] = numpy.asarray(widths[m][:],  dtype=REAL) 
-            L_val[jset,n] = ch.L
+            g_poles[jset,:rows,c] = numpy.asarray(widths[m][:],  dtype=REAL) 
+            L_val[jset,c] = ch.L
             S = float(ch.channelSpin)
-            S_val[jset,n] = S
+            S_val[jset,c] = S
             has_widths[jset,:rows] = 1
             
-            seg_val[jset,n] = pair
-            p_mask[pair,jset,n] = 1.0
+            seg_val[jset,c] = pair
+            p_mask[pair,jset,c] = 1.0
             Spins[pair].add(S)
             All_spins.add(S)
 
@@ -347,16 +353,16 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 phi = - math.atan2(P, F - S)
                 Omega = cmath.exp(complex(0,phi))
                 if bndx is None:
-                    L_diag[ie,jset,n]       = complex(0.,P)
+                    L_diag[ie,jset,c]       = complex(0.,P)
                 elif bndx == 'Brune':
-                    L_diag[ie,jset,n]       = DL
+                    L_diag[ie,jset,c]       = DL
                 else:
-                    L_diag[ie,jset,n]       = DL - B
+                    L_diag[ie,jset,c]       = DL - B
 
-                POm_diag[ie,jset,n]      = Psr * Omega
-                Om2_mat[ie,jset,n,n]     = Omega**2
-                CS_diag[ie,jset,n]       = Csig_exp[ie,pair,ch.L]
-            n += 1
+                POm_diag[ie,jset,c]      = Psr * Omega
+                Om2_mat[ie,jset,c,c]     = Omega**2
+                CS_diag[ie,jset,c]       = Csig_exp[ie,pair,ch.L]
+            c += 1
         if debug:
             print('J set %i: E_poles \n' % jset,E_poles[jset,:])
             print('g_poles \n',g_poles[jset,:,:])
@@ -658,7 +664,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     ComputerPrecisions = (REAL, CMPLX, INT)
 
-    Channels = [ipair,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val]
+    Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val]
     CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
     CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles]                                                  # batch n_jsets
 

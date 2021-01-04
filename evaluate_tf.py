@@ -23,7 +23,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
 #     ComputerPrecisions = (REAL, CMPLX, INT)
 # 
-#     Channels = [ipair,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val]
+#     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val]
 #     CoulombFunctions_data = (L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac)    # batch n_data
 #     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles)                                                  # batch n_jsets
 # 
@@ -41,7 +41,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
     REAL, CMPLX, INT = ComputerPrecisions
 
-    ipair,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val = Channels
+    ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val = Channels
     L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac = CoulombFunctions_data   # batch n_data
     S_poles,dSdE_poles,EO_poles = CoulombFunctions_poles                                                  # batch n_jsets
 
@@ -116,39 +116,46 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
         # Use Level Matrix A to get T=1-S:
         #     print('g_poles',g_poles.dtype,g_poles.get_shape())
 
-            W = tf.reshape(L_diag,[-1,n_jsets,1,1,n_chans]) #; print('LDIAG',LDIAG.dtype,LDIAG.get_shape())
+            T_matList = []
+            for js in range(n_jsets):
+                m = nch[js]  # number of partial-wave channels
+                p = npl[js]  # number of poles
+            
+                W = tf.reshape(L_diag[:,js,:m],[-1,1,1,m]) #; print('LDIAG',LDIAG.dtype,LDIAG.get_shape())
 
-            Z = tf.constant(0.0, dtype=REAL)
-            if brune:   # add extra terms to GLG
-                SE_poles = S_poles + tf.expand_dims(tf.math.real(E_poles)-EO_poles,2) * dSdE_poles
-                POLES_L = tf.reshape(E_poles, [1,n_jsets,n_poles,1,1])  # same for all energies and channel matrix
-                POLES_R = tf.reshape(E_poles, [1,n_jsets,1,n_poles,1])  # same for all energies and channel matrix
-                SHIFT_L = tf.reshape(SE_poles, [1,n_jsets,n_poles,1,n_chans] ) # [J,n,c] >  [1,J,n,1,c]
-                SHIFT_R = tf.reshape(SE_poles, [1,n_jsets,1,n_poles,n_chans] ) # [J,n,c] >  [1,J,1,n,c]
-                SCAT  = tf.reshape(E_scat,  [-1,1,1,1,1])             # vary only for scattering energies
-        #         NUM = SHIFT_L * (SCAT - POLES_R) - SHIFT_R * (SCAT - POLES_L)  # expect [ie,J,n',n,c]
-                NUM = tf.complex(SHIFT_L,Z) * (SCAT - POLES_R) - tf.complex(SHIFT_R,Z) * (SCAT - POLES_L)  # expect [ie,J,n',n,c]
-                DEN = POLES_L - POLES_R
-                W_offdiag = tf.math.divide_no_nan( NUM , DEN )  
-                W_diag    = tf.reshape( tf.eye(n_poles, dtype=CMPLX), [1,1,n_poles,n_poles,1]) * tf.complex(SHIFT_R,Z) 
-                W = W - W_diag - W_offdiag
+                Z = tf.constant(0.0, dtype=REAL)
+                if brune:   # add extra terms to GLG
+                    SE_poles = S_poles[js,:p,:m] + tf.expand_dims(tf.math.real(E_poles[js,:p])-EO_poles[js,:p],1) * dSdE_poles[js,:p,:m]
+                    POLES_L = tf.reshape(E_poles[js,:p], [1,p,1,1])  # same for all energies and channel matrix
+                    POLES_R = tf.reshape(E_poles[js,:p], [1,1,p,1])  # same for all energies and channel matrix
+                    SHIFT_L = tf.reshape(SE_poles[:p,:m], [1,p,1,m] ) # [J,n,c] >  [1,n,1,c]
+                    SHIFT_R = tf.reshape(SE_poles[:p,:m], [1,1,p,m] ) # [J,n,c] >  [1,1,n,c]
+                    SCATL  = tf.reshape(E_scat,  [-1,1,1,1])             # vary only for scattering energies
 
-            GL = tf.reshape(g_poles,[1,n_jsets,n_poles,1,n_chans]) #; print('GL',GL.dtype,GL.get_shape())
-            GR = tf.reshape(g_poles,[1,n_jsets,1,n_poles,n_chans]) #; print('GR',GR.dtype,GR.get_shape())
+                    NUM = tf.complex(SHIFT_L,Z) * (SCATL - POLES_R) - tf.complex(SHIFT_R,Z) * (SCATL - POLES_L)  # expect [ie,n',n,c]
+                    DEN = POLES_L - POLES_R
+                    W_offdiag = tf.math.divide_no_nan( NUM , DEN )  
+                    W_diag    = tf.reshape( tf.eye(p, dtype=CMPLX), [1,p,p,1]) * tf.complex(SHIFT_R,Z) 
+                    W = W - W_diag - W_offdiag
 
-            GLG = tf.reduce_sum( GL * W * GR , 4)    # giving [ie,J,n',n]
-            POLES = tf.reshape(E_poles, [1,n_jsets,n_poles,1])  # same for all energies and channel matrix
-            SCAT  = tf.reshape(E_scat,  [-1,1,1,1])             # vary only for scattering energies
-            Ainv_mat = tf.eye(n_poles, dtype=CMPLX) * (POLES - SCAT) - GLG    # print('Ainv_mat',Ainv_mat.dtype,Ainv_mat.get_shape())
+                GL = tf.reshape(g_poles[js,:p,:m],[1,p,1,m]) #; print('GL',GL.dtype,GL.get_shape())
+                GR = tf.reshape(g_poles[js,:p,:m],[1,1,p,m]) #; print('GR',GR.dtype,GR.get_shape())
+
+                GLG = tf.reduce_sum( GL * W * GR , 3)    # giving [ie,n',n]
+                POLES = tf.reshape(E_poles[js,:p], [1,p,1])  # same for all energies and channel matrix
+                SCAT  = tf.reshape(E_scat,  [-1,1,1])             # vary only for scattering energies
+                Ainv_mat = tf.eye(p, dtype=CMPLX) * (POLES - SCAT) - GLG    # print('Ainv_mat',Ainv_mat.dtype,Ainv_mat.get_shape())
     
-            A_mat = tf.linalg.inv(Ainv_mat);       
+                A_mat = tf.linalg.inv(Ainv_mat);       
     
-            D_mat = tf.matmul( g_poles, tf.matmul( A_mat, g_poles) , transpose_a=True)     # print('D_mat',D_mat.dtype,D_mat.get_shape())
+                D_mat = tf.matmul( g_poles[js,:p,:], tf.matmul( A_mat, g_poles[js,:p,:]) , transpose_a=True)     # print('D_mat',D_mat.dtype,D_mat.get_shape())
 
-        #    S_mat = Om2_mat + complex(0.,2.) * tf.expand_dims(POm_diag,3) * D_mat * tf.expand_dims(POm_diag,2);
-        #  T=I-S
-            T_mat = tf.eye(n_chans, dtype=CMPLX) - (Om2_mat + complex(0.,2.) * tf.expand_dims(POm_diag,3) * D_mat * tf.expand_dims(POm_diag,2) )
-    
+            #    S_mat = Om2_mat + complex(0.,2.) :q:q!* tf.expand_dims(POm_diag,3) * D_mat * tf.expand_dims(POm_diag,2);
+            #  T=I-S
+                T_matJ =  tf.eye(n_chans, dtype=CMPLX) - (Om2_mat[:,js,:,:] + complex(0.,2.) * tf.expand_dims(POm_diag[:,js,:],2) * D_mat * tf.expand_dims(POm_diag[:,js,:],1) ) 
+                T_matList.append( T_matJ ) 
+                
+            T_mat = tf.stack(T_matList, 1) #; print('T_mat',T_mat.dtype,T_mat.get_shape())
         # multiply left and right by Coulomb phases:
             T_mat = tf.expand_dims(CS_diag,3) * T_mat * tf.expand_dims(CS_diag,2)
 
@@ -180,44 +187,6 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
             return(XSp_mat,XSp_tot,XSp_cap) 
 
-        
-#         @tf.function
-#         def T2B_transformsTF_all(T_mat,AA, n_jsets,n_chans,n_angles,batches):
-# #         def T2B_transformsTF(T_mat,AA, n_qjsets,n_chans,n_angles,batches):
-# 
-#         # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
-#         #  T= T_mat[:,n_jsets,n_chans,n_chans]
-# 
-#             # print(' AA', AA.get_shape())
-#             T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
-#             T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
-#     
-#             TAT = AA * tf.math.real( tf.math.conj(T_left) * T_right )
-#         #     TAT = AA * ( tf.math.real(T_left) * tf.math.real(T_right) + tf.math.imag(T_left) * tf.math.imag(T_right) )
-# 
-#             Ax = tf.reduce_sum(TAT,[ 1,2,3, 4,5,6])    # exlude dim=0 (ie)
-#             return(Ax)
-#  
-#         @tf.function
-#         def T2B_transformsTF_split2(T_mat,AA, n_jsets,n_chans,n_angles,batches):
-# #         def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
-# 
-#         # BB[ie,L] = sum(i,j) T[ie,i]* AA[i,L,j] T[ie,j]
-#         #  T= T_mat[:,n_jsets,n_chans,n_chans]
-# 
-#             # print(' AA', AA.get_shape())
-#             T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
-#             T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
-#     
-#             Ax = tf.zeros( AA.shape[0], dtype=REAL)
-#             for jl in range(n_jsets):
-#                 T_L_conj = tf.math.conj(T_left[:, jl,:,:, 0,:,:])
-#                 for jr in range(n_jsets):
-#                     TAT = AA[:,jl,:,:,jr,:,:] * tf.math.real( T_L_conj * T_right[:, 0,:,:, jr,:,:] )
-#                     Ax += tf.reduce_sum(TAT,[ 1,2, 3,4])    # exlude dim=0 (ie)
-#                 
-#             return(Ax)   
- 
         @tf.function
 #         def T2B_transformsTF_split1(T_mat,AA, n_jsets,n_chans,n_angles,batches):
         def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
