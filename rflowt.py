@@ -40,6 +40,7 @@ print("First imports done rflow: ",tim.toString( ))
 # TO DO:
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
 #   Multiple GPU strategies
+#   Estimate initial Hessian by 1+delta parameter shift. Try various delta to make BFGS search smoother
 #   Options to set parameter and search again.
 
 # Search options:
@@ -48,7 +49,6 @@ print("First imports done rflow: ",tim.toString( ))
 #   Command input, e.g. as with Sfresco?
 
 # Maybe:
-#   Angle batching of specified size (?)
 #   Fit specific Legendre orders
 
 # Doing:
@@ -907,7 +907,6 @@ if __name__=='__main__':
     parser.add_argument("-B", "--Background", action="store_true",  help="Include BG in name of background poles")
     parser.add_argument("-R", "--ReichMoore", action="store_true", help="Include Reich-Moore damping widths in search")
     parser.add_argument("-L", "--LMatrix", action="store_true", help="Use level matrix method if not already Brune basis")
-    parser.add_argument("-A", "--AngleBunching", type=int, default="1",  help="Max number of angles to bunch at each energy.")
     parser.add_argument("-G", "--GroupAngles", type=int, default="1",  help="Number of energy batches for T2B transforms, aka batches")
     parser.add_argument("-a", "--anglesData", type=int, help="Max number of angular data points to use (to make smaller search). Pos: random selection. Neg: first block")
     parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to use (to make smaller search). Pos: random selection. Neg: first block")
@@ -1008,26 +1007,6 @@ if __name__=='__main__':
     data_val = numpy.zeros([n_data,5], dtype=REAL)    # Elab,mu, datum,absError
     data_p   = numpy.zeros([n_data,2], dtype=INT)    # pin,pout
     
-    if args.AngleBunching > 1:
-        Energies = {}
-        Uses = {}
-        for l in data_lines:
-            Ein = l.split()[0]
-            count = Energies.get(Ein,0) + 1
-            Energies[Ein] = count
-            Uses[count] = Uses.get(count,0) + 1
-            if count>1: Uses[count-1] -= 1
-
-        print('Data points:',n_data,'with',len(Energies),'independent incident energies')
-        maxcount = sorted(Uses.keys())[-1]
-        print('Bunching:')
-        for count in range(1,maxcount+1):
-            Es = []
-            for Ein in Energies.keys():
-                if Energies[Ein] == count:  Es.append(Ein)
-            print('%4i  %4i' % (count,Uses.get(count,0)) ) #, len(Es),  Es )
-        print('---')
-
     groups = set()
     X4groups = set()
     group_list   = []
