@@ -111,7 +111,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
         if args.Cross_Sections and found:
             gf.close()
             ef.close()
-        print('Model %2i curve (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ngraphAll+1,io,op,chisq/io,chisq/chisqtot*100.) )
+        print('Model %2i curve (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ngraphAll+1,io,op,chisq/max(1,io),chisq/chisqtot*100.) )
         if args.Cross_Sections and found: 
             plot_cmd += ' -graph %i -xy %s -xydy %s ' % (ngraphAll,g_out,e_out) 
 #             plot_cmds.append(plot_cmd)

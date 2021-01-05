@@ -123,8 +123,8 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             
                 W = tf.reshape(L_diag[:,js,:m],[-1,1,1,m]) #; print('LDIAG',LDIAG.dtype,LDIAG.get_shape())
 
-                Z = tf.constant(0.0, dtype=REAL)
                 if brune:   # add extra terms to GLG
+                    Z = tf.constant(0.0, dtype=REAL)
                     SE_poles = S_poles[js,:p,:m] + tf.expand_dims(tf.math.real(E_poles[js,:p])-EO_poles[js,:p],1) * dSdE_poles[js,:p,:m]
                     POLES_L = tf.reshape(E_poles[js,:p], [1,p,1,1])  # same for all energies and channel matrix
                     POLES_R = tf.reshape(E_poles[js,:p], [1,1,p,1])  # same for all energies and channel matrix
@@ -188,8 +188,8 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             return(XSp_mat,XSp_tot,XSp_cap) 
 
         @tf.function
-#         def T2B_transformsTF_split1(T_mat,AA, n_jsets,n_chans,n_angles,batches):
         def T2B_transformsTF(T_mat,AA, n_jsets,n_chans,n_angles,batches):
+#         def T2B_transformsTF_split1(T_mat,AA, n_jsets,n_chans,n_angles,batches):
 
         #  T= T_mat[:,n_jsets,n_chans,n_chans]
             T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())

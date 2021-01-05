@@ -39,8 +39,8 @@ print("First imports done rflow: ",tim.toString( ))
 
 # TO DO:
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
-#   Search norm values on their log value (so always positive!)
 #   Multiple GPU strategies
+#   Options to set parameter and search again.
 
 # Search options:
 #   Fix or search on Reich-Moore widths
@@ -66,7 +66,9 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
                                     
-def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list, fixedlist,norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
+def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,
+        norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
         Search,Iterations,restarts,Distant,Background,ReichMoore, TransitionMatrix,verbose,debug,inFile,fitStyle,tag,large):
         
 #     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
@@ -192,6 +194,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     if debug: print('Energy grid (lab in partition',ipair,'):\n',E_scat)
     Elarge = 0.0
     nExcluded = 0
+    if emind is not None: emin = emind
+    if emaxd is not None: emax = emaxd
     for i in range(n_data):
         if not max(emin,Elarge) <= E_scat[i] <= emax:
             # print('Datum at energy %10.4f MeV outside evaluation range [%.4f,%.4f]' % (E_scat[i],emin,emax))
@@ -422,6 +426,11 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             if E == 0: continue   # invalid energy: filler
             nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E)
             varying = abs(E) < Distant             
+            if pmin is not None and pmax is not None and pmin > pmax: 
+                varying = E > pmin or E < pmax
+            else:
+                if pmin is not None: varying = varying and E > pmin
+                if pmax is not None: varying = varying and E < pmax
             for pattern in patterns:
                  varying = varying and not pattern.match(nam) 
 #             print('Pole',jset,n,'named',nam,'at',E, 'vary:',varying)
@@ -459,6 +468,12 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     nam='BG:%.1f%s' % (J_set[jset],parity)
                 wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
                 varying = abs(g_poles[jset,n,c])>1e-20 
+                if pmin is not None and pmax is not None and pmin > pmax:   # -p,-P fix both energies and widths
+                    varying = E > pmin or E < pmax
+                else:
+                    if pmin is not None: varying = varying and E > pmin
+                    if pmax is not None: varying = varying and E < pmax
+
                 for pattern in patterns:
                     matching = pattern.match(wnam)
                     varying = varying and not pattern.match(wnam)   
@@ -896,6 +911,10 @@ if __name__=='__main__':
     parser.add_argument("-G", "--GroupAngles", type=int, default="1",  help="Number of energy batches for T2B transforms, aka batches")
     parser.add_argument("-a", "--anglesData", type=int, help="Max number of angular data points to use (to make smaller search). Pos: random selection. Neg: first block")
     parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to use (to make smaller search). Pos: random selection. Neg: first block")
+    parser.add_argument("-e", "--emin", type=float, help="Min lab energy for gnds evaluation.")
+    parser.add_argument("-E", "--EMAX", type=float, help="Max lab energy for gnds evaluation.")
+    parser.add_argument("-p", "--pmin", type=float, help="Min energy of R-matrix pole to fit, in gnds lab energy frame. Overrides --Fixed.")
+    parser.add_argument("-P", "--PMAX", type=float, help="Max energy of R-matrix pole to fit. If p>P, create gap.")
 
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
     parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files for grace")
@@ -1109,6 +1128,7 @@ if __name__=='__main__':
         print('Fixed variables:',args.Fixed)
     else:
         args.Fixed = []
+    print('Energy limits.   Data min,max:',args.emin,args.EMAX,'.  Poles min,max:',args.pmin,args.PMAX)
 
     finalStyleName = 'fitted'
     fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
@@ -1118,16 +1138,22 @@ if __name__=='__main__':
     if args.single: base += 's'
     base += '+%s' % args.dataFile.replace('.data','')
     if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',':')
+    if args.pmin       is not None: base += '-p%s' % args.pmin
+    if args.PMAX       is not None: base += '-P%s' % args.PMAX
+    if args.emin       is not None: base += '-e%s' % args.emin
+    if args.EMAX       is not None: base += '-E%s' % args.EMAX
     if args.maxData    is not None: base += '_m%s' % args.maxData
     if args.anglesData is not None: base += '_a%s' % args.anglesData
     if args.Search     is not None: base += '+S' 
     if args.Iterations is not None: base += '_I%s' % args.Iterations
     if args.tag != '': base = base + '_'+args.tag
+     
     dataDir = base 
     if args.Cross_Sections or args.Matplot  : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
-    chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
+    chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
+                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.TransitionMatrix, args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
@@ -1141,7 +1167,7 @@ if __name__=='__main__':
         saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm_refs)
 
         info = '+S_' + args.tag
-        newFitFile = base  + args.tag + '-fit.xml'
+        newFitFile = base  + '-fit.xml'
         open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
         print('Written new fit file:',newFitFile)
     else:
