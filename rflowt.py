@@ -942,7 +942,20 @@ if __name__=='__main__':
         realSize = 4  # bytes
 
     gnd=reactionSuiteModule.readXML(args.inFile)
-    
+    p,t = gnd.projectile,gnd.target
+    PoPs = gnd.PoPs
+    projectile = PoPs[p];
+    target     = PoPs[t];
+    pMass = projectile.getMass('amu');   tMass = target.getMass('amu')
+    lab2cmi = tMass / (pMass + tMass)
+        
+    rrr = gnd.resonances.resolved
+    emin = PQUModule.PQU(rrr.domainMin,rrr.domainUnit).getValueAs('MeV')
+    emax = PQUModule.PQU(rrr.domainMax,rrr.domainUnit).getValueAs('MeV')
+    if args.emin is not None: emin = args.emin
+    if args.EMAX is not None: emax = args.EMAX
+    print(' Trim incoming data within [',emin,',',emax,'] in lab MeV for projectile',p)
+            
 # Previous fitted norms:
 # any variable or data namelists in the documentation?
     docVars = []
@@ -980,10 +993,26 @@ if __name__=='__main__':
     
 
     f = open( args.dataFile )
-    data_lines = f.readlines( )
-    projectile4LabEnergies = data_lines[0].split()[0]; data_lines.pop(0)
+    projectile4LabEnergies =f.readline().split()[0]
+    p4LE = PoPs[projectile4LabEnergies].getMass('amu')
+    t4LE = (tMass + pMass) - p4LE  # neglect Q here, just for data filtering. Tweak emind,emaxd if needed to fix this.
+    lab2cmd = t4LE / (p4LE + t4LE)
+    print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
+    if args.emin is None and args.EMAX is None:
+        data_lines = f.readlines( )
+    else:
+        data_lines = []
+        lines_excluded= 0      
+        for line in f.readlines():
+            Ed = float(line.split()[0])# in frame of data file
+            E  = Ed*lab2cmd / lab2cmi  # in frame of gnds projectile
+            if emin < E < emax:
+                data_lines.append(line)  
+            else:
+                lines_excluded += 1      
+        
     n_data = len(data_lines)
-    print(n_data,'data lines after lab energies defined by projectile',projectile4LabEnergies)
+    print(n_data,'data lines after lab energies defined by projectile',projectile4LabEnergies,'(',lines_excluded,'lines excluded)')
     if args.maxData is not None: 
         if args.maxData < 0:
             data_lines = data_lines[:abs(args.maxData)]
@@ -1138,7 +1167,7 @@ if __name__=='__main__':
     if args.Cross_Sections or args.Matplot or args.TransitionMatrix or args.GlobalIntegrals : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
-    chisqtot,xsc,norm_val,n_pars,ch_info = Rflow(
+    chisqtot,xsc,norm_val,n_pars,XS_totals,ch_info = Rflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
                         Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
@@ -1149,10 +1178,9 @@ if __name__=='__main__':
     chisqPN = chisqtot / n_data
     print('\n ChiSq/pt = %10.4f from %i points' % (chisqPN,n_data))
 
+    XSp_tot_n,XSp_cap_n,XSp_mat_n = XS_totals
     pname,tname, za,zb, npairs,cm2lab,QI,ipair = ch_info
-    rrr = gnd.resonances.resolved
-    emin = PQUModule.PQU(rrr.domainMin,rrr.domainUnit).getValueAs('MeV')
-    emax = PQUModule.PQU(rrr.domainMax,rrr.domainUnit).getValueAs('MeV')
+
     EIndex = numpy.argsort(data_val[:,0])
     if args.TransitionMatrix:
         pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,True)
@@ -1172,6 +1200,6 @@ if __name__=='__main__':
 
     dof = n_data + n_cnorms - n_norms - n_pars
     plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,None,pname,args.datasize,ipair,cm2lab, gnd.evaluation,cmd )
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,args.datasize,ipair,cm2lab, gnd.evaluation,cmd )
         
     print("Final rflow: ",tim.toString( ))
