@@ -319,7 +319,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
         GlobalGraphList = []
         GlobalngraphAll = 0
         pLab = lightnuclei.get(pname[ipair],pname[ipair])
-        lab2cm = 1. #/cm2lab[ipair]
+        lab2cm = 1./cm2lab[ipair]
       
         for pinG in range(npairs):
             pn = lightnuclei.get(pname[pinG],pname[pinG])
