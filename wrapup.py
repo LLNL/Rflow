@@ -10,6 +10,8 @@ pldashes = {0:'solid', 1:'dashed', 2:'dashdot', 3:'dotted'}
 plsymbol = {0:".", 1:"o", 2:"s", 3: "D", 4:"^", 5:"<", 6: "v", 7:">",
             8:"P", 9:"x", 10:"*", 11:"p", 12:"1", 13:"2", 14:"3"}
 
+lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
+
 @singledispatch
 def to_serializable(val):
     """Used by default."""
@@ -49,7 +51,7 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
     return
 
 def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-    groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, evaluation,cmd ):
+    groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,datasize, ipair,cm2lab, evaluation,cmd ):
 
     ngraphAll = 0
     groups = sorted(groups)
@@ -138,7 +140,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
     print('Data grouped by X4 subentry:')
     chisqAll = 0
     plot_cmds = []
-    legendsize = 1.0 # 0.5 # default
+    legendsize =  0.5 # default
     info = info.replace('_','')
     
     for group in X4groups:
@@ -306,5 +308,150 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')' )   
     
     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
+
+    if totals is not None:
+        print('\nWrite Angle-integrals-*.json files in the lab frame of gnds projectile')
+        Singleplot_cmds = ''
+        plot_cmds = ''
+        Globalplot_cmds = ''
+        npairs = totals.shape[1]
+        nmodelpts = data_val.shape[0]
+        GlobalGraphList = []
+        GlobalngraphAll = 0
+        pLab = lightnuclei.get(pname[ipair],pname[ipair])
+        lab2cm = 1. #/cm2lab[ipair]
+      
+        for pinG in range(npairs):
+            pn = lightnuclei.get(pname[pinG],pname[pinG])
+            print('In:',pn,'from',pinG)
+            GraphList = []
+            ngraphAll = 0
+
+            for poutG in range(npairs+1):
+                if pinG==poutG: continue  # elastic is too boring
+                po = '-> ' + lightnuclei.get(pname[poutG],pname[poutG]) if poutG < npairs else 'tot'
+                poG = poutG if poutG < npairs else -1  # convention in printExcitationFunctions
+                SingleGraphList = []
+                SinglengraphAll = 0      
+                          
+                DataLines = []
+                ModelLines = []
+                LineModel = [{}, [[],[],[],[]] ]
+                for i0 in range(nmodelpts):
+                    i = EIndex[i0]
+                    LineModel[1][0].append(data_val[i,0]*lab2cm)
+                    LineModel[1][1].append(totals[poutG,pinG,i])
+                    LineModel[1][2].append(0.)
+                    LineModel[1][3].append(0.)    
+                legend = '%s %s' % (pn,po) #+ ' (%s,%s=%s)' % (pinG,poutG,poG)
+                LineModel[0] = {'kind':'R-matrix', 'color':plcolor[0], 'linestyle': pldashes[pinG], 'evaluation':legend}  #, 'legend': legend } 
+                ModelLines.append(LineModel)
+                print('  Curve for',legend)
+       
+                ng = 0
+
+                for group in X4groups:
+#                     print('  X4 group:',group)
+                    groupB = group.split('@')[0]
+                    lfac = 1.0
+                    curves = set()
+                    ptsInCurve = {}  # to be list of curves for given group base (groupB)
+                    for id in range(n_data):
+                        gld = group_list[id]
+                        glds= gld.split('@')
+                        if groupB == glds[0]:
+                            curve = glds[1] if len(glds)>1 else 'Aint'
+                            ptsInCurve[curve] = ptsInCurve.get(curve,0) + 1
+                
+                            pin,pout = data_p[id,:]   # assume same for all data(id) in this curve!
+                            if pin != pinG or pout != poG: continue
+                            if pout == -1:
+                                reaction = 'total'
+                            elif pout == pin:
+                                reaction = 'elastic'
+                            else:
+                                reaction = pins[pin]+'->'+pins[pout]
+                    
+                            fac = 1.0 # assume same for all data(id) in this curve!
+                            if not args.norm1:
+                                for ni in range(n_norms):
+                                    fac += (norm_val[ni]-1.) * effect_norm[ni,id]
+                            lfac = (fac-1)*100
+                            curves.add((curve,fac,lfac,pin,pout,reaction))
+#                     if len(curves)>0: print('\nGroup',group,'has curves:',curves)     
+                    
+                    for curve,fac,lfac,pin,pout,reaction in curves:
+                        if pin != pinG or pout != poG: continue
+                        if ptsInCurve[curve]==0: continue
+#                         print('Data for',legend,'from',curve)
+            
+                        tag = groupB + ( ('@' + curve) if curve!='Aint' else '')
+            
+                        LineData  = [{}, [[],[],[],[]] ]
+                        np = 0
+                        for id in range(n_data):
+                            gld = group_list[id]
+                            cluster = cluster_list[id]
+                            if gld != tag: continue
+                            if cluster != 'I': continue # angle-integrated data only here
+ 
+                            E_Gproj = data_val[id,0]*lab2cm
+                            Data = data_val[id,2]*fac
+                            DataErr = data_val[id,3]*fac        
+
+                            LineData[1][0].append(E_Gproj)
+                            LineData[1][1].append(Data)
+                            LineData[1][2].append(0)
+                            LineData[1][3].append(DataErr)
+                            np += 1
+                        print('    Curve',ng,':',tag,'has',np,'data points')
+                                
+                        ng += 1
+                        ic = (ng-1) % 14 + npairs  # for colors
+                        leg = tag if '/' not in tag else tag.split('/')[1]
+                        legend = leg.replace('-Aint','') # if len(leg) < 12 else leg[:12]
+                        LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
+                            'symbol': plsymbol[ng%7], 'symbolsize':datasize   }
+#                         print('    Finishing I curve',ng,'for',curve,'with legend',legend,'with',ptsInCurve[curve],'pts for ',reaction)
+
+                        DataLines.append(LineData)
+                        
+                subtitle = '' # "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile
+                kind     = "R-matrix fit for incident-%s = %s  (units mb and '%s' MeV cm)" % (pname[pinG],pn,pLab)
+                kinds    = "R-matrix fit for incident %s %s  (units mb and '%s' MeV cm)" % (pname[pinG],po,pLab)
+                SingleGraphList.append([DataLines+ModelLines,subtitle,args.logs,kinds])
+                SinglengraphAll += 1
+                GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
+                ngraphAll += 1
+                GlobalGraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
+                GlobalngraphAll += 1
+                
+                j_out = 'Angle-integrals-%s-to-%s.json' % (pn,po.replace('-> ',''))
+        #         if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
+                j_out = dataDir + '/' + j_out
+                print('Write',j_out,'with',SinglengraphAll)
+                with open(j_out,'w') as ofile:
+                   json.dump([SinglengraphAll,1,cmd,SingleGraphList],ofile, default=to_serializable)
+                Singleplot_cmds +=  ' ' + j_out
+        
+            j_out = 'Angle-integrals-from-%s.json' % (pn)
+    #         if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
+            j_out = dataDir + '/' + j_out
+            print('   Write',j_out,'with',ngraphAll)
+            with open(j_out,'w') as ofile:
+               json.dump([ngraphAll,1,cmd,GraphList],ofile, default=to_serializable)
+            plot_cmds += ' ' + j_out
+        
+        j_out = 'Angle-integrals-Global.json' 
+#         if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
+        j_out = dataDir + '/' + j_out
+        print('Write',j_out,'with',GlobalngraphAll)
+        with open(j_out,'w') as ofile:
+           json.dump([GlobalngraphAll,1,cmd,GlobalGraphList],ofile, default=to_serializable)
+        Globalplot_cmds +=  ' ' + j_out
+            
+    print("Single plots:   jsonPlot.py -w 10,8 ",Singleplot_cmds)
+    print("Incident plots: jsonPlot.py -w 10,8 ",plot_cmds)
+    print("Global plots:   jsonPlot.py -w 10,8 ",Globalplot_cmds)
 
     return

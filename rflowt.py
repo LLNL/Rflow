@@ -4,11 +4,13 @@ import times
 tim = times.times()
 
 import os,math,numpy,cmath,pwd,sys,time,json
+
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from evaluate_tf import evaluate_tf
 from wrapup import plotOut,saveNorms2gnds
-from pqu import PQU as PQUModule
+from printExcitationFunctions import *
 
+from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
 from xData.series1d  import Legendre
 
@@ -64,6 +66,7 @@ fmscal = 2e0 * amu / hbc**2
 etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
+
 
                                     
 def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
@@ -684,15 +687,17 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles]                                                  # batch n_jsets
 
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches]
-    Logicals = [LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose]
+    Logicals = [LMatrix,brune,chargedElastic, debug,verbose]
 
     Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base, Search,Iterations,restarts]
 
     Data_Control = [Pleg, ExptAint,ExptTot]     # batch n_angle_integrals,  n_totals  
     
-    searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_tf(ComputerPrecisions, Channels,
+    searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian,XS_totals, chisq0_n,grad0 = evaluate_tf(ComputerPrecisions, Channels,
         CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
         Search_Control,Data_Control, searchpars0, data_val, tim)
+        
+    ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
         
     print("Finished tf: ",tim.toString( ))
 #  END OF TENSORFLOW
@@ -878,10 +883,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             computerCode.note.body = '\n'.join( docLines )
             RMatrix.documentation.computerCodes.add( computerCode )
     
-        return(chisqF_n,A_tF_n,norm_val,n_pars)
+        return(chisqF_n,A_tF_n,norm_val,n_pars,XS_totals,ch_info)
         
     else:
-        return(chisq_n,A_tF_n,norm_val,n_pars)
+        return(chisq_n,A_tF_n,norm_val,n_pars,XS_totals,ch_info)
 
 ############################################## main
 
@@ -898,6 +903,8 @@ if __name__=='__main__':
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
     parser.add_argument('dataFile', type=str, help='Experimental data to fit' )
     parser.add_argument('normFile', type=str, help='Experimental norms for fitting' )
+    parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Substrings to exclude if any string within group name")
+
     parser.add_argument("-F", "--Fixed", type=str, nargs="*", help="Names of variables (as regex) to keep fixed in searches")
     parser.add_argument("-1", "--norm1", action="store_true", help="Use norms=1")
     parser.add_argument("-S", "--Search", type=str, help="Search minimization method.")
@@ -907,7 +914,7 @@ if __name__=='__main__':
     parser.add_argument("-B", "--Background", action="store_true",  help="Include BG in name of background poles")
     parser.add_argument("-R", "--ReichMoore", action="store_true", help="Include Reich-Moore damping widths in search")
     parser.add_argument("-L", "--LMatrix", action="store_true", help="Use level matrix method if not already Brune basis")
-    parser.add_argument("-G", "--GroupAngles", type=int, default="1",  help="Number of energy batches for T2B transforms, aka batches")
+    parser.add_argument("-g", "--groupAngles", type=int, default="1",  help="Unused. Number of energy batches for T2B transforms, aka batches")
     parser.add_argument("-a", "--anglesData", type=int, help="Max number of angular data points to use (to make smaller search). Pos: random selection. Neg: first block")
     parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to use (to make smaller search). Pos: random selection. Neg: first block")
     parser.add_argument("-e", "--emin", type=float, help="Min lab energy for gnds evaluation.")
@@ -1128,19 +1135,29 @@ if __name__=='__main__':
     if args.tag != '': base = base + '_'+args.tag
      
     dataDir = base 
-    if args.Cross_Sections or args.Matplot  : os.system('mkdir '+dataDir)
+    if args.Cross_Sections or args.Matplot or args.TransitionMatrix or args.GlobalIntegrals : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
-    chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
+    chisqtot,xsc,norm_val,n_pars,XS_totals,ch_info = Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
                         Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,
-                        norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
+                        norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.TransitionMatrix, args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
 
     print("Finish rflow call: ",tim.toString( ))
     chisqPN = chisqtot / n_data
     print('\n ChiSq/pt = %10.4f from %i points' % (chisqPN,n_data))
-    
+
+    XSp_tot_n,XSp_cap_n,XSp_mat_n = XS_totals
+    pname,tname, za,zb, npairs,cm2lab,QI,ipair = ch_info
+    rrr = gnd.resonances.resolved
+    emin = PQUModule.PQU(rrr.domainMin,rrr.domainUnit).getValueAs('MeV')
+    emax = PQUModule.PQU(rrr.domainMax,rrr.domainUnit).getValueAs('MeV')
+    EIndex = numpy.argsort(data_val[:,0])
+    if args.TransitionMatrix:
+        pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,True)
+        pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,False)
+
     if args.Search or True:  
         print('Revised norms:',norm_val)
         saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm_refs)
@@ -1150,10 +1167,11 @@ if __name__=='__main__':
         open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
         print('Written new fit file:',newFitFile)
     else:
-        info = ''
+        info = '' 
+
 
     dof = n_data + n_cnorms - n_norms - n_pars
     plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, gnd.evaluation,cmd )
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,args.datasize,ipair,cm2lab, gnd.evaluation,cmd )
         
     print("Final rflow: ",tim.toString( ))

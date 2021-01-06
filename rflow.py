@@ -1686,7 +1686,7 @@ if __name__=='__main__':
         if not previousFit: RMatrix.documentation.computerCodes.add( computerCodeFit )
 
         info = '+S_' + args.tag
-        newFitFile = base  + args.tag + '-fit.xml'
+        newFitFile = base  + '-fit.xml'
         open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
         print('Written new fit file:',newFitFile)
     else:

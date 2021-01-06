@@ -1,6 +1,5 @@
 
 import numpy,os
-from printExcitationFunctions import *
 
 # import tensorflow as tf
 import tensorflow.compat.v2 as tf
@@ -28,7 +27,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 #     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles)                                                  # batch n_jsets
 # 
 #     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches)
-#     Logicals = (LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose)
+#     Logicals = (LMatrix,brune,chargedElastic, debug,verbose)
 # 
 #     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,Search,Iterations,restarts)
 # 
@@ -46,7 +45,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
     S_poles,dSdE_poles,EO_poles = CoulombFunctions_poles                                                  # batch n_jsets
 
     n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches = Dimensions
-    LMatrix,brune,chargedElastic, TransitionMatrix,debug,verbose = Logicals
+    LMatrix,brune,chargedElastic, debug,verbose = Logicals
 
     searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base,Search,Iterations,restarts = Search_Control
 
@@ -442,11 +441,10 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
         A_tF_n = A_tF.numpy()
         grad1 = Grads[0].numpy()
         print(  'chisq from FitStatusTF:',chisqF_n)
-
-        if TransitionMatrix:
-            printExcitationFunctions(XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy(), pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],cm2lab,QI,ipair )   
+        
+        XS_totals = [XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy()]
 
 #  END OF TENSORFLOW
     print("Ending tf: ",tim.toString( ))
 
-    return( searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian,  chisq0_n,grad0)
+    return( searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian,XS_totals,  chisq0_n,grad0)
