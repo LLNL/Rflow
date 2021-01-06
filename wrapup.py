@@ -450,8 +450,8 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
            json.dump([GlobalngraphAll,1,cmd,GlobalGraphList],ofile, default=to_serializable)
         Globalplot_cmds +=  ' ' + j_out
             
-    print("Single plots:   jsonPlot.py -w 10,8 ",Singleplot_cmds)
-    print("Incident plots: jsonPlot.py -w 10,8 ",plot_cmds)
-    print("Global plots:   jsonPlot.py -w 10,8 ",Globalplot_cmds)
+        print("Single plots:   jsonPlot.py -w 10,8 ",Singleplot_cmds)
+        print("Incident plots: jsonPlot.py -w 10,8 ",plot_cmds)
+        print("Global plots:   jsonPlot.py -w 10,8 ",Globalplot_cmds)
 
     return

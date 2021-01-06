@@ -1138,7 +1138,8 @@ if __name__=='__main__':
     if args.Cross_Sections or args.Matplot or args.TransitionMatrix or args.GlobalIntegrals : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
-    chisqtot,xsc,norm_val,n_pars,XS_totals,ch_info = Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
+    chisqtot,xsc,norm_val,n_pars,ch_info = Rflow(
+                        gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
                         Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
@@ -1148,7 +1149,6 @@ if __name__=='__main__':
     chisqPN = chisqtot / n_data
     print('\n ChiSq/pt = %10.4f from %i points' % (chisqPN,n_data))
 
-    XSp_tot_n,XSp_cap_n,XSp_mat_n = XS_totals
     pname,tname, za,zb, npairs,cm2lab,QI,ipair = ch_info
     rrr = gnd.resonances.resolved
     emin = PQUModule.PQU(rrr.domainMin,rrr.domainUnit).getValueAs('MeV')
@@ -1172,6 +1172,6 @@ if __name__=='__main__':
 
     dof = n_data + n_cnorms - n_norms - n_pars
     plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,args.datasize,ipair,cm2lab, gnd.evaluation,cmd )
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,None,pname,args.datasize,ipair,cm2lab, gnd.evaluation,cmd )
         
     print("Final rflow: ",tim.toString( ))

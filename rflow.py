@@ -1078,6 +1078,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     n_angle_integrals = n_data - n_totals - n_angles
     n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
     n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
+    ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
                     
 #     chisqF,A_tF,Grads = FitStatusTF(searchpars, others) 
 #     print('\n*** chisq/pt=',chisqF.numpy()/n_data)
@@ -1385,10 +1386,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             computerCode.note.body = '\n'.join( docLines )
             RMatrix.documentation.computerCodes.add( computerCode )
     
-        return(chisqF.numpy(),A_tF.numpy(),norm_val,n_pars)
+        return(chisqF.numpy(),A_tF.numpy(),norm_val,n_pars,ch_info)
         
     else:
-        return(chisq.numpy(),Ax.numpy(),norm_val,n_pars)
+        return(chisq.numpy(),Ax.numpy(),norm_val,n_pars,ch_info)
 
 #             print('Chisq :',chisq.numpy()/n_data)
 
@@ -1650,7 +1651,8 @@ if __name__=='__main__':
     dataDir = base
     if args.Cross_Sections or args.Matplot  : os.system('mkdir '+dataDir)
  
-    chisqtot,xsc,norm_val,n_pars = Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
+    chisqtot,xsc,norm_val,n_pars,ch_info  = Rflow(
+                        gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,Ein_list,args.Fixed,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.GroupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.TransitionMatrix, args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
@@ -1692,9 +1694,11 @@ if __name__=='__main__':
     else:
         info = ''
 
+    pname,tname, za,zb, npairs,cm2lab,QI,ipair = ch_info
     dof = n_data + n_cnorms - n_norms - n_pars
+    EIndex = numpy.argsort(data_val[:,0])
     plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, gnd.evaluation,cmd )
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,None,pname,args.datasize,ipair,cm2lab, gnd.evaluation,cmd )
     print("Final rflow: ",tim.toString( ))
     sys.exit()
     
