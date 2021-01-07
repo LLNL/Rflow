@@ -1000,7 +1000,9 @@ if __name__=='__main__':
     print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
     if args.emin is None and args.EMAX is None:
         data_lines = f.readlines( )
+        lines_excluded = 'No'
     else:
+        EminFound = 1e6; EmaxFound = -1e6
         data_lines = []
         lines_excluded= 0      
         for line in f.readlines():
@@ -1008,11 +1010,14 @@ if __name__=='__main__':
             E  = Ed*lab2cmd / lab2cmi  # in frame of gnds projectile
             if emin < E < emax:
                 data_lines.append(line)  
+                EminFound = min(EminFound,Ed)
+                EmaxFound = max(EmaxFound,Ed)
             else:
                 lines_excluded += 1      
         
     n_data = len(data_lines)
     print(n_data,'data lines after lab energies defined by projectile',projectile4LabEnergies,'(',lines_excluded,'lines excluded)')
+    print('Kept data in the range [',EminFound,',',EmaxFound,'] from',lab2cmd,lab2cmi, 'data,gnds lab2cm')
     if args.maxData is not None: 
         if args.maxData < 0:
             data_lines = data_lines[:abs(args.maxData)]
@@ -1164,7 +1169,7 @@ if __name__=='__main__':
     if args.tag != '': base = base + '_'+args.tag
      
     dataDir = base 
-    if args.Cross_Sections or args.Matplot or args.TransitionMatrix or args.GlobalIntegrals : os.system('mkdir '+dataDir)
+    if args.Cross_Sections or args.Matplot or args.TransitionMatrix : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
     chisqtot,xsc,norm_val,n_pars,XS_totals,ch_info = Rflow(
@@ -1185,6 +1190,10 @@ if __name__=='__main__':
     if args.TransitionMatrix:
         pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,True)
         pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,False)
+        pnin = 'for %s' % pnin
+    else:
+        totals = None
+        pnin = ''
 
     if args.Search or True:  
         print('Revised norms:',norm_val)
@@ -1200,6 +1209,6 @@ if __name__=='__main__':
 
     dof = n_data + n_cnorms - n_norms - n_pars
     plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,args.datasize,ipair,cm2lab, gnd.evaluation,cmd )
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,args.datasize,ipair,cm2lab, emin,emax,pnin,gnd,cmd )
         
     print("Final rflow: ",tim.toString( ))

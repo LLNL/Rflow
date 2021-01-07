@@ -51,7 +51,7 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
     return
 
 def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-    groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,datasize, ipair,cm2lab, evaluation,cmd ):
+    groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,datasize, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
 
     ngraphAll = 0
     groups = sorted(groups)
@@ -266,7 +266,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                 if lfac!=0.0: legend += ' n%s%.2f%%' % ('+' if lfac>0 else '-', abs(lfac))
                 LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
                     'symbol': plsymbol[ng%7], 'symbolsize':args.datasize   }
-                LineModel[0] = {'kind':'Model', 'color':plcolor[ic-1], 'linestyle': pldashes[(ng-1)%4], 'evaluation':''} # evaluation.split()[0] }
+                LineModel[0] = {'kind':'Model', 'color':plcolor[ic-1], 'linestyle': pldashes[(ng-1)%4], 'evaluation':''} 
 #                 DataLines.append(LineData)
 #                 ModelLines.append(LineModel)
                 if args.debug: print('Finishing new curve',ng,'for',curve,'with legend',legend,'with',ptsInCurve[curve],'pts')
@@ -298,7 +298,63 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                
             plot_cmd += '\t             json2pyplot.py -w 10,8 %s' % j_out
             plot_cmds.append(plot_cmd)
+#
+# Extract newest R-matrix parameters
 
+    rrr = gnd.resonances.resolved
+    RMatrix = rrr.evaluated
+    bndx = RMatrix.boundaryCondition
+    pLab = lightnuclei.get(pname[ipair],pname[ipair])
+    PoleData = []    
+    ModelLines = []
+    jset = 0
+    PoleGraphList = []
+    ngraphAll = 0
+    print('Kept data in the range [',emin,',',emax,'] for lab',pLab)
+
+    for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
+        J_set = Jpi.spin
+        pi_set = Jpi.parity
+        parity = '+' if int(pi_set) > 0 else '-'
+        legend = '%s%s' % (J_set,parity)
+        pcolor = 'red' if int(pi_set) > 0 else 'black'
+#             if True: print('J,pi =',J_set,parity)
+        R = Jpi.resonanceParameters.table
+        rows = R.nRows
+        cols = R.nColumns - 1  # without energy col
+        LineData  = [{}, [[],[],[],[]] ]
+        LineModel = [{}, [[],[],[],[]] ]
+        bit = 0.05 if int(pi_set) > 0 else 0.0
+        for pole in range(rows):
+            E_pole = R.data[pole][0]      
+            E_cm = E_pole / cm2lab[ipair]
+            if not (emin < E_pole < emax): continue
+            LineData[1][0].append(E_cm)
+            LineData[1][1].append(float(J_set) + bit)
+            LineData[1][2].append(0)
+            LineData[1][3].append(0)       
+            
+#             LineModel[1][0].append(E_cm)
+#             LineModel[1][1].append(0.)
+#             LineModel[1][2].append(0.)
+#             LineModel[1][3].append(0.)          
+        LineData[0] =  {'kind':'Data',  'color':pcolor, 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
+            'symbol': plsymbol[jset%7], 'symbolsize':datasize   }
+        jset += 1
+        PoleData.append(LineData)
+        
+    ModelLines.append(LineModel)
+    subtitle = '' # "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile
+    kind     = "Final Pole Energies (MeV, cm) %s in B=%s basis" % (pLab,bndx)
+    PoleGraphList.append([PoleData+ModelLines,subtitle,args.logs,kind])
+    j_out = '%s-Pole-energies.json' % base 
+#     j_out = dataDir + '/' + j_out
+    print('   Write',j_out,'with',1)
+    with open(j_out,'w') as ofile:
+       json.dump([1,1,cmd,PoleGraphList],ofile, default=to_serializable)
+    print("Pole energy plot:   plotJson.py -w 10,8 ",j_out)
+            
+            
 # chi from norm_vals themselves:
     for ni in range(n_norms):
         chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
@@ -317,7 +373,8 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
         npairs = totals.shape[1]
         nmodelpts = data_val.shape[0]
         GlobalGraphList = []
-        GlobalngraphAll = 0
+        GlobalGraphList.append(PoleGraphList[0])
+        GlobalngraphAll = 1 # this is the PoleGraph
         pLab = lightnuclei.get(pname[ipair],pname[ipair])
         lab2cm = 1./cm2lab[ipair]
       
@@ -344,12 +401,11 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                     LineModel[1][2].append(0.)
                     LineModel[1][3].append(0.)    
                 legend = '%s %s' % (pn,po) #+ ' (%s,%s=%s)' % (pinG,poutG,poG)
-                LineModel[0] = {'kind':'R-matrix', 'color':plcolor[0], 'linestyle': pldashes[pinG], 'evaluation':legend}  #, 'legend': legend } 
+                LineModel[0] = {'kind':'Model', 'color':plcolor[0], 'linestyle': pldashes[pinG], 'evaluation':legend}  #, 'legend': legend } 
                 ModelLines.append(LineModel)
                 print('  Curve for',legend)
-       
+                
                 ng = 0
-
                 for group in X4groups:
 #                     print('  X4 group:',group)
                     groupB = group.split('@')[0]
