@@ -918,8 +918,8 @@ if __name__=='__main__':
     parser.add_argument("-g", "--groupAngles", type=int, default="1",  help="Unused. Number of energy batches for T2B transforms, aka batches")
     parser.add_argument("-a", "--anglesData", type=int, help="Max number of angular data points to use (to make smaller search). Pos: random selection. Neg: first block")
     parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to use (to make smaller search). Pos: random selection. Neg: first block")
-    parser.add_argument("-e", "--emin", type=float, help="Min cm energy for input data.")
-    parser.add_argument("-E", "--EMAX", type=float, help="Max cm energy for input data.")
+    parser.add_argument("-e", "--emin", type=float, help="Min cm energy for gnds projectile.")
+    parser.add_argument("-E", "--EMAX", type=float, help="Max cm energy for gnds projectile.")
     parser.add_argument("-p", "--pmin", type=float, help="Min energy of R-matrix pole to fit, in gnds cm energy frame. Overrides --Fixed.")
     parser.add_argument("-P", "--PMAX", type=float, help="Max energy of R-matrix pole to fit. If p>P, create gap.")
 
@@ -996,9 +996,22 @@ if __name__=='__main__':
 
     f = open( args.dataFile )
     projectile4LabEnergies =f.readline().split()[0]
-    p4LE = PoPs[projectile4LabEnergies].getMass('amu')
-    t4LE = (tMass + pMass) - p4LE  
-    lab2cmd = t4LE / (p4LE + t4LE)
+    lab2cmd = None
+    for partition in RMatrix.resonanceReactions:
+        reaction = partition.reactionLink.link
+        p,t = partition.ejectile,partition.residual
+        if partition.Q is not None:
+            QI = partition.Q.getConstantAs('MeV')
+        else:
+            QI = reaction.getQ('MeV')
+        if p == projectile4LabEnergies:
+            p4LE = PoPs[p].getMass('amu');   t4LE = PoPs[t].getMass('amu'); 
+            lab2cmd = t4LE / (p4LE + t4LE)
+            Qvalued = QI
+        if p == projectile.id:
+            Qvaluei = QI
+            
+            
     print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
     EminFound = 1e6; EmaxFound = -1e6
     if args.emin is None and args.EMAX is None:
@@ -1008,8 +1021,8 @@ if __name__=='__main__':
         data_lines = []
         lines_excluded= 0      
         for line in f.readlines():
-            Ed = float(line.split()[0])# in frame of data file
-            Ecm  = Ed*lab2cmd  # -Qd + Qg # in frame of gnds projectile. Should really add Q-value to data projectile!!
+            Ed = float(line.split()[0])# in lab frame of data file
+            Ecm  = Ed*lab2cmd - Qvalued + Qvaluei # in cm frame of gnds projectile.
             if emin < Ecm < emax:
                 data_lines.append(line)  
                 EminFound = min(EminFound,Ecm)
@@ -1019,7 +1032,7 @@ if __name__=='__main__':
         
     n_data = len(data_lines)
     print(n_data,'data lines after lab energies defined by projectile',projectile4LabEnergies,'(',lines_excluded,'lines excluded)')
-    if EminFound < EmaxFound: print('Kept data in the Ecm g-p range [',EminFound,',',EmaxFound,']\n')
+    if EminFound < EmaxFound: print('Kept data in the Ecm g-p range [',EminFound,',',EmaxFound,'] using Qd,Qi =',Qvalued,Qvaluei,'\n')
     if args.maxData is not None: 
         if args.maxData < 0:
             data_lines = data_lines[:abs(args.maxData)]
@@ -1044,8 +1057,8 @@ if __name__=='__main__':
     
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]), float(x.split()[1]) ) )
     if args.debug and False: 
-        with open(args.dataFile+'-sorted','w') as fout: fout.writelines(data_lines)
-    with open(args.dataFile+'-sorted','w') as fout: fout.writelines(data_lines)
+        with open(args.dataFile+'-sorted','w') as fout: fout.writelines([projectile4LabEnergies] + data_lines)
+    with open(args.dataFile+'-sorted','w') as fout: fout.writelines([projectile4LabEnergies] + data_lines)
 
     
     n_data = len(data_lines)
