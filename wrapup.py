@@ -306,6 +306,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
     bndx = RMatrix.boundaryCondition
     pLab = lightnuclei.get(pname[ipair],pname[ipair])
     PoleData = []    
+    PoleDataP = []    
     ModelLines = []
     jset = 0
     PoleGraphList = []
@@ -323,6 +324,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
         rows = R.nRows
         cols = R.nColumns - 1  # without energy col
         LineData  = [{}, [[],[],[],[]] ]
+        LineDataP  = [{}, [[],[],[],[]] ]
         LineModel = [{}, [[],[],[],[]] ]
         bit = 0.05 if int(pi_set) > 0 else 0.0
         for pole in range(rows):
@@ -332,27 +334,30 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
             LineData[1][0].append(E_cm)
             LineData[1][1].append(float(J_set) + bit)
             LineData[1][2].append(0)
-            LineData[1][3].append(0)       
-            
-#             LineModel[1][0].append(E_cm)
-#             LineModel[1][1].append(0.)
-#             LineModel[1][2].append(0.)
-#             LineModel[1][3].append(0.)          
-        LineData[0] =  {'kind':'Data',  'color':pcolor, 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
+            LineData[1][3].append(0)  
+                 
+            LineDataP[1][0].append(E_cm)
+            LineDataP[1][1].append(float(J_set) + bit)
+            LineDataP[1][2].append(0)
+            LineDataP[1][3].append(0)   
+                                
+        LineData[0] =   {'kind':'Data',  'color':pcolor, 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
+            'symbol': plsymbol[jset%7], 'symbolsize':datasize   }
+        LineDataP[0] =  {'kind':'Data',  'color':pcolor, 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
             'symbol': plsymbol[jset%7], 'symbolsize':datasize   }
         jset += 1
         PoleData.append(LineData)
+        PoleDataP.append(LineDataP)
         
     ModelLines.append(LineModel)
     subtitle = '' # "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile
-    kind     = "Final Pole Energies (MeV, cm) %s in B=%s basis" % (pLab,bndx)
+    kind     = "Final Pole Energies (MeV, %s cm) in B=%s basis" % (pname[ipair],bndx)
     PoleGraphList.append([PoleData+ModelLines,subtitle,args.logs,kind])
-    j_out = '%s-Pole-energies.json' % base 
+    p_out = '%s-Pole-energies.json' % base 
 #     j_out = dataDir + '/' + j_out
-    print('   Write',j_out,'with',1)
-    with open(j_out,'w') as ofile:
+    print('   Write',p_out,'with',1)
+    with open(p_out,'w') as ofile:
        json.dump([1,1,cmd,PoleGraphList],ofile, default=to_serializable)
-    print("Pole energy plot:   plotJson.py -w 10,8 ",j_out)
             
             
 # chi from norm_vals themselves:
@@ -373,8 +378,8 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
         npairs = totals.shape[1]
         nmodelpts = data_val.shape[0]
         GlobalGraphList = []
-        GlobalGraphList.append(PoleGraphList[0])
-        GlobalngraphAll = 1 # this is the PoleGraph
+#         GlobalGraphList.append(PoleGraphList[0])
+        GlobalngraphAll = 0 # 1 # this is the PoleGraph
         pLab = lightnuclei.get(pname[ipair],pname[ipair])
         lab2cm = 1./cm2lab[ipair]
       
@@ -473,9 +478,9 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                         DataLines.append(LineData)
                         
                 subtitle = '' # "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile
-                kind     = "R-matrix fit for incident-%s = %s  (units mb and '%s' MeV cm)" % (pname[pinG],pn,pLab)
-                kinds    = "R-matrix fit for incident %s %s  (units mb and '%s' MeV cm)" % (pname[pinG],po,pLab)
-                SingleGraphList.append([DataLines+ModelLines,subtitle,args.logs,kinds])
+                kind     = "R-matrix fit for incident-%s = %s  (units mb and %s MeV cm)" % (pname[pinG],pn,pname[ipair])
+                kinds    = "R-matrix fit for incident %s %s  (units mb and %s MeV cm)" % (pname[pinG],po,pname[ipair])
+                SingleGraphList.append([DataLines+ModelLines+PoleDataP,subtitle,args.logs,kinds])
                 SinglengraphAll += 1
                 GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
                 ngraphAll += 1
@@ -505,9 +510,12 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
         with open(j_out,'w') as ofile:
            json.dump([GlobalngraphAll,1,cmd,GlobalGraphList],ofile, default=to_serializable)
         Globalplot_cmds +=  ' ' + j_out
-            
+        
+        print('------')
         print("Single plots:   plotJson.py -w 10,8 ",Singleplot_cmds)
         print("Incident plots: plotJson.py -w 10,8 ",plot_cmds)
         print("Global plots:   plotJson.py -w 10,8 ",Globalplot_cmds)
+    print(    "Poles E plot:   plotJson.py -w 10,8 ",p_out)
+    print('------')
 
     return

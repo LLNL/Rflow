@@ -191,7 +191,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 # Find energies in the lab frame of partition 'ipair' as needed for the R-matrix pole energies, not data lab frame:
 #
     print('Transform main energy vector from',pname[dlabpair],'to',pname[ipair],' projectile lab frames')
-    data_val[:,0]  = (data_val[:,0]/cm2lab[dlabpair] + QI[ipair] - QI[dlabpair]) * cm2lab[ipair]
+    data_val[:,0]  = (data_val[:,0]/cm2lab[dlabpair] - QI[dlabpair] + QI[ipair] ) * cm2lab[ipair]
     E_scat  = data_val[:,0]
 
     if debug: print('Energy grid (lab in partition',ipair,'):\n',E_scat)
@@ -257,7 +257,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #  Calculate Coulomb functions on data Energy Grid
     for pair in range(npairs):
         for ie in range(n_data):
-            E = E_scat[ie]/cm2lab[ipair] + QI[pair]
+            E = E_scat[ie]/cm2lab[ipair] - QI[ipair] + QI[pair]
             if rmass[pair]!=0:
                 k = cmath.sqrt(fmscal * rmass[pair] * E)
             else: # photon!
@@ -461,6 +461,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         parity = '+' if pi_set[jset] > 0 else '-'
         for n in range(n_poles):
             E = E_poles[jset,n]
+            Ecm = E/cm2lab[ipair] + QI[ipair]
             for c in range(n_chans):
                 if L_val[jset,c] < 0: continue   # invalid partial wave: blank filler
                 if E == 0: continue   # invalid energy: filler
@@ -472,10 +473,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
                 varying = abs(g_poles[jset,n,c])>1e-20 
                 if pmin is not None and pmax is not None and pmin > pmax:   # -p,-P fix both energies and widths
-                    varying = E > pmin or E < pmax
+                    varying = Ecm > pmin or Ecm < pmax
                 else:
-                    if pmin is not None: varying = varying and E > pmin
-                    if pmax is not None: varying = varying and E < pmax
+                    if pmin is not None: varying = varying and Ecm > pmin
+                    if pmax is not None: varying = varying and Ecm < pmax
 
                 for pattern in patterns:
                     matching = pattern.match(wnam)
@@ -917,9 +918,9 @@ if __name__=='__main__':
     parser.add_argument("-g", "--groupAngles", type=int, default="1",  help="Unused. Number of energy batches for T2B transforms, aka batches")
     parser.add_argument("-a", "--anglesData", type=int, help="Max number of angular data points to use (to make smaller search). Pos: random selection. Neg: first block")
     parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to use (to make smaller search). Pos: random selection. Neg: first block")
-    parser.add_argument("-e", "--emin", type=float, help="Min lab energy for gnds evaluation.")
-    parser.add_argument("-E", "--EMAX", type=float, help="Max lab energy for gnds evaluation.")
-    parser.add_argument("-p", "--pmin", type=float, help="Min energy of R-matrix pole to fit, in gnds lab energy frame. Overrides --Fixed.")
+    parser.add_argument("-e", "--emin", type=float, help="Min cm energy for input data.")
+    parser.add_argument("-E", "--EMAX", type=float, help="Max cm energy for input data.")
+    parser.add_argument("-p", "--pmin", type=float, help="Min energy of R-matrix pole to fit, in gnds cm energy frame. Overrides --Fixed.")
     parser.add_argument("-P", "--PMAX", type=float, help="Max energy of R-matrix pole to fit. If p>P, create gap.")
 
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
@@ -990,34 +991,35 @@ if __name__=='__main__':
         partitions[kp] = pair
         pins.append(kp.replace(' ',''))
         pair += 1
-    
+#                Ecm = E/cm2lab[ipair] + QI[ipair]
+
 
     f = open( args.dataFile )
     projectile4LabEnergies =f.readline().split()[0]
     p4LE = PoPs[projectile4LabEnergies].getMass('amu')
-    t4LE = (tMass + pMass) - p4LE  # neglect Q here, just for data filtering. Tweak emind,emaxd if needed to fix this.
+    t4LE = (tMass + pMass) - p4LE  
     lab2cmd = t4LE / (p4LE + t4LE)
     print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
+    EminFound = 1e6; EmaxFound = -1e6
     if args.emin is None and args.EMAX is None:
         data_lines = f.readlines( )
         lines_excluded = 'No'
     else:
-        EminFound = 1e6; EmaxFound = -1e6
         data_lines = []
         lines_excluded= 0      
         for line in f.readlines():
             Ed = float(line.split()[0])# in frame of data file
-            E  = Ed*lab2cmd / lab2cmi  # in frame of gnds projectile
-            if emin < E < emax:
+            Ecm  = Ed*lab2cmd  # -Qd + Qg # in frame of gnds projectile. Should really add Q-value to data projectile!!
+            if emin < Ecm < emax:
                 data_lines.append(line)  
-                EminFound = min(EminFound,Ed)
-                EmaxFound = max(EmaxFound,Ed)
+                EminFound = min(EminFound,Ecm)
+                EmaxFound = max(EmaxFound,Ecm)
             else:
                 lines_excluded += 1      
         
     n_data = len(data_lines)
     print(n_data,'data lines after lab energies defined by projectile',projectile4LabEnergies,'(',lines_excluded,'lines excluded)')
-    print('Kept data in the range [',EminFound,',',EmaxFound,'] from',lab2cmd,lab2cmi, 'data,gnds lab2cm')
+    if EminFound < EmaxFound: print('Kept data in the Ecm g-p range [',EminFound,',',EmaxFound,']\n')
     if args.maxData is not None: 
         if args.maxData < 0:
             data_lines = data_lines[:abs(args.maxData)]
@@ -1042,7 +1044,9 @@ if __name__=='__main__':
     
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]), float(x.split()[1]) ) )
     if args.debug and False: 
-        with open(args.dataFile+'-/T/sorted','w') as fout: fout.writelines(data_lines)
+        with open(args.dataFile+'-sorted','w') as fout: fout.writelines(data_lines)
+    with open(args.dataFile+'-sorted','w') as fout: fout.writelines(data_lines)
+
     
     n_data = len(data_lines)
     data_val = numpy.zeros([n_data,5], dtype=REAL)    # Elab,mu, datum,absError
