@@ -353,8 +353,8 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
     subtitle = '' # "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile
     kind     = "Final Pole Energies (MeV, %s cm) in B=%s basis" % (pname[ipair],bndx)
     PoleGraphList.append([PoleData+ModelLines,subtitle,args.logs,kind])
-    p_out = '%s-Pole-energies.json' % base 
-#     j_out = dataDir + '/' + j_out
+    p_out = 'Pole-energies.json' 
+    p_out = dataDir + '/' + p_out
     print('   Write',p_out,'with',1)
     with open(p_out,'w') as ofile:
        json.dump([1,1,cmd,PoleGraphList],ofile, default=to_serializable)
@@ -468,7 +468,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                         print('    Curve',ng,':',tag,'has',np,'data points')
                                 
                         ng += 1
-                        ic = (ng-1) % 14 + npairs  # for colors
+                        ic = (ng+ npairs-1) % 14 + 1  # for colors
                         leg = tag if '/' not in tag else tag.split('/')[1]
                         legend = leg.replace('-Aint','') # if len(leg) < 12 else leg[:12]
                         LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,

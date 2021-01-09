@@ -83,6 +83,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectil
         pp = 1  # all stable projectiles  A<=4 are + parity
         ep = 0.0
 #         print('For target:',t)
+        if t=='N0': t='N14'
         target = pops[t.lower()]
         proj   = pops[p.lower()]
 
@@ -283,8 +284,9 @@ def lab2cm(mu_lab, ap,at,ae,ar, E_lab,Q):
 
     x = ((ap*ae * E_cm) / (at*ar * E_out))**0.5
     th_lab = math.acos(mu_lab)
-    sin_lab = (1-mu_lab**2) ** 0.5
-    th_cm = th_lab + math.asin(x*sin_lab)
+    mu_l = max(mu_lab,1.0-1e-12)
+    sin_lab = (1-mu_l**2) ** 0.5
+    th_cm = th_lab + math.asin(x.real*sin_lab.real)
     cos_cm = math.cos(th_cm)
     cos_cm = max(cos_cm,-1.0+1e-5)    # avoid cm=180 deg in case x=1, to avoid 0/0
     a = 1 + x*cos_cm

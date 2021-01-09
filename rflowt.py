@@ -1056,9 +1056,8 @@ if __name__=='__main__':
     data_lines = angular_lines + aint_lines + tot_lines
     
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]), float(x.split()[1]) ) )
-    if args.debug and False: 
+    if args.debug: 
         with open(args.dataFile+'-sorted','w') as fout: fout.writelines([projectile4LabEnergies] + data_lines)
-    with open(args.dataFile+'-sorted','w') as fout: fout.writelines([projectile4LabEnergies] + data_lines)
 
     
     n_data = len(data_lines)
