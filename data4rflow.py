@@ -298,6 +298,7 @@ def lab2cm(mu_lab, ap,at,ae,ar, E_lab,Q):
 parser = argparse.ArgumentParser(description='Prepare data for Rflow')
 
 parser.add_argument("-P", "--Projectiles", type=str, nargs='+', help="List of projectiles (gnds names). First is projectile in GNDS file")
+parser.add_argument("-L", "--LevelsMax", type=int, nargs='+', help="List of max level numbers of corresponding targets, in same order as -P")
 parser.add_argument("-B", "--EminCN", type=float, help="Minimum energy relative to gs of the compound nucleus.")
 parser.add_argument("-C", "--EmaxCN", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
 parser.add_argument("-J", "--Jmax", type=float, default=5.0, help="Maximum total J of partial wave set.")
@@ -328,6 +329,7 @@ args = parser.parse_args()
 Dir = args.Dir + '/'
 EmaxCN = args.EmaxCN
 Projectiles = args.Projectiles
+LevelsMax = args.LevelsMax
     
 scales = {-1: "nodim", 0: "fm^2", 1: "b", 2:"mb", 3:"mic-b"}
 rscales = {"nodim": -1, "fm^2":0, "b":1, "mb":2, "mic-b":3, "microbarns":3}
@@ -457,24 +459,36 @@ for datFile in args.inFiles:
 
     dr = datFile.split('.dat')[0]
     projectile,ejectile,residual,integrated,syserror,staterror,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir = props[baseFile]
-    print("\nRead ",datFile," write root:",dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth)
+    print("\nRead ",datFile," write root:",dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth,', p,e,r =',projectile,ejectile,residual)
     
     if projectile=='photon' and not args.GammaChannel:
         continue
 
 #   p,e,x = datFile.split('_')[1][0:3]
     p,e,x = projectile,ejectile,residual
-    if p not in projs or (e not in projs and e != 'TOT'):
-        print('SKIP',datFile,'as strange projectile')
-        continue
-    if ( p not in Projectiles or (e not in Projectiles and e != 'TOT') ) and p != 'photon':
-        print('SKIP',datFile,'as',p,'or',e,'not in',Projectiles)
-        continue
-
     try:
         ia= int(x)+1
     except:
         ia = 1
+        
+    if p not in projs or (e not in projs and e != 'TOT'):
+        print('SKIP',datFile,'as strange projectile')
+        continue
+        
+    if ( p not in Projectiles or (e not in Projectiles and e != 'TOT') ) and p != 'photon':
+        print('SKIP',datFile,'as',p,'or',e,'not in',Projectiles)
+        continue
+        
+    try:
+        ipi = args.Projectiles.index(projectile)
+    except:
+        print('Unwanted projectile',projectile,": SKIP")
+        continue
+        
+    if args.LevelsMax is not None and ia-1 > args.LevelsMax[ipi]:
+        print('Level',ia-1,'is above level limit',args.LevelsMax[ipi],": SKIP")
+        continue         
+
     pel = projs.index(p) + 1
     ic  = projs.index(e) + 1 if e != 'TOT' else 0
     elim = elimits[pel-1]
