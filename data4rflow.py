@@ -3,7 +3,8 @@
 import os,sys,copy,csv,math
 import argparse
 from CoulCF import dSoP
-from PoPs import database
+from PoPs import database as databaseModule
+from nuclear import *
 pi = math.pi
 rad = pi/180
 
@@ -17,6 +18,8 @@ etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 
 hbar = 6.582e-22 # MeV.s
 
+defaultPops = '../ripl2pops_to_Z8.xml'
+
 fresco_start = \
 """R-matrix starter for {%s}
 NAMELIST
@@ -28,13 +31,13 @@ NAMELIST
  pel=1 exl=1 elab(1:2) = %s %s nlab(1)=1 /
 """
  
-def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectiles,EminCN,EmaxCN,emin,emax,
+def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Projectiles,EminCN,EmaxCN,emin,emax,
         Rmatrix_radius,jdef,pidef,widef,Term0,gammas):
 
-    pops = database.database.readFile(popsicles[0])
-    for p in popsicles[1:]:
-        print('read further pops file',p)
-        pops.addFile(p)
+#     pops = databaseModule.database.readFile(popsicles[0])
+#     for p in popsicles[1:]:
+#         print('read further pops file',p)
+#         pops.addFile(p)
     gs = '+g' if gammas else ''
 
     fresco = open('fresco%s.in' % gs,'w')
@@ -78,11 +81,12 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectil
             continue
 
         nex = 1
-        tgs,tlevel = t.split('_e') if '_e' in t else t,0
         jp = (Ap % 2) * 0.5 if Ap!=2 else 1.0
         pp = 1  # all stable projectiles  A<=4 are + parity
         ep = 0.0
+
 #         print('For target:',t)
+        tgs,tlevel = t.split('_e') if '_e' in t else t,0
         if t=='N0': t='N14'
         target = pops[t.lower()]
         proj   = pops[p.lower()]
@@ -91,16 +95,20 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,popsicles,Jmax,Projectil
 #         jp,pp,ep =   proj.spin[0].float('hbar'),   proj.parity[0].value,   proj.energy[0].pqu('MeV').value
     
 
+        levelList = levels[t]
+        nex = len(levelList)
         print("\n &PARTITION namep='%s' massp=%s zp=%s nex=%s namet='%s' masst=%s zt=%s qval=%s prmax=%.4f/" % (p,pmass,pz,nex,t,tmass,tz,Q,prmax), file=fresco)
         partitions.append(ic)
         mxp += 1
         excitationPairs = []
         print("  &STATES  cpot =%s jp=%s ptyp=%s ep=%s  jt=%s ptyt=%s et=%s /" % (mxp,jp,pp,ep,jt,pt,et) , file=fresco)
         excitationPairs.append([jp,pp,ep,jt,pt,et])
-        for level in range(1,tlevel+1):
-            target = pops["%s_e%s" % (tgs,level)]
-            jt,tp,et = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
-            print("&STATES  copyp=1                      jt=%s ptyt=%s et=%s /" % (nex,jt,pt,et) , file=fresco)
+        for level in levelList:
+            if level == 0: continue
+            targetex = pops["%s_e%s" % (tgs,level)].nucleus
+            print('R*',targetex.id,targetex.spin[0],targetex.parity[0],targetex.energy[0])
+            jt,tp,et = targetex.spin[0].float('hbar'), targetex.parity[0].value, targetex.energy[0].pqu('MeV').value
+            print("  &STATES  copyp=1                       jt=%s ptyt=%s et=%s /" % (jt,pt,et) , file=fresco)
             excitationPairs.append([jp,pp,ep,jt,pt,et])
         excitationLists.append(excitationPairs)
         
@@ -302,24 +310,27 @@ parser.add_argument("-L", "--LevelsMax", type=int, nargs='+', help="List of max 
 parser.add_argument("-B", "--EminCN", type=float, help="Minimum energy relative to gs of the compound nucleus.")
 parser.add_argument("-C", "--EmaxCN", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
 parser.add_argument("-J", "--Jmax", type=float, default=5.0, help="Maximum total J of partial wave set.")
-parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum incident lab energy in 'projectile' partition.")
-parser.add_argument("-E", "--emaxp", type=float, default=10., help="Maximum incident lab energy in 'projectile' partition.")
+parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum incident lab energy in first partition.")
+parser.add_argument("-E", "--emaxp", type=float, default=10., help="Maximum incident lab energy in first partition.")
 parser.add_argument("-R", "--Rmatrix_radius", type=float, default=1.4, help="Reduced R-matrix radius: factor of (A1^1/3+A2^1/3).")
 parser.add_argument("-G", "--GammaChannel", action="store_true", help="Include discrete gamma channel")
 parser.add_argument("-j", "--jdef", type=float, default=2.0, help="Default spins for unknown RIPL states")
 parser.add_argument("-p", "--pidef", type=int, default=1, help="Default spins for unknown RIPL states")
 parser.add_argument("-w", "--widef", type=float, default=0.10, help="Default width (MeV) for unknown RIPL states")
 
-parser.add_argument('-i', '--inFiles', type=str, nargs="+", help='cross-section data files: E,angle,expt,err as desribed in property file.')
-parser.add_argument('--pops', type=str, nargs='+', help='pops files for nuclear levels data')
+parser.add_argument('-I', '--InFiles', type=str, nargs="+", help='cross-section data files: E,angle,expt,err as desribed in property file.')
+parser.add_argument("-i", "--include", metavar="INCL",  nargs="*", help="Subentries to include, if not all")
+parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Subentries to exclude if any string within subentry name")
 
-parser.add_argument("-d", "--Dir", type=str,  default="Data", help="output data directory for small filesdu")
+parser.add_argument(      "--pops", type=str, default=defaultPops, help="pops files with all the level information from RIPL3. Default = %s" % defaultPops)
+
+parser.add_argument("-d", "--Dir", type=str,  default="Data_X4", help="output data directory for small filesdu")
 parser.add_argument("-o", "--Out", type=str,  default="flow.data", help="output data file")
 parser.add_argument("-n", "--Norms", type=str,  default="flow.norms", help="output normalization file")
 parser.add_argument("-S", "--Sfresco", action="store_true", help="Outputs for Sfresco")
 parser.add_argument("-T", "--Term0", type=int, default=0, help="First 'term' in Sfresco output")
 
-parser.add_argument(      "--CSV", type=str,  default="properties", help="property datafile.props.csv in args.Dir")
+parser.add_argument(      "--CSV", type=str,  default="datafile.props.csv", help="property datafile.props.csv in args.Dir")
 parser.add_argument("-a", "--Adjusts", type=str,  default="adjusts", help="list of current norm and shift adjustments")
 parser.add_argument("-f", "--Fits", type=str,  default="datafit.csv", help="list of current norm and shift adjustments")
 
@@ -330,6 +341,7 @@ Dir = args.Dir + '/'
 EmaxCN = args.EmaxCN
 Projectiles = args.Projectiles
 LevelsMax = args.LevelsMax
+pops = databaseModule.database.readFile( args.pops )
     
 scales = {-1: "nodim", 0: "fm^2", 1: "b", 2:"mb", 3:"mic-b"}
 rscales = {"nodim": -1, "fm^2":0, "b":1, "mb":2, "mic-b":3, "microbarns":3}
@@ -340,7 +352,7 @@ amu   = 931.4940954e0             # 1 amu/c^2 in MeV
 
 sf = open(Dir + 'sfresco.split','w')
 plotd = open(Dir + 'sfresco.split.plotd','w')
-if args.inFiles is not None:
+if args.InFiles is not None:
     output = open(args.Out,'w')
     noutput = open(args.Norms,'w')
     print(args.Projectiles[0],' : projectile defining the lab energy in first column', file=output)
@@ -349,38 +361,41 @@ z_errors = set()
 nsf = 0
 
 print("\nProperty dictionary from '%s'" % args.CSV)
-print("                           p e r  ang-int     %    %   expect  group  split  lab    abs   iscale   Aflip   Ein rRuth Sfactor Escale Eshift Ecalib split run")
-print("           File                              sys  stat norm    an/en  norms  a,xs   err   units                                      shifts              directory")
+print("                             p   e   t    r    l ang-int   %    %   expect  group  split  lab    abs   iscale   Aflip   Ein rRuth Sfactor Escale Eshift Ecalib split run")
+print("           File                                           sys  stat norm    an/en  norms  a,xs   err   units                                      shifts              directory")
 csv_out = open(Dir + args.CSV + '-o.csv','w')
-headings = ['projectile','ejectile','residual','file','integrated','sys-error','stat-error','norm','group','splitnorms','lab','abserr','scale','filedir','Aflip','Ein','ratioRuth','Sfactor','eshift','ecalib','splitshifts']
+headings = ['projectile','ejectile','target','residual','level','file','integrated','sys-error','stat-error','norm','group','splitnorms','lab','abserr','scale','filedir','Aflip','Ein','ratioRuth','Sfactor','eshift','ecalib','splitshifts']
 print(','.join(headings), file=csv_out)
 
 props = {}
 
 # csv     #   SPREADSHEET !
 csvf =  open(Dir + args.CSV,'r')
-projs = [];    targs = []; elimits = []; masses={}; qvalue = {}; charges={}
+projs = [];    targs = []; levels = []; ejects = []; resids = []
+masses={}; qvalue = {}; charges={}
+
+MP = len(args.Projectiles)
+projs = args.Projectiles + ['photon']
+targs = ['' for i in range(MP+1)]
+ejects = ['' for i in range(MP+1)]
+resids = ['' for i in range(MP+1)]
+levels = {}
+# multiplicities = [0 for i in range(MP+1)]
+elimits = [0 for i in range(MP+1)]
+
 for prop in csv.DictReader(csvf):
     projectile = prop['projectile']
     ejectile = prop['ejectile']
-    residual = prop.get('residual',0)
+    target = prop['target']
+    residual = prop['residual']
+    level = prop.get('level',0)
     datFile = prop['file']
     sys_percent = prop['sys-error']
     stat_percent = prop['stat-error']
     expect  = prop['norm']
     group  = prop['group']
-    if datFile == 'LIMIT':
-        print('LIMIT')
-        target = ejectile
-        projs.append(projectile)
-        targs.append(ejectile)
-        elimits.append(float(residual))
-        masses[projectile] = float(sys_percent)
-        masses[target] = float(stat_percent)  # target mass!
-        qvalue[projectile] = float(prop['angle-integrated'])
-        charges[projectile] = int(expect)
-        charges[target] = int(group)  # target charge!
-        continue
+
+
 #     print(( prop['angle-integrated']))
     integrated = prop['angle-integrated'][0]=='T'        
     expect  = prop['norm']
@@ -398,12 +413,49 @@ for prop in csv.DictReader(csvf):
     ecalib  = float(prop.get('ecalib',0.))
     splitgroupshifts = prop.get('splitshifts')[0]=='T'
     iscale = rscales[scale]
-    print("%26s %1s %1s %1s  %5s %5s %5s %5s %5s     %5s %5s %5s %4s=%-5s %5s %5s %5s %5s %5s  %5s  %s %s" % (datFile,projectile,ejectile,residual,integrated,sys_percent,stat_percent,expect,group,splitgroupnorms,lab,abserr,iscale,scale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir))
-    props[datFile] = (projectile,ejectile,residual,integrated,float(sys_percent)/100.,float(stat_percent)/100.,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir)
-    pdata      = [projectile,ejectile,residual,datFile,integrated,sys_percent,stat_percent,expect,group,splitgroupnorms,lab,abserr,scale,filedir,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts]
+    props[datFile] = (projectile,ejectile,target,residual,level,integrated,float(sys_percent)/100.,float(stat_percent)/100.,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir)
+#     print(datFile,projectile,ejectile,target,residual,level,integrated,sys_percent,stat_percent,expect,group,splitgroupnorms,lab,abserr,iscale,scale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir)
+    print("%26s %3s %3s %3s %4s %4s %5s %5s %5s %5s %5s     %5s %5s %5s %4s=%-5s %5s %5s %5s %5s %5s  %5s  %s %s" % (datFile,projectile,ejectile,target,residual,level,integrated,sys_percent,stat_percent,expect,group,splitgroupnorms,lab,abserr,iscale,scale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir))
+    props[datFile] = (projectile,ejectile,target,residual,level,integrated,float(sys_percent)/100.,float(stat_percent)/100.,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir)
+    pdata      = [projectile,ejectile,target,residual,level,datFile,integrated,sys_percent,stat_percent,expect,group,splitgroupnorms,lab,abserr,scale,filedir,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts]
     sdata      = [str(d) for d in pdata]
     print(','.join(sdata), file=csv_out)
     stat_percent = float(stat_percent)
+    
+    try:
+        ipi = args.Projectiles.index(projectile)
+    except:
+#         print('Unwanted projectile',projectile,": SKIP")
+        continue
+    projs[ipi] = projectile
+    targs[ipi] = target
+    ejects[ipi] = ejectile
+    resids[ipi] = residual
+    levels[residual] = set()
+    for nucl in [projectile,ejectile,target,residual]:
+        if nucl in ['TOT','.']: continue
+        n = nucl if nucl != '2n' else 'n'
+        pe = pops[n]
+        masses[nucl] = pe.getMass('amu')
+        if hasattr(pe, 'nucleus'): pe = pe.nucleus
+        charges[nucl] = pe.charge[0].value
+
+p_ref = args.Projectiles[0]
+t_ref = targs[projs.index(p_ref)]
+masses_ref = masses[p_ref] + masses[t_ref]
+
+projs[MP] = 'photon'
+ZT = int(charges[p_ref]+charges[t_ref])
+AT = int(0.5+ masses[p_ref]+masses[t_ref])
+targs[MP] = '%s%s' % (elementSymbolFromZ(ZT),AT)
+masses[targs[MP]] = pops[targs[MP]].getMass('amu')
+
+for ipi in range(MP+1):
+    p = projs[ipi]
+    t = targs[ipi]
+    masses_i = masses[p] + masses[t]
+    qvalue[p] = (masses_ref - masses_i) * amu
+    elimits[ipi] = args.EmaxCN 
 
 print('Partitions with projs:',projs,' targs:',targs)
 print('Partitions elimits:',elimits)
@@ -448,9 +500,9 @@ idfirst = 1
 ffirst = 1
 flast  = 0
 
-if args.inFiles is None: args.inFiles = []
+if args.InFiles is None: args.InFiles = []
 
-for datFile in args.inFiles:
+for datFile in args.InFiles:
     if '@' in datFile: continue
     baseFile = datFile.split(Dir)[1]
     if len(open(datFile,'r').readlines())==0:
@@ -458,14 +510,15 @@ for datFile in args.inFiles:
     d = open(datFile,'r')
 
     dr = datFile.split('.dat')[0]
-    projectile,ejectile,residual,integrated,syserror,staterror,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir = props[baseFile]
+    projectile,ejectile,target,residual,level,integrated,syserror,staterror,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir = props[baseFile]
     print("\nRead ",datFile," write root:",dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth,', p,e,r =',projectile,ejectile,residual)
     
     if projectile=='photon' and not args.GammaChannel:
         continue
 
-#   p,e,x = datFile.split('_')[1][0:3]
-    p,e,x = projectile,ejectile,residual
+    leveltag = '_e%s' % level if level != '0' else ''
+    level = int(level)
+    p,e,x = projectile,ejectile,level
     try:
         ia= int(x)+1
     except:
@@ -485,19 +538,18 @@ for datFile in args.inFiles:
         print('Unwanted projectile',projectile,": SKIP")
         continue
         
-    if args.LevelsMax is not None and ia-1 > args.LevelsMax[ipi]:
+    if args.LevelsMax is not None and level > args.LevelsMax[ipi]:
         print('Level',ia-1,'is above level limit',args.LevelsMax[ipi],": SKIP")
         continue         
+    levels[residual].add(level)
 
     pel = projs.index(p) + 1
     ic  = projs.index(e) + 1 if e != 'TOT' else 0
     elim = elimits[pel-1]
     index = projs.index(p)
     t = targs[index]
-    r = targs[projs.index(e)] if e!= 'TOT' else 0
-    
-    p_ref = args.Projectiles[0]
-    t_ref = targs[projs.index(p_ref)]
+    r =   targs[projs.index(e)] if e!= 'TOT' else 0
+    r_l = (targs[projs.index(e)]+leveltag) if e!= 'TOT' else 0
     
     Ein_scale =  1.0
     Ec = Ein[0].lower()
@@ -510,7 +562,7 @@ for datFile in args.inFiles:
             Ein_scale = masses[p]/masses[t]
         print("  Scale projectile energy by %.5f" % Ein_scale)
     idir = 1 if rRuth else 0
-    pn,tn,en,rn = [lightA.get(n,n) for n in (p,t,e,r)]
+    pn,tn,en,rn = [lightA.get(n,n) for n in (p,t,e,r_l)]
     if e != 'TOT':
         Qvalue_masses = (masses[p] + masses[t] - masses[e]-masses[r]) * amu
         Qvalue = qvalue[e] - qvalue[p]
@@ -665,6 +717,9 @@ for datFile in args.inFiles:
                 if Aflip: datum[1] = 180 - datum[1]
                 angle_ex = angle_lab
                 ex2cm = frame_scale if not rRuth else 1.0
+                if abs(ex2cm.imag)>0: 
+                    print("STRANGE SUB-THRESHOLD TRANSITION!!!. Omit as ex2cm=",ex2cm)
+                    continue
                 
             if rRuth:
                 rmass = masses[p] * masses[t] / (masses[p] + masses[t])
@@ -730,7 +785,10 @@ for datFile in args.inFiles:
                         if Aflip: dat[1] = 180 - dat[1]
                         angle_ex = angle_lab
                         ex2cm = frame_scale if not rRuth else 1.0
-                         
+                        if abs(ex2cm.imag)>0: 
+                            print("STRANGE SUB-THRESHOLD TRANSITION!!!. Omit as ex2cm=",ex2cm)
+                            continue
+                                             
                     if rRuth:
                         rmass = masses[p] * masses[t] / (masses[p] + masses[t])
                         k = math.sqrt(fmscal * rmass * Ecm)
@@ -819,9 +877,10 @@ if args.Sfresco:
     print(' ', file=sf)
     for  s in shiftlimits: print(s, file=sf)
 
-if args.pops is not None:
-    print('\nFresco input file:')
-    make_fresco_input(projs,targs,masses,charges,qvalue,args.pops,args.Jmax,Projectiles,
-        args.EminCN,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,
-        args.jdef,args.pidef,args.widef,args.Term0,args.GammaChannel)
+print("Excited states used:",levels)
+
+print('\nFresco input file:')
+make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,args.Jmax,Projectiles,
+    args.EminCN,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,
+    args.jdef,args.pidef,args.widef,args.Term0,args.GammaChannel)
 

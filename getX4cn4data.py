@@ -741,7 +741,6 @@ if __name__ == "__main__":
                                     else:
                                        if debug: print('P =',E,' and m,amU=',masses_in[0] , amu,'so E',(E*E_scale)**2/ (2 * masses_in[0] * amu))
                                        E = (E*E_scale)**2/ (2 * masses_in[0] * amu)
-                                    if not (ElabMin < E < ElabMax): continue
                                     dE *= dE_scale
         #                            print('dData:',dData,dataErr_abs,Data,dataErr_rel)
                                     dData *=  ( dataErr_abs**2 + (Data*dataErr_rel)**2 ) ** 0.5
@@ -755,6 +754,8 @@ if __name__ == "__main__":
 
                                     if E is None: continue
                                     if No_neg_errorbars and (Data < 0. or Data - dData < 0): continue
+                                    if not (ElabMin < E < ElabMax): continue
+
                                     level = 0.
                                     if level_index is not None and obs in ['DA','CS'] and stuff[level_index] is not None:
                                         level = stuff[level_index]
