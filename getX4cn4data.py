@@ -1,51 +1,73 @@
 #! /usr/bin/env python
 
 # TO DO
-# 1. Code for S-factors and recognize their possible units
-# 3. Trap bad levels not in RIPL
+# 1. 
 #
-import sys,os,math
+import sys,os,math,argparse
 sys.path.append( '..' )
 from x4i import exfor_manager, exfor_entry
 from nuclear import *
-lightnuclei = {'n':'N', '2n':'2N', 'H1':'P', 'H2':'D', 'H3':'T', 'He3':'HE3', 'He4':'A', 'photon':'G'}
-GNDSnuclei = {'N':'n', '2N':'2n', 'P':'H1', 'D':'H2', 'T':'H3', 'HE3':'He3', 'A':'He4', 'G':'photon'}
-lightA      = {'photon':0, 'n':1, '2n':2, 'H1':1, 'H2':2, 'H3':3, 'He3':3, 'He4':4}
-lightZ      = {'photon':0, 'n':0, '2n':0, 'H1':1, 'H2':1, 'H3':1, 'He3':2, 'He4':2}
-
-classes = ['INL','NON']
-
-debug = False
-print('Command:',' '.join(sys.argv[:]) ,'\n')
-
-if len(sys.argv[1:]) < 3:
-    print('Usage:\n getX4cn4data.py CN  Ethreshold Emaxlimit [projectile  nat]')
-    print('where:          CN = compound-nucleus   e.g. N-15 or N15\n',
-          '        Ethreshold = minimum incoming lab energy \n',
-          '        Emaxlimit  = maximum incoming lab energy\n',
-          '        projectile = specific projectile only (or "any" or empty)  \n',
-          '        nat        = CN which can be replaced by element as being isotopically dominant (e.g. "N-14")\n')
-    sys.exit()
-# print(list(elementsSymbolZ.keys()))
-#
-#Call:
-#    getX4CN.py Be-7
-#
-allObs = ['CS','DA','DA/DE','DE']
-plots1d = ['CS','NU']
-plots2d = ['DA','NU/DE','DA-G']
-No_neg_errorbars = True
-Ethreshold = float(sys.argv[2]) # ignore incoming energies below this.
-EmaxLimit = 20. # lab energy in first channel
-EmaxLimit = float(sys.argv[3]) # ignore incoming energies above this
+from PoPs import database as databaseModule
 
 # BAD DATA:
 rescale_e3 = ['20920']  # Scobel data should be label b, not mb
 
 excludeSE = ['F0005002','10547002','11182002','11164003','10755003']
 
-from PoPs import database as databaseModule
-pops = databaseModule.database.readFile( '../pops-global.xml' )
+
+
+
+lightnuclei = {'n':'N', '2n':'2N', 'H1':'P', 'H2':'D', 'H3':'T', 'He3':'HE3', 'He4':'A', 'photon':'G'}
+GNDSnuclei = {'N':'n', '2N':'2n', 'P':'H1', 'D':'H2', 'T':'H3', 'HE3':'He3', 'A':'He4', 'G':'photon'}
+lightA      = {'photon':0, 'n':1, '2n':2, 'H1':1, 'H2':2, 'H3':3, 'He3':3, 'He4':4}
+lightZ      = {'photon':0, 'n':0, '2n':0, 'H1':1, 'H2':1, 'H3':1, 'He3':2, 'He4':2}
+
+
+defaultPops = '../ripl2pops_to_Z8.xml'
+debug = False
+print('Command:',' '.join(sys.argv[:]) ,'\n')
+
+parser = argparse.ArgumentParser(description='Prepare data for Rflow')
+
+parser.add_argument('CN', type=str, help='compound-nucleus   e.g. N-15 or N15.')
+parser.add_argument("-E", "--EnergyMax", type=float,  default="19.9", help="Maximum lab incident energy to allow. Default=19.9")
+parser.add_argument("-e", "--EnergyMin", type=float,  default="0.1", help="Minimum lab incident energy to allow. Default=0.001")
+parser.add_argument("-p", "--projectiles", type=str, default='any', help="Specific projectile only or default 'any'")
+parser.add_argument("-n", "--nat", type=str,  help="CN which can be replaced by element as being isotopically dominant (e.g. N-14).")
+parser.add_argument("-d", "--dir", type=str, default="Data_X4", help="Output directory.")
+
+parser.add_argument("-i", "--include", metavar="INCL",  nargs="*", help="Subentries to include, if not all")
+parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Subentries to exclude if any string within subentry name")
+parser.add_argument(      "--pops", type=str, default=defaultPops, help="pops files with all the level information from RIPL3. Default = %s" % defaultPops)
+parser.add_argument(      "--allowNeg", action="store_true", help="Allow points if lower error bar goes negative")
+parser.add_argument("-t", "--tolerance", type=float,  default="0.1", help="Print warnings for level discrepancies larger than this")
+
+
+args = parser.parse_args()
+
+
+pops = databaseModule.database.readFile( args.pops )
+CN = args.CN
+ElabMin = args.EnergyMin
+ElabMax = args.EnergyMax
+proj = args.projectiles
+nat = args.nat
+
+# print(list(elementsSymbolZ.keys()))
+
+allObs = ['CS','DA','DA/DE','DE']
+plots1d = ['CS','NU']
+plots2d = ['DA','NU/DE','DA-G']
+classes = ['INL','NON']
+classes = []
+No_neg_errorbars = not args.allowNeg
+
+exclude = args.exclude
+include = args.include
+if include:
+    print("    Include only ",include)
+else:
+    include = [None]
 
 pi = math.pi
 rad = 180/pi
@@ -66,7 +88,7 @@ def getmz(nucl):
         charge = n.nucleus.charge[0].value
     return (mass,charge)
     
-def PoPsLevelFind(nucname,level,pops,trace):
+def PoPsLevelFind(nucname,level,trace):
     if level == 0.0: return ('')
     proximity = 1e6
     nearest = 0
@@ -80,16 +102,16 @@ def PoPsLevelFind(nucname,level,pops,trace):
                 proximity = abs(E-level)
                 Enearest = E
                 nearest = l
+                if proximity < 1e-3: break
         except:
             pass
-#     if proximity > 0.1: return(None)
     tag = '_e%s' % nearest if nearest > 0 else ''
-    if trace and proximity>0.01: print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity)
+    if trace and proximity>args.tolerance : print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity)
+#     print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity)
     return(tag)
 
 if __name__ == "__main__":
 
-    CN = sys.argv[1]
     if '-' in CN:
         name,Acn = CN.split('-')
     else:
@@ -99,21 +121,8 @@ if __name__ == "__main__":
     gndsName = name+Acn
     CNmass,CNcharge = getmz(gndsName)
 
-    try: proj = sys.argv[4]
-    except: proj = 'any'
-    try: nat = sys.argv[5]
-    except: nat = None
     Acn = int(Acn)
     Zcn = elementsSymbolZ[name]
-    
-
-    pops_cn = '%s%s-pops.xml' % (name,Acn)
-    pops_cn = 'local-pops.xml'
-    try:
-        print('Try reading local pops file',pops_cn)
-        pops.addFile(pops_cn)
-    except:
-        pass
 
     channels = []
     for p in lightA.keys():
@@ -128,7 +137,7 @@ if __name__ == "__main__":
     print('Binary channels for',CN,':\n',channels)
     
     db = exfor_manager.X4DBManagerPlainFS( )  
-    dir = 'Data_X4'
+    dir = args.dir
     #if nat is not None: dir = 'nat'+name
     os.system('mkdir '+dir)
     excuses = {}
@@ -149,19 +158,15 @@ if __name__ == "__main__":
         if len(partitions) == 0:
             qvalue = 0.0
             Tmass = pmass + tmass
-            e0limit = EmaxLimit * tmass/Tmass + qvalue
-            print('Set e0limit =',e0limit,'for projectile',p)
-            elimit = e0limit
-        else:
-            elimit = e0limit + qvalue
 
         Partmass = pmass + tmass
         qvalue = (Tmass - Partmass) * amu  # relative to the first partition
                 
         targets = [t]
+        natT = ''
         if nat is not None:  
             if t==nat:    # replace t by nat-t as isotopically dominant
-                natT = t.split('-')[0]
+                natT,natA = t.split('-')
                 tn = natT + '-0'
                 print('Also try replacing',t,'by',tn)
                 targets.append(tn)
@@ -172,7 +177,7 @@ if __name__ == "__main__":
             this_partition_Listed = False
             for Out in more+channels:
                 po,to = Out
-                Qvalue_to_gs = 0 if Out == 'TOT' else -99
+                Qvalue_to_gs = 0 # if Out == 'TOT' else -99
                 if Out in channels:
                     emass,poZ = getmz(po)
                     rmass,toZ = getmz(to)
@@ -180,7 +185,7 @@ if __name__ == "__main__":
 
                 pon = po if po in cl else lightnuclei[po]   # x4 name
                 if po == p: pon = 'EL'
-                to_gnds = to.replace('-','')
+                residual = to.replace('-','')
 
                 reaction = pn + ',' + pon
                 projectile,ejectile = (pn,pon)
@@ -189,14 +194,20 @@ if __name__ == "__main__":
         
 #                 if ejectile == 'N': continue
 #                 if ejectile == 'G': continue
-                if ejectile == 'NON': continue
-                if ejectile == 'INL': continue
+#                 if ejectile == 'NON': continue
+#                 if ejectile == 'INL': continue
 
                 for obs in allObs:
                     searchX4 = "\n ***** Search X4 for %s(%s), %s with Q2gs=%7.3f MeV" % (t,reaction,obs,Qvalue_to_gs)
                     print("\n", searchX4)
                     exit_quantity = 'angle' if obs=='DA' else 'exit energy'
-                    subents = db.retrieve( target = t, reaction = reaction, quantity = obs )
+                    
+                    print("    Include only ",include)
+                    subents = {}
+                    for incl in include:
+                        subs = db.retrieve( target = t, reaction = reaction, quantity = obs , SUBENT = incl)
+                        for e in list(subs.keys()) : subents[e] = subs[e]
+
                     searchesFound = 0
 
                     if obs == 'DA/DE': continue
@@ -212,6 +223,7 @@ if __name__ == "__main__":
                             print(list(subents[ e ].keys()))
                             continue
                         for d in ds:
+                            print()
                             npoints = 0
                             result = str( ds[ d ] ) 
                             Authors = ', '.join(ds[d].author[:])
@@ -236,10 +248,14 @@ if __name__ == "__main__":
                             Legendre = 'Legendre' in Reaction
                         
                             if subent in excludeSE:
-                                excuses[subent] = 'Subentry on excluded list'
+                                excuses[subent] = 'Subentry on global excluded list'
                                 print(20*' ',excuses[subent])
                                 continue
-
+                            # if exclude is not None and subent in exclude:
+                            if exclude is not None and any(sub in subent for sub in exclude):
+                                excuses[subent] = '## Data set in local exclusion list'
+                                print(20*' ',excuses[subent])
+                                continue
                         
                             if n < 3: continue  # need 3 or more data points 
                         
@@ -250,6 +266,10 @@ if __name__ == "__main__":
 
                             if 'Legendre' in Reaction:
                                 excuses[subent] = 'Legendre data not yet extracted'
+                                print(20*' ',excuses[subent])
+                                continue
+                            if '+' in Reaction:
+                                excuses[subent] = 'Summed reactions not yet processed'
                                 print(20*' ',excuses[subent])
                                 continue
                             if 'Delayed' in Reaction:
@@ -268,14 +288,14 @@ if __name__ == "__main__":
                                 excuses[subent] = 'isotopic data not yet distinguished'
                                 print(20*' ',excuses[subent])
                                 continue
-                            if 'S-factor' in Reaction:
-                                excuses[subent] = 'S-factor data not yet plotted'
-                                print(20*' ',excuses[subent])
-                                continue
-                            if 'SFC' in str(ds[d].reaction[:]):
-                                excuses[subent] = 'S-factor data not yet plotted'
-                                print(20*' ',excuses[subent])
-                                continue
+#                             if 'S-factor' in Reaction:
+#                                 excuses[subent] = 'S-factor data not yet plotted'
+#                                 print(20*' ',excuses[subent])
+#                                 continue
+#                             if 'SFC' in str(ds[d].reaction[:]):
+#                                 excuses[subent] = 'S-factor data not yet plotted'
+#                                 print(20*' ',excuses[subent])
+#                                 continue
                             if 'MXW' in str(ds[d].reaction[:]):
                                 excuses[subent] = 'Maxwellian data not processed'
                                 print(20*' ',excuses[subent])
@@ -310,7 +330,7 @@ if __name__ == "__main__":
                             labels = ds[d].labels
                             units  = ds[d].units 
                             E_index = None
-                            include = False
+                            included = False
                             emin = 1e3
                             emax = 0
                             energy = True
@@ -351,7 +371,7 @@ if __name__ == "__main__":
                                     emin = min(emin,E)
                                     emax = max(emax,E)
                                 errs = ' '
-                                include = emin < EmaxLimit
+                                included = True
         
                             elif 'EN-MIN' in labels in labels:
                                 E_index_min = labels.index('EN-MIN')
@@ -365,7 +385,6 @@ if __name__ == "__main__":
                                     emin = min(emin,E)
                                     emax = max(emax,E)
                                 errs = ' '
-                                include = emin < EmaxLimit
                             elif 'MOM' in labels:
                                 E_index = labels.index('MOM')
                                 energy = False
@@ -374,9 +393,9 @@ if __name__ == "__main__":
                                 emin = ' '
                                 emax = ' '
                                 errs = ' '
-                                include = True
+                                included = True
                         
-                            if not include: continue
+                            if not included: continue
                             
                             level_index = None; levelnum_index = None; Q_index = None
                             if 'E-LVL' in labels:
@@ -408,45 +427,51 @@ if __name__ == "__main__":
                                     Emin_in = stuff[E_index_min] if E_index_min is not None else 0.0
                                     Emax_in = stuff[E_index_max]
                                     E = (Emin_in + Emax_in)*0.5
-                                if not (Ethreshold < E*E_scale < EmaxLimit) : continue
-
-                                if level_index is not None and obs in ['DA','CS']:
+                                if not (ElabMin < E*E_scale < ElabMax): continue
+                                
+                                if level_index is not None and obs in ['DA','CS'] and stuff[level_index] is not None:
                                     level = stuff[level_index]
-                                    levelUnits = units[level_index]
-                                    if levelUnits.lower() == 'ev':  level *= 1e-6
-                                    if levelUnits.lower() == 'kev': level *= 1e-3
-                                    levels.add(level)
-                                elif levelnum_index is not None and obs in ['DA','CS']:
+                                    if level is not None:
+                                        levelUnits = units[level_index]
+                                        if levelUnits.lower() == 'ev':  level *= 1e-6
+                                        if levelUnits.lower() == 'kev': level *= 1e-3
+                                        levels.add(level)
+#                                         print('level=',level,'from level_index=',level_index)
+                                    
+                                elif levelnum_index is not None and obs in ['DA','CS'] and  stuff[levelnum_index] is not None:
                                     levelnum = stuff[levelnum_index]
-                                    tex = to_gnds + ('_e%s' % int(levelnum) if levelnum > 0 else '')
-                                    try:
-                                        level = pops[tex].energy[0].pqu('MeV').value
-                                    except:
-                                        excuses[subent] = "Residual %s not found in evaluation pops" % tex
-                                        print(20*' ',excuses[subent])
-                                        continue
-
-                                    levels.add(level)
+                                    if levelnum is not None:
+                                        tex = residual + ('_e%s' % int(levelnum) if levelnum > 0 else '')
+                                        try:
+                                            level = float(pops[tex].energy[0].pqu('MeV').value)
+#                                             print('level=',level,'from levelnum=',levelnum)
+                                        except:
+                                            excuses[subent] = "Residual %s not found in evaluation pops" % tex
+                                            print(20*' ',excuses[subent])
+                                            continue
+                                        levels.add(level)
                                 elif levelnum_g is not None:
-                                    tex = to_gnds + ('_e%s' % int(levelnum_g) if levelnum_g > 0 else '')
+                                    tex = residual + ('_e%s' % int(levelnum_g) if levelnum_g > 0 else '')
                                     try:
                                         level = pops[tex].energy[0].pqu('MeV').value
+                                        levels.add(level)
+#                                         print('level=',level,'from levelnum_g=',levelnum_g)
                                     except:
                                         print('Energy of state',tex,'NOT FOUND IN POPS. ERROR')
                                         level = levelnum_g*1.11111
+                                        levels.add(level)
                
-                                    # print "Residual",tex," at energy",level
-                                    levels.add(level)
                                 elif Q_index is not None:
                                     Q = stuff[Q_index]
                                     level = Qvalue_to_gs - Q
-                                    print(' level =',level,'from Qgs-Q =',Qvalue_to_gs ,'-', Q)
+#                                     print(' level =',level,'from Qgs-Q =',Qvalue_to_gs ,'-', Q)
                                     levels.add(level)
                                 else:
                                     level = 0.
-                                    
-                                leveltag = PoPsLevelFind(to,level,pops,True)   
+                                
+                                leveltag = PoPsLevelFind(residual,level,True)   
                                 leveltags.add(leveltag)
+#                             print('Found leveltags:',leveltags,'from',levels,'for',subent)
 # GET DATA                            
                             if 'EN-RSL' in labels:
                                 dE_index = labels.index('EN-RSL')
@@ -502,6 +527,8 @@ if __name__ == "__main__":
                             if S_factor:
                                 if Data_units.lower() in ['mb*mev']: data_scale = 1e-3
                                 if Data_units.lower() in ['b*mev']: data_scale = 1.0
+                                if Data_units.lower() in ['b*kev']: data_scale = 1e-3
+                                if Data_units.lower() in ['mb*kev']: data_scale = 1e-6
                                 print('S_factor: data_scale=',data_scale)
            
                             dData_index = None
@@ -572,8 +599,8 @@ if __name__ == "__main__":
                                 elif 'COS-CM' in labels:
                                     Ang_index = labels.index('COS-CM')
                                     cosines = True   # data already in cosines
-                                elif 'E' in labels and observable!='DA':
-                                    Ang_index = labels.index('E')
+#                                 elif 'E' in labels and observable!='DA':
+#                                     Ang_index = labels.index('E')
                                 else:
                                     excuses[subent] = 'No exit '+exit_quantity+' column found'
                                     print(20*' ',excuses[subent])
@@ -591,7 +618,7 @@ if __name__ == "__main__":
                             
                             
                             for leveltag in leveltags:
-                        
+
                         # FIND IF ANY DATA IS IN RANGE, before creating a file! 
                                 Datafound = 0
                                 for stuff in ds[d].data:
@@ -605,24 +632,27 @@ if __name__ == "__main__":
                                         Emin_in = stuff[E_index_min] if E_index_min is not None else 0.0
                                         Emax_in = stuff[E_index_max]
                                         E = (Emin_in + Emax_in)*0.5
+                                    if not (ElabMin < E*E_scale < ElabMax): continue
 
                                     if E is None: continue
-                                    if E*E_scale < Ethreshold: continue
                                     
-                                    if level_index is not None and obs in ['DA','CS']:
+                                    if level_index is not None and obs in ['DA','CS']  and stuff[level_index] is not None:
                                         level = stuff[level_index]
                                         levelUnits = units[level_index]
                                         if levelUnits.lower() == 'ev':  level *= 1e-6
                                         if levelUnits.lower() == 'kev': level *= 1e-3
-                                    elif levelnum_index is not None and obs in ['DA','CS']:
+                                    elif levelnum_index is not None and obs in ['DA','CS']  and stuff[levelnum_index] is not None:
                                         levelnum = stuff[levelnum_index]
-                                        tex = to_gnds + ('_e%s' % int(levelnum) if levelnum > 0 else '')
-                                        try:
-                                            level = pops[tex].energy[0].pqu('MeV').value
-                                        except:
-                                            continue
+                                        if levelnum is not None:
+                                            tex = residual + ('_e%s' % int(levelnum) if levelnum > 0 else '')
+                                            try:
+                                                level = pops[tex].energy[0].pqu('MeV').value
+                                            except:
+                                                excuses[subent] = "Residual %s not found in evaluation pops" % tex
+                                                print(20*' ',excuses[subent])
+                                                continue
                                     elif levelnum_g is not None:
-                                        tex = to_gnds + ('_e%s' % int(levelnum_g) if levelnum_g > 0 else '')
+                                        tex = residual + ('_e%s' % int(levelnum_g) if levelnum_g > 0 else '')
                                         try:
                                             level = pops[tex].energy[0].pqu('MeV').value
                                         except:
@@ -633,7 +663,7 @@ if __name__ == "__main__":
                                     else:
                                         level = 0.
                                         
-                                    if leveltag != PoPsLevelFind(to,level,pops,False): continue
+                                    if leveltag != PoPsLevelFind(residual,level,False): continue
                                                                     
                                     Datafound += 1                    
                         
@@ -647,7 +677,6 @@ if __name__ == "__main__":
                                 described = False
                                 searchesFound += 1
                                 for stuff in ds[d].data:
-                                
                                     dData = dData1 = dData2 = 0.0
                                     E = None
 
@@ -712,6 +741,7 @@ if __name__ == "__main__":
                                     else:
                                        if debug: print('P =',E,' and m,amU=',masses_in[0] , amu,'so E',(E*E_scale)**2/ (2 * masses_in[0] * amu))
                                        E = (E*E_scale)**2/ (2 * masses_in[0] * amu)
+                                    if not (ElabMin < E < ElabMax): continue
                                     dE *= dE_scale
         #                            print('dData:',dData,dataErr_abs,Data,dataErr_rel)
                                     dData *=  ( dataErr_abs**2 + (Data*dataErr_rel)**2 ) ** 0.5
@@ -724,23 +754,23 @@ if __name__ == "__main__":
                                     if RT_data_scale is not None: Data /= (E*RT_data_scale) ** 0.5
 
                                     if E is None: continue
-                                    if E < Ethreshold: continue
                                     if No_neg_errorbars and (Data < 0. or Data - dData < 0): continue
-                                    
-                                    if level_index is not None and obs in ['DA','CS']:
+                                    level = 0.
+                                    if level_index is not None and obs in ['DA','CS'] and stuff[level_index] is not None:
                                         level = stuff[level_index]
                                         levelUnits = units[level_index]
                                         if levelUnits.lower() == 'ev':  level *= 1e-6
                                         if levelUnits.lower() == 'kev': level *= 1e-3
-                                    elif levelnum_index is not None and obs in ['DA','CS']:
+                                    elif levelnum_index is not None and obs in ['DA','CS']  and stuff[levelnum_index] is not None:
                                         levelnum = stuff[levelnum_index]
-                                        tex = to_gnds + ('_e%s' % int(levelnum) if levelnum > 0 else '')
-                                        try:
-                                            level = pops[tex].energy[0].pqu('MeV').value
-                                        except:
-                                            continue
+                                        if levelnum is not None:
+                                            tex = residual + ('_e%s' % int(levelnum) if levelnum > 0 else '')
+                                            try:
+                                                level = pops[tex].energy[0].pqu('MeV').value
+                                            except:
+                                                pass
                                     elif levelnum_g is not None:
-                                        tex = to_gnds + ('_e%s' % int(levelnum_g) if levelnum_g > 0 else '')
+                                        tex = residual + ('_e%s' % int(levelnum_g) if levelnum_g > 0 else '')
                                         try:
                                             level = pops[tex].energy[0].pqu('MeV').value
                                         except:
@@ -748,12 +778,9 @@ if __name__ == "__main__":
                                     elif Q_index is not None:
                                         Q = stuff[Q_index]
                                         level = Qvalue_to_gs - Q
-                                    else:
-                                        level = 0.
                                         
-                                    if leveltag != PoPsLevelFind(to,level,pops,False): continue
+                                    if leveltag != PoPsLevelFind(residual,level,False): continue
                                     
-
                                     if obs in plots2d:
                                         if dAng  is None: dAng  = 0.
                                         if  Ang  is None: continue
@@ -773,19 +800,13 @@ if __name__ == "__main__":
                                 data_output.close()
                                 npts = str(npoints)
                          
-    #                             if 0.0 in levels: levels = levels.remove(0.0)
-                                if levels is not None:
-                                    if len(levels)>0:
-                                        levelE = [float(e) for e in levels]
-                                        print('     Subentry',subent,' produces in',reaction,to,'the levels',repr(levelE))
-                                        levelsSeen.append(['Subentry %s produces in %s%s levels %s' % (subent,reaction,to,repr(levelE)) ])
-                                                                
-                                residual = '0'
+
+                                level = '0'
                                 if ejectile == 'INL':
                                     ejectile=projectile
-                                    residual = '*'
+                                    level = '*'
                                 if leveltag != '':
-                                    residual = leveltag[2:]
+                                    level = leveltag[2:]
                                 sys_error = '5'  if ejectile != 'TOT' else '1' if not shape_data else str(-1)
                                 stat_error= '10' if ejectile != 'TOT' else '2' #  for when pointwise errors are 0.0
                                 angle_integrated = 'TRUE' if obs=='CS' else 'FALSE'
@@ -817,19 +838,29 @@ if __name__ == "__main__":
                                     pmass,tmass,pZ,tZ = tmass,pmass,tZ,pZ
                                 else:
                                     if not this_partition_Listed:
-                                        partitions.append([p,t.replace('-',''),str(qvalue),str(pmass),str(tmass),str(pZ),str(tZ),'%.2f' % elimit])
+                                        partitions.append([p,t.replace('-',''),str(qvalue),str(pmass),str(tmass),str(pZ),str(tZ)])
                                         print('Added partition',partitions[-1])
                                         this_partition_Listed = True
 
                            
                                 target  = t.replace('-','')  # GNDS name
+                                if target == natT+'0': target = natT + natA
                                 nucname = target  # TEMPORARY ??
                                 Aflip = 'TRUE' if Aflip else 'FALSE'
-                                print(projectile,ejectile,residual,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npoints,X4_tag)
-                                if include:
+                                print(projectile,ejectile,target,residual,level,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npoints,X4_tag)
+                                if included:
         #                             subentries.append(', '.join(['"'+part+'"' for part in [subent,x4file,t,reaction,obs,Reaction,str(emin),str(emax),
         #                                 str(n),errs,Authors,ds[d].year,str(ds[d].reference)]]))
-                                    subentries.append(','.join([projectile,ejectile,residual,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npts,X4_tag]))
+                                    subentries.append(','.join([projectile,ejectile,target,residual,level,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npts,X4_tag]))
+                                #                             if 0.0 in levels: levels = levels.remove(0.0)
+#                             print('Looked for levels',levels,'in',residual) 
+                            if levels is not None:
+                                if len(levels)>0:
+                                    levelE = [float(e) for e in levels]
+                                    print('     Subentry',subent,' produces in',reaction,to,'the levels',repr(levelE))
+                                    levelsSeen.append(['Subentry %s produces in %s%s levels %s' % (subent,reaction,to,repr(levelE)) ])
+                                                                
+
                     searched +=  searchX4.replace('***** Search X4 for','') + " : %s" % searchesFound
 
     print('partitions:',partitions)
@@ -839,7 +870,7 @@ if __name__ == "__main__":
         fn = dir + '/datafile.props.csv'
         print('\nWrite csv file',fn,'for',len(subentries),'subentries')
         f = open ( fn , 'w')
-        print('projectile,ejectile,residual,file,sys-error,stat-error,angle-integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,S_factor,Npoints,EXFOR',file=f)
+        print('projectile,ejectile,target,residual,level,file,sys-error,stat-error,angle-integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,S_factor,Npoints,EXFOR',file=f)
         ents = set()
         for subent in sorted(list(subentries)):
             psubent = subent.replace('"','')
@@ -853,26 +884,6 @@ if __name__ == "__main__":
             else:
                 print(subent.replace(", ",","), file=f)
         print('\nPartitions:')
-        hasPhotons = False
-        
-        
-        
-        for p in partitions:
-            if p[1] == nat.replace('-',''): continue
-            print(','.join([p[0],p[1],p[7],'LIMIT',p[3],p[4],p[2],p[5],p[6]]))
-            print(','.join([p[0],p[1],p[7],'LIMIT',p[3],p[4],p[2],p[5],p[6]]), file=f)
-            if p[0]=='photon': hasPhotons = True
-        
-        if not hasPhotons:
-            qvalue = (Tmass - CNmass) * amu
-            elimit = e0limit + qvalue
-            
-            print(','.join(['photon',gndsName,str(elimit),'LIMIT','0',str(CNmass),str(qvalue),'0',str(CNcharge)]), file=f)
-            print('photon',gndsName,str(elimit),'LIMIT','0',str(CNmass),str(qvalue),'0',str(CNcharge))
-        else:
-            print('Photons included with CN',gndsName)
-
-#     print('Levels seen:\n',levelsSeen)
     
     if len(list(excuses.keys()))>0: print("\nReasons for exclusions:")
     for sub in list(excuses.keys()):
