@@ -12,6 +12,20 @@ plsymbol = {0:".", 1:"o", 2:"s", 3: "D", 4:"^", 5:"<", 6: "v", 7:">",
 
 lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
+from PoPs.groups.misc import *
+
+def nuclIDs (nucl):
+    datas = chemicalElementALevelIDsAndAnti(nucl)
+    if datas[1] is not None:
+        return datas[1]+str(datas[2]),datas[3]
+    else:
+        return datas[0],0
+
+def quickName(p,t):     #   (He4,Be11_e3) -> a3
+    ln = lightnuclei.get(p,p)
+    tnucl,tlevel = nuclIDs(t)
+    return(ln + str(tlevel) if tlevel>0 else ln)
+
 @singledispatch
 def to_serializable(val):
     """Used by default."""
@@ -51,8 +65,9 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
     return
 
 def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-    groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,datasize, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
+    groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,tname,datasize, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
 
+    print('pname:',pname)
     ngraphAll = 0
     groups = sorted(groups)
     chisqAll = 0
@@ -304,7 +319,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
     rrr = gnd.resonances.resolved
     RMatrix = rrr.evaluated
     bndx = RMatrix.boundaryCondition
-    pLab = lightnuclei.get(pname[ipair],pname[ipair])
+    pLab = quickName(pname[ipair],tname[ipair])
     PoleData = []    
     PoleDataP = []    
     ModelLines = []
@@ -380,21 +395,22 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
         GlobalGraphList = []
 #         GlobalGraphList.append(PoleGraphList[0])
         GlobalngraphAll = 0 # 1 # this is the PoleGraph
-        pLab = lightnuclei.get(pname[ipair],pname[ipair])
+        pLab = quickName(pname[ipair],tname[ipair])
         lab2cm = 1./cm2lab[ipair]
       
         for pinG in range(npairs):
-            pn = lightnuclei.get(pname[pinG],pname[pinG])
+            pn = quickName(pname[pinG],tname[pinG])
             print('In:',pn,'from',pinG)
             GraphList = []
             ngraphAll = 0
 
             for poutG in range(npairs+1):
                 if pinG==poutG: continue  # elastic is too boring
-                po = '-> ' + lightnuclei.get(pname[poutG],pname[poutG]) if poutG < npairs else 'tot'
+                po = '-> ' + quickName(pname[poutG],tname[poutG]) if poutG < npairs else 'tot'
+                po = '-> ' + pname[poutG] if poutG < npairs else 'tot'
                 poG = poutG if poutG < npairs else -1  # convention in printExcitationFunctions
                 SingleGraphList = []
-                SinglengraphAll = 0      
+                SinglengraphAll = 0
                           
                 DataLines = []
                 ModelLines = []
@@ -406,7 +422,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                     LineModel[1][2].append(0.)
                     LineModel[1][3].append(0.)    
                 legend = '%s %s' % (pn,po) #+ ' (%s,%s=%s)' % (pinG,poutG,poG)
-                LineModel[0] = {'kind':'Model', 'color':plcolor[0], 'linestyle': pldashes[pinG], 'evaluation':legend}  #, 'legend': legend } 
+                LineModel[0] = {'kind':'Model', 'color':plcolor[0], 'linestyle': pldashes[pinG % 4], 'evaluation':legend}  #, 'legend': legend } 
                 ModelLines.append(LineModel)
                 print('  Curve for',legend)
                 

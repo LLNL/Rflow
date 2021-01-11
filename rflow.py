@@ -1698,7 +1698,7 @@ if __name__=='__main__':
     dof = n_data + n_cnorms - n_norms - n_pars
     EIndex = numpy.argsort(data_val[:,0])
     plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,None,pname,args.datasize,ipair,cm2lab, gnd.evaluation,cmd )
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,None,pname,tname,args.datasize,ipair,cm2lab, gnd.evaluation,cmd )
     print("Final rflow: ",tim.toString( ))
     sys.exit()
     

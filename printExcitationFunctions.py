@@ -1,6 +1,20 @@
 import numpy
 lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
+from PoPs.groups.misc import *
 
+def nuclIDs (nucl):
+    datas = chemicalElementALevelIDsAndAnti(nucl)
+    if datas[1] is not None:
+        return datas[1]+str(datas[2]),datas[3]
+    else:
+        return datas[0],0
+
+def quickName(p,t):     #   (He4,Be11_e3) -> a3
+    ln = lightnuclei.get(p,p)
+    tnucl,tlevel = nuclIDs(t)
+    return(ln + str(tlevel) if tlevel>0 else ln)
+        
+        
 def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base,n_data,E_scat,EIndex,cm2lab,QI,ipair,Eframe):
         
 #  Eframe False:   plot as function of cm energy in the partition ipair (the projectile frame in gnds source)
@@ -16,8 +30,7 @@ def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, 
     pnin = None
     for pin in range(npairs):
 
-        pn = lightnuclei.get(pname[pin],pname[pin])
-        tn = lightnuclei.get(tname[pin],tname[pin])
+        pn = quickName(pname[pin],tname[pin])
         neut = za[pin]*zb[pin] == 0    # calculate total cross-sections for neutrons
         if neut: pnin = pin
         fname = base + '-%stot_%s' % (sym,pn)
@@ -50,8 +63,7 @@ def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, 
 
         for pout in range(npairs):
             if pin==pout and not neut: continue
-            po = lightnuclei.get(pname[pout],pname[pout])
-            to = lightnuclei.get(tname[pout],tname[pout])
+            po = quickName(pname[pout],tname[pout])
             fname = base + '-%sch_%s-to-%s' % (sym,pn,po)
             print('Partition',pin,'to',pout,': angle-integrated cross-sections to file',fname)
             fout = open(fname,'w')

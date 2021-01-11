@@ -40,6 +40,7 @@ print("First imports done rflow: ",tim.toString( ))
 
 
 # TO DO:
+#   Preliminary scaling factors for unscaled data, to start fits more easily.
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
 #   Multiple GPU strategies
 #   Estimate initial Hessian by 1+delta parameter shift. Try various delta to make BFGS search smoother
@@ -67,8 +68,6 @@ etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
-
-                                    
 def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
         Ein_list, fixedlist, emind,emaxd,pmin,pmax,
         norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
@@ -150,6 +149,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         tname[pair] = t
         projectile = PoPs[p];
         target     = PoPs[t];
+
         pMass = projectile.getMass('amu');   tMass =     target.getMass('amu');
         rmass[pair] = pMass * tMass / (pMass + tMass)
         if hasattr(projectile, 'nucleus'): projectile = projectile.nucleus
@@ -1225,6 +1225,6 @@ if __name__=='__main__':
 
     dof = n_data + n_cnorms - n_norms - n_pars
     plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,args.datasize,ipair,cm2lab, emin,emax,pnin,gnd,cmd )
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,tname,args.datasize,ipair,cm2lab, emin,emax,pnin,gnd,cmd )
         
     print("Final rflow: ",tim.toString( ))
