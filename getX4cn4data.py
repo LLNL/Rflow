@@ -744,9 +744,10 @@ if __name__ == "__main__":
                                     dE *= dE_scale
         #                            print('dData:',dData,dataErr_abs,Data,dataErr_rel)
                                     dData *=  ( dataErr_abs**2 + (Data*dataErr_rel)**2 ) ** 0.5
-        #                             print('dData:',dData1,dataErr_abs1,Data,dataErr_rel1)
+#                                     print('dData:',dData1,dataErr_abs1,Data,dataErr_rel1)
                                     dData1 *=  ( dataErr_abs1**2 + (Data*dataErr_rel1)**2 ) ** 0.5
-        #                             print('dData2:',dData2,dataErr_abs2,Data,dataErr_rel2)
+#                                     print('dData2:',dData2,dataErr_abs2,Data,dataErr_rel2)
+                                    if dData2 is None: dData2 = 0. 
                                     dData2 *=  ( dataErr_abs2**2 + (Data*dataErr_rel2)**2 ) ** 0.5
                                     if debug: print('err:',dData/Data,dData1/Data,dData2/Data)
                                     dData  = (dData**2 + dData1**2 + dData2**2) ** 0.5

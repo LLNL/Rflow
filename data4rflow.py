@@ -188,7 +188,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
             pmass = masses[p];  Ap = int(pmass+0.5)
             tmass = masses[t];  At = int(tmass+0.5)
             prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.))
-            rmass = pmass*tmass/(pmass*tmass)
+            rmass = pmass*tmass/(pmass+tmass)
             Q = qvalue[p]
             print('Partition',ic,':',p,t,'so Q=',Q)
             icnew += 1
@@ -213,7 +213,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
                         channels.append((icnew+1,ia,lch,sch,ic))
                         # print(' Partial wave channels IC,IA,L,S:',ic,ia,lch,sch)
                         w = 1./(2*lch+1)**2
-                        if Epole+Q > 0.:
+                        if Epole+Q > 0. and rmass>0:    # don't bother for sub-threshold states or photons
                             dSoPc = dSoP(Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch)
 #                             print('dSoP(',Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch, ') = ',dSoPc)
                             w *= ( 1 - width * dSoPc/2.)
@@ -243,7 +243,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
     
     BackGroundTerms = True
     if BackGroundTerms: 
-        EBG = 30.0
+        EBG = 40.0
         wBG = 10
         step = 0.1
         for spinGroup in spinGroups.keys():
@@ -385,13 +385,17 @@ projs = [];    targs = []; levels = []; ejects = []; resids = []
 masses={}; qvalue = {}; charges={}
 
 MP = len(args.Projectiles)
-projs = args.Projectiles + ['photon']
-targs = ['' for i in range(MP+1)]
-ejects = ['' for i in range(MP+1)]
-resids = ['' for i in range(MP+1)]
+projs = args.Projectiles 
+print('projs 1',projs)
+if 'photon' not in projs: projs += ['photon']
+print('projs 2',projs)
+MPT = len(projs)
+targs = ['' for i in range(MPT)]
+ejects = ['' for i in range(MPT)]
+resids = ['' for i in range(MPT)]
 levels = {}
-# multiplicities = [0 for i in range(MP+1)]
-elimits = [0 for i in range(MP+1)]
+# multiplicities = [0 for i in range(MPT)]
+elimits = [0 for i in range(MPT)]
 
 for prop in csv.DictReader(csvf):
     projectile = prop['projectile']
@@ -440,7 +444,7 @@ for prop in csv.DictReader(csvf):
     try:
         ipi = args.Projectiles.index(projectile)
     except:
-#         print('Unwanted projectile',projectile,": SKIP")
+        print('Unwanted projectile',projectile,": SKIP")
         continue
     projs[ipi] = projectile
     targs[ipi] = target
@@ -459,15 +463,22 @@ p_ref = args.Projectiles[0]
 t_ref = targs[projs.index(p_ref)]
 masses_ref = masses[p_ref] + masses[t_ref]
 
-projs[MP] = 'photon'
-ZT = int(charges[p_ref]+charges[t_ref])
-AT = int(0.5+ masses[p_ref]+masses[t_ref])
-targs[MP] = '%s%s' % (elementSymbolFromZ(ZT),AT)
-masses[targs[MP]] = pops[targs[MP]].getMass('amu')
+try:
+    ipi = args.Projectiles.index('photon')
+    ZT = int(charges[p_ref]+charges[t_ref])
+    AT = int(0.5+ masses[p_ref]+masses[t_ref])
+    targs[ipi] = '%s%s' % (elementSymbolFromZ(ZT),AT)
+    print('From Z,A=',ZT,AT,'have target',targs[MP] )
+    masses[targs[ipi]] = pops[targs[ipi]].getMass('amu')
+except:
+    pass
 
-for ipi in range(MP+1):
+print('Partitions with projs:',projs,' targs:',targs)
+print('           masses: ',masses)
+for ipi in range(MPT):
     p = projs[ipi]
     t = targs[ipi]
+    print('partition',ipi,' p,t=',p,t)
     masses_i = masses[p] + masses[t]
     qvalue[p] = (masses_ref - masses_i) * amu
     elimits[ipi] = args.EmaxCN 
@@ -563,9 +574,14 @@ for datFile in args.InFiles:
     except:
         print('Unwanted projectile',projectile,": SKIP")
         continue
+    try:
+        iti = args.Projectiles.index(ejectile)
+    except:
+        print('Unwanted ejectile',ejectile,": SKIP")
+        continue
         
-    if args.LevelsMax is not None and level > args.LevelsMax[ipi]:
-        print('Level',ia-1,'is above level limit',args.LevelsMax[ipi],": SKIP")
+    if args.LevelsMax is not None and level > args.LevelsMax[iti]:
+        print('Level',ia-1,'is above level limit',args.LevelsMax[ipi],"for %s+%s" % (ejectile,residual),": SKIP")
         continue         
     levels[residual].add(level)
 

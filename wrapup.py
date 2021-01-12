@@ -409,7 +409,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
             for poutG in range(npairs+1):
                 if pinG==poutG: continue  # elastic is too boring
                 po = '-> ' + quickName(pname[poutG],tname[poutG]) if poutG < npairs else 'tot'
-                po = '-> ' + pname[poutG] if poutG < npairs else 'tot'
+#                 po = '-> ' + pname[poutG] if poutG < npairs else 'tot'
                 poG = poutG if poutG < npairs else -1  # convention in printExcitationFunctions
                 SingleGraphList = []
                 SinglengraphAll = 0
