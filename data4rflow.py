@@ -319,8 +319,9 @@ parser.add_argument("-p", "--pidef", type=int, default=1, help="Default spins fo
 parser.add_argument("-w", "--widef", type=float, default=0.10, help="Default width (MeV) for unknown RIPL states")
 
 parser.add_argument('-I', '--InFiles', type=str, nargs="+", help='cross-section data files: E,angle,expt,err as desribed in property file.')
-parser.add_argument("-i", "--include", metavar="INCL",  nargs="*", help="Subentries to include, if not all")
-parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Subentries to exclude if any string within subentry name")
+parser.add_argument('-s', '--scalefactors', type=str, default='../ScalingFactors', help='File of preliminary scale factors for unscaled data: filename,value pairs')
+# parser.add_argument("-i", "--include", metavar="INCL",  nargs="*", help="Subentries to include, if not all")
+# parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Subentries to exclude if any string within subentry name")
 
 parser.add_argument(      "--pops", type=str, default=defaultPops, help="pops files with all the level information from RIPL3. Default = %s" % defaultPops)
 
@@ -358,8 +359,17 @@ if args.InFiles is not None:
     print(args.Projectiles[0],' : projectile defining the lab energy in first column', file=output)
 z_errorOut = open(Dir + 'Zero-errors.log','w')
 z_errors = set()
-nsf = 0
 
+scalingFactors = []
+if args.scalefactors is not None:
+    print("Reading ad hoc scale factors from file",args.scalefactors)
+    f = open(args.scalefactors , 'r' )
+    for line in f.readlines( ):
+        scalingFactors.append(line.split())
+    f.close( )
+    print('    Found',scalingFactors)
+
+nsf = 0
 print("\nProperty dictionary from '%s'" % args.CSV)
 print("                             p   e   t    r    l ang-int   %    %   expect  group  split  lab    abs   iscale   Aflip   Ein rRuth Sfactor Escale Eshift Ecalib split run")
 print("           File                                           sys  stat norm    an/en  norms  a,xs   err   units                                      shifts              directory")
@@ -395,7 +405,11 @@ for prop in csv.DictReader(csvf):
     expect  = prop['norm']
     group  = prop['group']
 
-
+    for filename,scalingfactor in scalingFactors:
+        if filename in datFile and float(scalingfactor)==0.0:
+            print('Exclude %s, as %s scaling factor = 0' % (datFile,filename))
+            continue
+            
 #     print(( prop['angle-integrated']))
     integrated = prop['angle-integrated'][0]=='T'        
     expect  = prop['norm']
@@ -507,11 +521,19 @@ for datFile in args.InFiles:
     baseFile = datFile.split(Dir)[1]
     if len(open(datFile,'r').readlines())==0:
         continue
+
+    scalefactor = 1.0; note = ''
+    for filename,scalingfactor in scalingFactors:
+        if filename in baseFile:
+            scalefactor = float(scalingfactor)
+            note = ' ad hoc scaling: %s' % scalefactor
+            break
+
     d = open(datFile,'r')
 
     dr = datFile.split('.dat')[0]
     projectile,ejectile,target,residual,level,integrated,syserror,staterror,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir = props[baseFile]
-    print("\nRead ",datFile," write root:",dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth,', p,e,r =',projectile,ejectile,residual)
+    print("\nRead ",datFile," write root:",dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth,', p,e,r = %s %s %s%s' % (projectile,ejectile,residual,note) )
     
     if projectile=='photon' and not args.GammaChannel:
         continue
@@ -597,9 +619,9 @@ for datFile in args.InFiles:
 
         datum.append( (datum[0]*lab2cm_in + Qvalue_ref)/lab2cm_ref )   # add lab projectile energy in ref partition : datum[4]
         
+        datum[2] *= xs_scale * scalefactor
+        datum[3] *= xs_scale * scalefactor
         
-        datum[2] *= xs_scale
-        datum[3] *= xs_scale
 #         if staterror>0: datum[3] = max(datum[2]*staterror,datum[3])
         if staterror>0 and datum[3]==0.: datum[3] = datum[2]*staterror
         data.append(datum)
