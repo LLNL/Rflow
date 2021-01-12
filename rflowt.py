@@ -71,7 +71,8 @@ rsqr4pi = 1.0/(4*pi)**0.5
 def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
         Ein_list, fixedlist, emind,emaxd,pmin,pmax,
         norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
-        Search,Iterations,restarts,Distant,Background,ReichMoore, TransitionMatrix,verbose,debug,inFile,fitStyle,tag,large):
+        Search,Iterations,restarts,Distant,Background,ReichMoore, 
+        verbose,debug,inFile,fitStyle,tag,large):
         
 #     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
@@ -170,7 +171,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             ipair = pair  # incoming
         cm2lab[pair] = (pMass + tMass) / tMass
 
-        if p == projectile4LabEnergies:
+        if p == projectile4LabEnergies and '_e' not in t:  # target must be in gs.
             dlabpair = pair # frame for incoming data_val[:,0]
             
         jp[pair],pt[pair],ep[pair] = projectile.spin[0].float('hbar'), projectile.parity[0].value, 0.0
@@ -193,7 +194,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Transform main energy vector from',pname[dlabpair],'to',pname[ipair],' projectile lab frames')
     data_val[:,0]  = (data_val[:,0]/cm2lab[dlabpair] - QI[dlabpair] + QI[ipair] ) * cm2lab[ipair]
     E_scat  = data_val[:,0]
-
+    print('Transformed E:',E_scat[:4])
     if debug: print('Energy grid (lab in partition',ipair,'):\n',E_scat)
     Elarge = 0.0
     nExcluded = 0
@@ -927,7 +928,7 @@ if __name__=='__main__':
     parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files for grace")
     parser.add_argument("-c", "--compound", action="store_true", help="Plot -M and -C energies on scale of E* of compound system")
     parser.add_argument("-M", "--Matplot", action="store_true", help="Matplotlib data in .json output files")
-    parser.add_argument("-T", "--TransitionMatrix", action="store_true", help="Produce cross-section transition matrix functions in *tot_a and *fch_a-to-b")
+    parser.add_argument("-T", "--TransitionMatrix",  type=int, default=1, help="Produce cross-section transition matrix functions in *tot_a and *fch_a-to-b")
     parser.add_argument("-l", "--logs", type=str, default='', help="none, x, y or xy for plots")
     parser.add_argument(      "--datasize", type=float,  metavar="size", default="0.2", help="Font size for experiment symbols. Default=0.2")
     parser.add_argument("-t", "--tag", type=str, default='', help="Tag identifier for this run")
@@ -1185,7 +1186,7 @@ if __name__=='__main__':
     if args.tag != '': base = base + '_'+args.tag
      
     dataDir = base 
-    if args.Cross_Sections or args.Matplot or args.TransitionMatrix : os.system('mkdir '+dataDir)
+    if args.Cross_Sections or args.Matplot or args.TransitionMatrix >= 0 : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
     chisqtot,xsc,norm_val,n_pars,XS_totals,ch_info = Rflow(
@@ -1193,7 +1194,7 @@ if __name__=='__main__':
                         Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
-                        args.TransitionMatrix, args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
+                        args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
 
     print("Finish rflow call: ",tim.toString( ))
     chisqPN = chisqtot / n_data
@@ -1203,7 +1204,7 @@ if __name__=='__main__':
     pname,tname, za,zb, npairs,cm2lab,QI,ipair = ch_info
 
     EIndex = numpy.argsort(data_val[:,0])
-    if args.TransitionMatrix:
+    if args.TransitionMatrix >= 0:
         pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,True)
         pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,False)
         pnin = 'for %s' % pnin
@@ -1211,7 +1212,7 @@ if __name__=='__main__':
         totals = None
         pnin = ''
 
-    if args.Search or True:  
+    if args.Search:  
         print('Revised norms:',norm_val)
         saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm_refs)
 
@@ -1224,7 +1225,9 @@ if __name__=='__main__':
 
 
     dof = n_data + n_cnorms - n_norms - n_pars
-    plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,tname,args.datasize,ipair,cm2lab, emin,emax,pnin,gnd,cmd )
+    plotOut(n_data,n_norms,dof,args, base,info,dataDir, 
+        chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
+        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, args.TransitionMatrix,
+        EIndex,totals,pname,tname,args.datasize,ipair,cm2lab, emin,emax,pnin,gnd,cmd )
         
     print("Final rflow: ",tim.toString( ))
