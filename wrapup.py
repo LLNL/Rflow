@@ -8,7 +8,7 @@ plcolor = {0:"black", 1:"red", 2:"green", 3: "blue", 4:"yellow", 5:"brown", 6: "
             8:"cyan", 9:"magenta", 10:"orange", 11:"indigo", 12:"maroon", 13:"turquoise", 14:"darkgreen"}
 pldashes = {0:'solid', 1:'dashed', 2:'dashdot', 3:'dotted'}
 plsymbol = {0:".", 1:"o", 2:"s", 3: "D", 4:"^", 5:"<", 6: "v", 7:">",
-            8:"P", 9:"x", 10:"*", 11:"p", 12:"1", 13:"2", 14:"3"}
+            8:"P", 9:"x", 10:"*", 11:"p", 12:"D", 13:"P", 14:"X"}
 
 lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
@@ -64,8 +64,10 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
         RMatrix.documentation.computerCodes.add( computerCodeFit )
     return
 
-def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-    groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, EIndex,totals,pname,tname,datasize, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
+def plotOut(n_data,n_norms,dof,args, base,info,dataDir, 
+    chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
+    groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, TransitionMatrix,
+    EIndex,totals,pname,tname,datasize, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
 
     print('pname:',pname)
     ngraphAll = 0
@@ -280,7 +282,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                 legend = legtag + '  X2/pt=%.2f' % (lchisq/ptsInCurve[curve])
                 if lfac!=0.0: legend += ' n%s%.2f%%' % ('+' if lfac>0 else '-', abs(lfac))
                 LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
-                    'symbol': plsymbol[ng%7], 'symbolsize':args.datasize   }
+                    'symbol': plsymbol[ng%13], 'symbolsize':args.datasize   }
                 LineModel[0] = {'kind':'Model', 'color':plcolor[ic-1], 'linestyle': pldashes[(ng-1)%4], 'evaluation':''} 
 #                 DataLines.append(LineData)
 #                 ModelLines.append(LineModel)
@@ -357,9 +359,9 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
             LineDataP[1][3].append(0)   
                                 
         LineData[0] =   {'kind':'Data',  'color':pcolor, 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
-            'symbol': plsymbol[jset%7], 'symbolsize':datasize   }
+            'symbol': plsymbol[jset%13], 'symbolsize':datasize   }
         LineDataP[0] =  {'kind':'Data',  'color':pcolor, 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
-            'symbol': plsymbol[jset%7], 'symbolsize':datasize   }
+            'symbol': plsymbol[jset%13], 'symbolsize':datasize   }
         jset += 1
         PoleData.append(LineData)
         PoleDataP.append(LineDataP)
@@ -369,7 +371,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
     kind     = "Final Pole Energies (MeV, %s cm) in B=%s basis" % (pname[ipair],bndx)
     PoleGraphList.append([PoleData+ModelLines,subtitle,args.logs,kind])
     p_out = 'Pole-energies.json' 
-    p_out = dataDir + '/' + p_out
+    if totals is not None: p_out = dataDir + '/' + p_out  # put in subdirectory if it exists
     print('   Write',p_out,'with',1)
     with open(p_out,'w') as ofile:
        json.dump([1,1,cmd,PoleGraphList],ofile, default=to_serializable)
@@ -413,6 +415,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                 SinglengraphAll = 0
                           
                 DataLines = []
+                dataPoints = 0
                 ModelLines = []
                 LineModel = [{}, [[],[],[],[]] ]
                 for i0 in range(nmodelpts):
@@ -481,6 +484,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                             LineData[1][2].append(0)
                             LineData[1][3].append(DataErr)
                             np += 1
+                            dataPoints += 1
                         print('    Curve',ng,':',tag,'has',np,'data points')
                                 
                         ng += 1
@@ -488,21 +492,23 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir, chisqtot,data_val,norm_v
                         leg = tag if '/' not in tag else tag.split('/')[1]
                         legend = leg.replace('-Aint','') # if len(leg) < 12 else leg[:12]
                         LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
-                            'symbol': plsymbol[ng%7], 'symbolsize':datasize   }
+                            'symbol': plsymbol[ng%13], 'symbolsize':datasize   }
 #                         print('    Finishing I curve',ng,'for',curve,'with legend',legend,'with',ptsInCurve[curve],'pts for ',reaction)
 
                         DataLines.append(LineData)
-                        
+
                 subtitle = '' # "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile
                 kind     = "R-matrix fit for incident-%s = %s  (units mb and %s MeV cm)" % (pname[pinG],pn,pname[ipair])
                 kinds    = "R-matrix fit for incident %s %s  (units mb and %s MeV cm)" % (pname[pinG],po,pname[ipair])
                 SingleGraphList.append([DataLines+ModelLines+PoleDataP,subtitle,args.logs,kinds])
                 SinglengraphAll += 1
-                GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
-                ngraphAll += 1
-                GlobalGraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
-                GlobalngraphAll += 1
-                
+
+                if dataPoints >= TransitionMatrix:      # skip graph placement in summary plots, if not enough data. 
+                    GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
+                    ngraphAll += 1
+                    GlobalGraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
+                    GlobalngraphAll += 1
+
                 j_out = 'Angle-integrals-%s-to-%s.json' % (pn,po.replace('-> ',''))
         #         if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
                 j_out = dataDir + '/' + j_out
