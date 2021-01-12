@@ -408,7 +408,8 @@ for prop in csv.DictReader(csvf):
     for filename,scalingfactor in scalingFactors:
         if filename in datFile and float(scalingfactor)==0.0:
             print('Exclude %s, as %s scaling factor = 0' % (datFile,filename))
-            continue
+            expect = 0.0
+    if expect == 0: continue
             
 #     print(( prop['angle-integrated']))
     integrated = prop['angle-integrated'][0]=='T'        
@@ -532,7 +533,10 @@ for datFile in args.InFiles:
     d = open(datFile,'r')
 
     dr = datFile.split('.dat')[0]
-    projectile,ejectile,target,residual,level,integrated,syserror,staterror,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir = props[baseFile]
+    details = props.get(baseFile,None)
+    if details is None: continue
+    
+    projectile,ejectile,target,residual,level,integrated,syserror,staterror,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir = details
     print("\nRead ",datFile," write root:",dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth,', p,e,r = %s %s %s%s' % (projectile,ejectile,residual,note) )
     
     if projectile=='photon' and not args.GammaChannel:
