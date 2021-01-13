@@ -329,6 +329,7 @@ parser.add_argument("-d", "--Dir", type=str,  default="Data_X4", help="output da
 parser.add_argument("-o", "--Out", type=str,  default="flow.data", help="output data file")
 parser.add_argument("-n", "--Norms", type=str,  default="flow.norms", help="output normalization file")
 parser.add_argument("-S", "--Sfresco", action="store_true", help="Outputs for Sfresco")
+parser.add_argument(      "--SF", action="store_true", help="Convert S-factors to cross-sections")
 parser.add_argument("-T", "--Term0", type=int, default=0, help="First 'term' in Sfresco output")
 
 parser.add_argument(      "--CSV", type=str,  default="datafile.props.csv", help="property datafile.props.csv in args.Dir")
@@ -409,7 +410,7 @@ for prop in csv.DictReader(csvf):
     expect  = prop['norm']
     group  = prop['group']
 
-    for filename,scalingfactor in scalingFactors:
+    for filename,scalingfactor,*commment in scalingFactors:
         if filename in datFile and float(scalingfactor)==0.0:
             print('Exclude %s, as %s scaling factor = 0' % (datFile,filename))
             expect = 0.0
@@ -710,6 +711,11 @@ for datFile in args.InFiles:
                 ex2cm = Sfactor_xs   # MeV.b is default
 #                 print('Ecm,k,eta,Acm,S =',Ecm,k,eta,datum[1],Sfactor_xs)
             else:
+                ex2cm = 1.0
+                
+            if args.SF:
+                datum[2] *= ex2cm
+                datum[3] *= ex2cm
                 ex2cm = 1.0
             
             print("%-20s %-10s  %s %s %s %s  %-10s %-10s %s %s %s %s %s" % (datum[4],datum[1],pn,tn,en,rn, 

@@ -496,17 +496,18 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
 #                         print('    Finishing I curve',ng,'for',curve,'with legend',legend,'with',ptsInCurve[curve],'pts for ',reaction)
 
                         DataLines.append(LineData)
-
+                selection = 'all' if TransitionMatrix<=0 else '(>= %i datapt)' % TransitionMatrix
                 subtitle = '' # "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile
-                kind     = "R-matrix fit for incident-%s = %s  (units mb and %s MeV cm)" % (pname[pinG],pn,pname[ipair])
-                kinds    = "R-matrix fit for incident %s %s  (units mb and %s MeV cm)" % (pname[pinG],po,pname[ipair])
+                kind     = "R-matrix fit for incident %s+%s  (%s)  (units mb and %s MeV cm)" % (pname[pinG],tname[pinG],pn,pname[ipair])
+                kinds    = "R-matrix fit for incident %s+%s %s  (units mb and %s MeV cm)" % (pname[pinG],tname[pinG],po,pname[ipair])
+                kindG    = "R-matrix fits for %s transitions (units mb and %s MeV cm)" % (selection,pname[ipair])
                 SingleGraphList.append([DataLines+ModelLines+PoleDataP,subtitle,args.logs,kinds])
                 SinglengraphAll += 1
 
                 if dataPoints >= TransitionMatrix:      # skip graph placement in summary plots, if not enough data. 
                     GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
                     ngraphAll += 1
-                    GlobalGraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
+                    GlobalGraphList.append([DataLines+ModelLines,subtitle,args.logs,kindG])
                     GlobalngraphAll += 1
 
                 j_out = 'Angle-integrals-%s-to-%s.json' % (pn,po.replace('-> ',''))
