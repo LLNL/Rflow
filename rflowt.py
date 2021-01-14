@@ -40,7 +40,7 @@ print("First imports done rflow: ",tim.toString( ))
 
 
 # TO DO:
-#   Preliminary scaling factors for unscaled data, to start fits more easily.
+#   Use nch to set search parameters even if widths=0 (i.e. decide on filler vs real level info)
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
 #   Multiple GPU strategies
 #   Estimate initial Hessian by 1+delta parameter shift. Try various delta to make BFGS search smoother
@@ -236,7 +236,6 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     seg_col=  numpy.zeros([n_jsets], dtype=INT) 
 
     rksq_val  = numpy.zeros([n_data,npairs], dtype=REAL)
-    velocity  = numpy.zeros([n_data,npairs], dtype=REAL)
     
     eta_val = numpy.zeros([n_data,npairs], dtype=REAL)   # for E>0 only
     
@@ -289,7 +288,6 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             CF1_val[ie,pair,:] *=  rho.real
             CF2_val[ie,pair,:] *=  rho
             rksq_val[ie,pair] = 1./max(abs(k)**2, 1e-20) 
-            velocity[ie,pair] = k.real/rmass[pair]  # ignoring factor of hbar
             
             if E > 0.:
                 eta_val[ie,pair] = eta.real
@@ -473,6 +471,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     nam='BG:%.1f%s' % (J_set[jset],parity)
                 wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
                 varying = abs(g_poles[jset,n,c])>1e-20 
+#                 varying = c <= nch[jset] 
                 if pmin is not None and pmax is not None and pmin > pmax:   # -p,-P fix both energies and widths
                     varying = Ecm > pmin or Ecm < pmax
                 else:
@@ -517,9 +516,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     
     if brune and False:
         for jset in range(n_jsets):
-            for n in range(n_poles):
+            for n in range(npl[jset]):
                 print('j/n=',jset,n,' E_pole: %10.6f' % EO_poles[jset,n])
-                for c in range(n_chans):
+                for c in range(nch[jset]):
                      print("      S, S' %10.6f, %10.6f" % (S_poles[jset,n,c],dSdE_poles[jset,n,c]))
                                  
     print('Searching on pole energies:',searchparms[:border[0]])
@@ -614,57 +613,62 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                             ZZbar[L,iS,jset2,c2,jset1,c1] = angularMomentumCoupling.zbar_coefficient(i2(L1),n2(J1),i2(L2),n2(J2),n2(S),i2(L))
 
     BB = numpy.zeros([n_data,NL], dtype=REAL)
-    AAL = numpy.zeros([npairs,npairs, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans ,NL], dtype=REAL)
+    
+    if n_angles > 0:
+        cc = (n_jsets*n_chans**2)**2
+        print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,n_chans))
+        AAL = numpy.zeros([npairs,npairs, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans ,NL], dtype=REAL)
 
-    for rr_in in RMatrix.resonanceReactions:
-        if rr_in.eliminated: continue
-        inpair = partitions[rr_in.label]
+        for rr_in in RMatrix.resonanceReactions:
+            if rr_in.eliminated: continue
+            inpair = partitions[rr_in.label]
 
-        for rr_out in RMatrix.resonanceReactions:
-            if rr_out.eliminated: continue
-            pair = partitions[rr_out.label]
+            for rr_out in RMatrix.resonanceReactions:
+                if rr_out.eliminated: continue
+                pair = partitions[rr_out.label]
                 
-            for S_out in Spins[pair]:
-                for S_in in Spins[inpair]:
-#                     print('>> S_in:',S_in)
-                    for iS,S in enumerate(All_spins):
-                        for iSo,So in enumerate(All_spins):
-                            if abs(S-S_in)>0.1 or abs(So-S_out)>0.1: continue
-                            phase = (-1)**int(So-S) / 4.0
+                for S_out in Spins[pair]:
+                    for S_in in Spins[inpair]:
+    #                     print('>> S_in:',S_in)
+                        for iS,S in enumerate(All_spins):
+                            for iSo,So in enumerate(All_spins):
+                                if abs(S-S_in)>0.1 or abs(So-S_out)>0.1: continue
+                                phase = (-1)**int(So-S) / 4.0
 
 
-                            for jset1 in range(n_jsets):
-                                J1 = J_set[jset1]
-                                for c1 in range(n_chans):
-                                    if seg_val[jset1,c1] != inpair: continue
-                                    if abs(S_val[jset1,c1]-S) > 0.1 : continue
+                                for jset1 in range(n_jsets):
+                                    J1 = J_set[jset1]
+                                    for c1 in range(n_chans):
+                                        if seg_val[jset1,c1] != inpair: continue
+                                        if abs(S_val[jset1,c1]-S) > 0.1 : continue
 
-                                    for c1_out in range(n_chans):
-                                        if seg_val[jset1,c1_out] != pair: continue
-                                        if abs(S_val[jset1,c1_out]-So) > 0.1 : continue
+                                        for c1_out in range(n_chans):
+                                            if seg_val[jset1,c1_out] != pair: continue
+                                            if abs(S_val[jset1,c1_out]-So) > 0.1 : continue
 
-                                        for jset2 in range(n_jsets):
-                                            J2 = J_set[jset2]
-                                            for c2 in range(n_chans):
-                                                if seg_val[jset2,c2] != inpair: continue
-                                                if abs(S_val[jset2,c2]-S) > 0.1 : continue
+                                            for jset2 in range(n_jsets):
+                                                J2 = J_set[jset2]
+                                                for c2 in range(n_chans):
+                                                    if seg_val[jset2,c2] != inpair: continue
+                                                    if abs(S_val[jset2,c2]-S) > 0.1 : continue
 
-                                                for c2_out in range(n_chans):
-                                                    if seg_val[jset2,c2_out] != pair: continue
-                                                    if abs(S_val[jset2,c2_out]-So) > 0.1 : continue
+                                                    for c2_out in range(n_chans):
+                                                        if seg_val[jset2,c2_out] != pair: continue
+                                                        if abs(S_val[jset2,c2_out]-So) > 0.1 : continue
         
-                                                    for L in range(NL):
-                                                        ZZ = ZZbar[L,iS,jset2,c2,jset1,c1] * ZZbar[L,iSo,jset2,c2_out,jset1,c1_out] 
-                                                        AAL[inpair,pair, jset2,c2_out,c2, jset1,c1_out,c1,L] += phase * ZZ / pi 
+                                                        for L in range(NL):
+                                                            ZZ = ZZbar[L,iS,jset2,c2,jset1,c1] * ZZbar[L,iSo,jset2,c2_out,jset1,c1_out] 
+                                                            AAL[inpair,pair, jset2,c2_out,c2, jset1,c1_out,c1,L] += phase * ZZ / pi 
 
-#     AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans  ], dtype=REAL)
-    cc = (n_jsets*n_chans**2)**2
-    print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,n_chans))
-#     for ie in range(n_angles):
-#         pin = data_p[ie,0]
-#         pout= data_p[ie,1]
-#         for L in range(NL):
-#             AA[ie, :,:,:, :,:,:] += AAL[pin,pout, :,:,:, :,:,:, L] * Pleg[ie,L]
+    #     AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans  ], dtype=REAL)
+
+    #     for ie in range(n_angles):
+    #         pin = data_p[ie,0]
+    #         pout= data_p[ie,1]
+    #         for L in range(NL):
+    #             AA[ie, :,:,:, :,:,:] += AAL[pin,pout, :,:,:, :,:,:, L] * Pleg[ie,L]
+    else:
+        AAL = None
 
     E_poles_fixed_v = numpy.ravel(E_poles_fixed)
     g_poles_fixed_v = numpy.ravel(g_poles_fixed)

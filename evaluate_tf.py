@@ -53,15 +53,18 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
 
 #     AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans], dtype=REAL)
-    AA = []
-    for jl in range(n_jsets):
-        AA_jl =  numpy.zeros([n_angles, n_chans,n_chans, n_jsets,n_chans,n_chans], dtype=REAL)
-        for ie in range(n_angles):
-            pin = data_p[ie,0]
-            pout= data_p[ie,1]
-            for L in range(NL):
-                AA_jl[ie, :,:, :,:,:] += AAL[pin,pout, jl,:,:, :,:,:, L] * Pleg[ie,L]
-        AA.append(AA_jl)
+    if n_angles > 0:
+        AA = []
+        for jl in range(n_jsets):
+            AA_jl =  numpy.zeros([n_angles, n_chans,n_chans, n_jsets,n_chans,n_chans], dtype=REAL)
+            for ie in range(n_angles):
+                pin = data_p[ie,0]
+                pout= data_p[ie,1]
+                for L in range(NL):
+                    AA_jl[ie, :,:, :,:,:] += AAL[pin,pout, jl,:,:, :,:,:, L] * Pleg[ie,L]
+            AA.append(AA_jl)
+    else:
+        AA = None
 
     n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
     n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
@@ -194,10 +197,13 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             T_left = tf.reshape(T_mat[:n_angles,:,:],  [-1,n_jsets,n_chans,n_chans, 1,1,1])  #; print(' T_left', T_left.get_shape())
             T_right= tf.reshape(T_mat[:n_angles,:,:],  [-1,1,1,1, n_jsets,n_chans,n_chans])  #; print(' T_right', T_right.get_shape())
     
-            Ax = tf.zeros( AA[0].shape[0], dtype=REAL)
-            for jl in range(n_jsets):
-                TAT = AA[jl][:,:,:,:,:,:] * tf.math.real( tf.math.conj(T_left[:, jl,:,:, :,:,:]) * T_right[:, 0,:,:, :,:,:] )
-                Ax += tf.reduce_sum(TAT,[ 1,2, 3,4,5])    # exlude dim=0 (ie)
+            if n_angles > 0:
+                Ax = tf.zeros( AA[0].shape[0], dtype=REAL)
+                for jl in range(n_jsets):
+                    TAT = AA[jl][:,:,:,:,:,:] * tf.math.real( tf.math.conj(T_left[:, jl,:,:, :,:,:]) * T_right[:, 0,:,:, :,:,:] )
+                    Ax += tf.reduce_sum(TAT,[ 1,2, 3,4,5])    # exlude dim=0 (ie)
+            else:
+                Ax = tf.zeros(0, dtype=REAL)
                 
             return(Ax)  
                                 
@@ -272,7 +278,6 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
         grad0 = Grads[0].numpy()
         if verbose: print('Grads:',grad0)
- ###################################################
 
         if debug:
             T_mat_n = T_mat.numpy()
@@ -309,7 +314,6 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
      
             chisqsum += chisqnorms
             print('chisq/pt=',chisqsum/(n_data),'(including)' )
- ###################################################
 
         if Search:
             os.system("rm -f %s/%s-bfgs_min.trace" % (base,base) ) 
@@ -445,6 +449,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
         XS_totals = [XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy()]
 
 #  END OF TENSORFLOW
+###################################################
     print("Ending tf: ",tim.toString( ))
 
     return( searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian,XS_totals,  chisq0_n,grad0)

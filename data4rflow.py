@@ -411,8 +411,9 @@ for prop in csv.DictReader(csvf):
     group  = prop['group']
 
     for filename,scalingfactor,*commment in scalingFactors:
+        if filename[0]=='#': continue
         if filename in datFile and float(scalingfactor)==0.0:
-            print('Exclude %s, as %s scaling factor = 0' % (datFile,filename))
+            print('Exclude %s, as %s scaling factor = 0.   %s' % (datFile,filename,comment))
             expect = 0.0
     if expect == 0: continue
             
@@ -536,10 +537,11 @@ for datFile in args.InFiles:
         continue
 
     scalefactor = 1.0; note = ''
-    for filename,scalingfactor in scalingFactors:
+    for filename,scalingfactor,*comment in scalingFactors:
+        if filename[0]=='#': continue
         if filename in baseFile:
             scalefactor = float(scalingfactor)
-            note = ' ad hoc scaling: %s' % scalefactor
+            note = ' ad hoc scaling: %s     %s' % (scalefactor,comment)
             break
 
     d = open(datFile,'r')
