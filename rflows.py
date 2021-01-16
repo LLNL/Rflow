@@ -6,8 +6,8 @@ tim = times.times()
 import os,math,numpy,cmath,pwd,sys,time,json
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
-from evaluate_tf import evaluate_tf
-from wrapup import plotOut,saveNorms2gnds
+from evaluates import evaluate_tf
+from wrapups import plotOut,saveNorms2gnds
 from printExcitationFunctions import *
 
 from pqu import PQU as PQUModule
@@ -194,7 +194,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Transform main energy vector from',pname[dlabpair],'to',pname[ipair],' projectile lab frames')
     data_val[:,0]  = (data_val[:,0]/cm2lab[dlabpair] - QI[dlabpair] + QI[ipair] ) * cm2lab[ipair]
     E_scat  = data_val[:,0]
-    print('Transformed E:',E_scat[:4])
+#     if dlabpair != ipair: print('Transformed E:',E_scat[:4])
     if debug: print('Energy grid (lab in partition',ipair,'):\n',E_scat)
     Elarge = 0.0
     nExcluded = 0
@@ -301,6 +301,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #  SECOND: fill in arrays:
     jset = 0
     tot_channels = 0; tot_poles = 0
+    all_partition_channels = numpy.zeros(npairs, dtype=INT)
+    c0 = numpy.zeros([n_jsets,npairs], dtype=INT)
+    cn = numpy.zeros([n_jsets,npairs], dtype=INT)
     for Jpi in RMatrix.spinGroups:
         J_set[jset] = Jpi.spin
         pi_set[jset] = Jpi.parity
@@ -321,60 +324,73 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         n = None
         c = 0
         All_spins = set()
-        for ch in Jpi.channels:
-            rr = ch.resonanceReaction
-            pair = partitions.get(rr,None)
-            if pair is None: continue
-            m = ch.columnIndex - 1
-            g_poles[jset,:rows,c] = numpy.asarray(widths[m][:],  dtype=REAL) 
-            L_val[jset,c] = ch.L
-            S = float(ch.channelSpin)
-            S_val[jset,c] = S
-            has_widths[jset,:rows] = 1
+        partition_channels = numpy.zeros(npairs, dtype=INT)
+        partition_channels = numpy.zeros(npairs, dtype=INT)
+
+        for pair in range(npairs):
+            c0[jset,pair] = c
+            for ch in Jpi.channels:
+                rr = ch.resonanceReaction
+                pairc = partitions.get(rr,None)
+                if pairc is None or pairc!=pair: continue
+                m = ch.columnIndex - 1
+                g_poles[jset,:rows,c] = numpy.asarray(widths[m][:],  dtype=REAL) 
+                L_val[jset,c] = ch.L
+                S = float(ch.channelSpin)
+                S_val[jset,c] = S
+                has_widths[jset,:rows] = 1
             
-            seg_val[jset,c] = pair
-            p_mask[pair,jset,c] = 1.0
-            Spins[pair].add(S)
-            All_spins.add(S)
+                seg_val[jset,c] = pair
+                p_mask[pair,jset,c] = 1.0
+                partition_channels[pair] += 1
+            
+                Spins[pair].add(S)
+                All_spins.add(S)
 
-        # Find S and P:
-            for ie in range(n_data):
+            # Find S and P:
+                for ie in range(n_data):
 
-                if bndx == 'L' or bndx == '-L':
-                    B = -ch.L
-                elif bndx == 'Brune':
-                    pass
-                elif bndx == 'S' or bndx is None:
-                    bndx = None
-                elif bndx is not None:              # btype='B'
-                    B = float(bndx)
-                if ch.boundaryConditionOverride is not None:
-                    B = float(ch.boundaryConditionOverride)
+                    if bndx == 'L' or bndx == '-L':
+                        B = -ch.L
+                    elif bndx == 'Brune':
+                        pass
+                    elif bndx == 'S' or bndx is None:
+                        bndx = None
+                    elif bndx is not None:              # btype='B'
+                        B = float(bndx)
+                    if ch.boundaryConditionOverride is not None:
+                        B = float(ch.boundaryConditionOverride)
 
-                DL = CF2_val[ie,pair,ch.L]
-                S = DL.real
-                P = DL.imag
-                F = CF1_val[ie,pair,ch.L]
-                Psr = math.sqrt(abs(P))
-                phi = - math.atan2(P, F - S)
-                Omega = cmath.exp(complex(0,phi))
-                if bndx is None:
-                    L_diag[ie,jset,c]       = complex(0.,P)
-                elif bndx == 'Brune':
-                    L_diag[ie,jset,c]       = DL
-                else:
-                    L_diag[ie,jset,c]       = DL - B
+                    DL = CF2_val[ie,pair,ch.L]
+                    S = DL.real
+                    P = DL.imag
+                    F = CF1_val[ie,pair,ch.L]
+                    Psr = math.sqrt(abs(P))
+                    phi = - math.atan2(P, F - S)
+                    Omega = cmath.exp(complex(0,phi))
+                    if bndx is None:
+                        L_diag[ie,jset,c]       = complex(0.,P)
+                    elif bndx == 'Brune':
+                        L_diag[ie,jset,c]       = DL
+                    else:
+                        L_diag[ie,jset,c]       = DL - B
 
-                POm_diag[ie,jset,c]      = Psr * Omega
-                Om2_mat[ie,jset,c,c]     = Omega**2
-                CS_diag[ie,jset,c]       = Csig_exp[ie,pair,ch.L]
-            c += 1
+                    POm_diag[ie,jset,c]      = Psr * Omega
+                    Om2_mat[ie,jset,c,c]     = Omega**2
+                    CS_diag[ie,jset,c]       = Csig_exp[ie,pair,ch.L]
+                c += 1
+            cn[jset,pair] = c
         if debug:
             print('J set %i: E_poles \n' % jset,E_poles[jset,:])
             print('g_poles \n',g_poles[jset,:,:])
+        all_partition_channels = numpy.maximum(all_partition_channels,partition_channels)
         jset += 1   
 
     print(' Total channels',tot_channels,' and total poles',tot_poles,'\n')
+    maxpc = numpy.amax(all_partition_channels)
+    print('Max channels in each partition:',all_partition_channels,' max=',maxpc)
+    for jset in range(n_jsets):
+        print('Channel ranges for each parition:',[[c0[jset,pair],cn[jset,pair]] for pair in range(npairs)])
 
     if brune:  # S_poles: Shift functions at pole positions for Brune basis   
         S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
@@ -395,31 +411,25 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #     print('g_poles \n',g_poles[:,:,:])
 #     print('norm_val \n',norm_val[:])
 
+    
     n_norms = norm_val.shape[0]
-    n_Epoles_z = numpy.count_nonzero(E_poles != 0 ) 
-    n_Epoles = numpy.count_nonzero( (E_poles != 0) ) #& (abs(E_poles) < Distant) ) 
-    n_gpoles = numpy.count_nonzero(g_poles != 0 ) 
-    z_gpoles = numpy.count_nonzero(g_poles == 0 ) 
-    n_pars  = n_Epoles+n_gpoles+n_norms
-    n_Efixed = n_Epoles_z - n_Epoles
-    print('Variable E,w (non-zero, non-Distant) norms:',n_Epoles,n_gpoles,n_norms,' =',n_pars,'  with',n_Efixed,'E fixed:') 
-    print('Variable fixed list:',fixedlist)
-    print('# zero widths  =',z_gpoles)
+    fixed_norms= numpy.zeros([n_norms], dtype=REAL) # fixed in search
+    t_vars = n_poles* n_jsets + n_poles*n_jsets*n_chans + n_norms   # max possible # variables
+    fixedpars = numpy.zeros(t_vars, dtype=REAL)
+    fixedloc  = numpy.zeros([t_vars,1], dtype=INT)  
+    
     searchnames = []
-    searchparms = numpy.zeros(n_pars, dtype=REAL)
-    searchloc  = numpy.zeros([n_pars,1], dtype=INT)   
     fixednames = []
-    fixedpars = numpy.zeros(n_pars+z_gpoles, dtype=REAL)
-    fixedloc  = numpy.zeros([n_pars+z_gpoles,1], dtype=INT)   
-
+    search_vars = []
     
     ip = 0
     ifixed = 0
-    border = numpy.zeros(3, dtype=INT)     # variable parameters
-    frontier = numpy.zeros(3, dtype=INT)   # fixed parameters
+    border = numpy.zeros(4, dtype=INT)     # variable parameters
+    frontier = numpy.zeros(4, dtype=INT)   # fixed parameters
     patterns = [ re.compile(fix_regex) for fix_regex in fixedlist] 
     fixedlistex = set()
     
+    border[0] = 0;  frontier[0] = 0
     for jset in range(n_jsets):
         parity = '+' if pi_set[jset] > 0 else '-'
         for n in range(n_poles):
@@ -427,7 +437,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             E = E_poles[jset,n]
             if E == 0: continue   # invalid energy: filler
             nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E)
-            varying = abs(E) < Distant  # and n < npl[jset]
+            varying = abs(E) < Distant  and n < npl[jset]
             if pmin is not None and pmax is not None and pmin > pmax: 
                 varying = E > pmin or E < pmax
             else:
@@ -437,9 +447,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                  varying = varying and not pattern.match(nam) 
 #             print('Pole',jset,n,'named',nam,'at',E, 'vary:',varying)
             if varying: 
-                searchparms[ip] = E
-                searchloc[ip,0] = i
+#                 searchparms[ip] = E
+#                 searchloc[ip,0] = i
                 searchnames += [nam]
+                search_vars.append([E,i])
                 ip += 1
             else:
                 fixedlistex.add(nam)
@@ -453,9 +464,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 fixedloc[ifixed,0] = i
                 fixednames += [nam]
                 ifixed += 1
-
-    border[0] = ip
-    frontier[0] = ifixed
+    border[1] = ip
+    frontier[1] = ifixed
+    
     for jset in range(n_jsets):
         parity = '+' if pi_set[jset] > 0 else '-'
         for n in range(n_poles):
@@ -470,8 +481,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 else:
                     nam='BG:%.1f%s' % (J_set[jset],parity)
                 wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
-                varying = abs(g_poles[jset,n,c])>1e-20 
-#                 varying = c <= nch[jset] and n <= n_poles[jset] 
+#                 varying = abs(g_poles[jset,n,c])>1e-20 
+                varying = c < nch[jset] and n < npl[jset] 
                 if pmin is not None and pmax is not None and pmin > pmax:   # -p,-P fix both energies and widths
                     varying = Ecm > pmin or Ecm < pmax
                 else:
@@ -485,9 +496,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 
 #                 print('Width',jset,n,c,'named',wnam,'from',nam,E, 'vary:',varying,'\n')
                 if varying:
-                    searchparms[ip] = g_poles[jset,n,c]
-                    searchloc[ip,0] = i
+#                     searchparms[ip] = g_poles[jset,n,c]
+#                     searchloc[ip,0] = i
                     searchnames += [wnam]
+                    search_vars.append([g_poles[jset,n,c],i])
                     ip += 1
                 else:   # fixed
                     fixedlistex.add(wnam)
@@ -496,23 +508,54 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     g_poles_fixed[jset,n,c] = g_poles[jset,n,c]
                     fixedloc[ifixed,0] = i
                     fixednames += [wnam]
-                    ifixed += 1
-                    
-    border[1] = ip
-    border[2] = border[1] + n_norms
-    frontier[1] = ifixed
-    frontier[2] = frontier[1] + 0  # no fixed norms yet.
+                    ifixed += 1                    
+    border[2] = ip
+    frontier[2] = ifixed
+#     print('4n: Variable borders:',border,'and Fixed frontiers:',frontier)
+    
+    for ni in range(n_norms):
+        nnam = norm_refs[ni][0]
+        snorm = math.sqrt(norm_val[ni])
+        varying = norm_info[ni,2] < 1
+        for pattern in patterns:
+             varying = varying and not pattern.match(nnam)
+        if varying:
+#             searchparms[ip] = snorm
+#             searchloc[ip,0] = ni
+            searchnames += [nnam]
+            search_vars.append([snorm,ni])
+            ip += 1
+        else:
+            fixedlistex.add(nnam)
+            fixedpars[ifixed] =  snorm
+            fixed_norms[ni] = snorm
+            fixedloc[ifixed,0] = ni
+            fixednames += [nnam]
+            ifixed += 1   
+    border[3] = ip
+    frontier[3] = ifixed
+    n_pars = border[3]
+    n_fixed = frontier[3]
+    
     print('Variable borders:',border,'and Fixed frontiers:',frontier)
-    searchparms[border[1]:border[2]] = numpy.sqrt( norm_val )   # search on p = n**0.5 so n=p^2 is always positive
+    searchparms = numpy.zeros(n_pars, dtype=REAL)
+    searchloc  = numpy.zeros([n_pars,1], dtype=INT)   
+    for ip in range(n_pars):
+        searchparms[ip] = search_vars[ip][0]
+        searchloc[ip,0] = search_vars[ip][1]
 
-    for n in range(n_norms):
-        searchnames += [norm_refs[n][0]]
-    n_pars = border[2]
+    print('Variable parameters - E,w,norms: ',border[1]-border[0],border[2]-border[1],border[3]-border[2
+    
+    
+    ],' =',n_pars) 
+    print('Fixed    parameters - E,w,norms: ',frontier[1]-frontier[0],frontier[2]-frontier[1],frontier[3]-frontier[2],' =',n_fixed) 
+    print('# zero widths  =',numpy.count_nonzero(g_poles == 0) ,'\n')
     ndof = n_data - n_pars
-        
-#     print('\n Search variables:',' '.join(searchnames)) 
-    print('Variable fixed list expanded:',fixedlistex)
-    print('\n',len(fixednames),' fixed parameters:',' '.join(fixednames)) 
+    
+    if debug:
+        print('\n Variable parameters:',' '.join(searchnames)) 
+        print('Fixed    parameterlist:',' '.join(fixedlistex))
+        print('Searching on pole energies:',searchparms[border[0]:border[1]])
     
     if brune and False:
         for jset in range(n_jsets):
@@ -521,18 +564,16 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 for c in range(nch[jset]):
                      print("      S, S' %10.6f, %10.6f" % (S_poles[jset,n,c],dSdE_poles[jset,n,c]))
                                  
-    print('Searching on pole energies:',searchparms[:border[0]])
               
 ## ANGULAR-MOMENTUM ARRAYS:
 
-    gfac = numpy.zeros([n_data,n_jsets,n_chans], dtype=REAL)
+    gfac = numpy.zeros([n_data,n_jsets,npairs,maxpc], dtype=REAL)
     for jset in range(n_jsets):
-        for c_in in range(n_chans):   # incoming partial wave
-            pair = seg_val[jset,c_in]      # incoming partition
-            if pair>=0:
-                denom = (2.*jp[pair]+1.) * (2.*jt[pair]+1)
-                for ie in range(n_data):
-                    gfac[ie,jset,c_in] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom * 10.  # mb
+        for pair in range(npairs):     # incoming partition
+            denom = (2.*jp[pair]+1.) * (2.*jt[pair]+1)
+            nic = cn[jset,pair] - c0[jset,pair]
+            for ie in range(n_data):
+                gfac[ie,jset,pair,0:nic] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom * 10.  # mb
 
        
     Gfacc = numpy.zeros(n_angles, dtype=REAL)    
@@ -565,7 +606,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         
     if chargedElastic:
         Rutherford = numpy.zeros([n_angles], dtype=REAL)
-        InterferenceAmpl = numpy.zeros([n_angles, n_jsets, n_chans], dtype=CMPLX)
+        InterferenceAmpl = numpy.zeros([n_angles, n_jsets, maxpc], dtype=CMPLX)
         
         for ie in range(n_angles):
             pin = data_p[ie,0]
@@ -584,9 +625,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 for jset in range(n_jsets):
                     J = J_set[jset]
                     for c in range(n_chans):
+                        ic = c - c0[jset,pin]
                         if seg_val[jset,c] == pin:
                             L = L_val[jset,c]
-                            InterferenceAmpl[ie,jset,c] = (2*J+1) * Pleg[ie,L] * 2 * rsqr4pi * CoulAmpl.conjugate()
+                            InterferenceAmpl[ie,jset,ic] = (2*J+1) * Pleg[ie,L] * 2 * rsqr4pi * CoulAmpl.conjugate()
     else:
         Rutherford, InterferenceAmpl = None, None
 
@@ -616,8 +658,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     
     if n_angles > 0:
         cc = (n_jsets*n_chans**2)**2
+        ccp = (n_jsets*maxpc**2)**2
         print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,n_chans))
-        AAL = numpy.zeros([npairs,npairs, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans ,NL], dtype=REAL)
+        print('AAL, AA sizes/p= %5.3f, %5.3f GB' % (ccp*npairs**2*NL*8/1e9, ccp*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,maxpc))
+        AAL = numpy.zeros([npairs,npairs, n_jsets,maxpc,maxpc, n_jsets,maxpc,maxpc ,NL], dtype=REAL)
 
         for rr_in in RMatrix.resonanceReactions:
             if rr_in.eliminated: continue
@@ -641,26 +685,30 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                                     for c1 in range(n_chans):
                                         if seg_val[jset1,c1] != inpair: continue
                                         if abs(S_val[jset1,c1]-S) > 0.1 : continue
+                                        ic1 = c1 - c0[jset1,inpair]
 
                                         for c1_out in range(n_chans):
                                             if seg_val[jset1,c1_out] != pair: continue
                                             if abs(S_val[jset1,c1_out]-So) > 0.1 : continue
+                                            ic1_out = c1_out - c0[jset1,pair]
 
                                             for jset2 in range(n_jsets):
                                                 J2 = J_set[jset2]
                                                 for c2 in range(n_chans):
                                                     if seg_val[jset2,c2] != inpair: continue
                                                     if abs(S_val[jset2,c2]-S) > 0.1 : continue
+                                                    ic2 = c2 - c0[jset2,inpair]
 
                                                     for c2_out in range(n_chans):
                                                         if seg_val[jset2,c2_out] != pair: continue
                                                         if abs(S_val[jset2,c2_out]-So) > 0.1 : continue
+                                                        ic2_out = c2_out - c0[jset2,pair]
         
                                                         for L in range(NL):
                                                             ZZ = ZZbar[L,iS,jset2,c2,jset1,c1] * ZZbar[L,iSo,jset2,c2_out,jset1,c1_out] 
-                                                            AAL[inpair,pair, jset2,c2_out,c2, jset1,c1_out,c1,L] += phase * ZZ / pi 
+                                                            AAL[pair,inpair, jset2,ic2_out,ic2, jset1,ic1_out,ic1,L] += phase * ZZ / pi 
 
-    #     AA = numpy.zeros([n_angles, n_jsets,n_chans,n_chans, n_jsets,n_chans,n_chans  ], dtype=REAL)
+    #     AA = numpy.zeros([n_angles, n_jsets,maxpc,maxpc, n_jsets,maxpc,maxpc  ], dtype=REAL)
 
     #     for ie in range(n_angles):
     #         pin = data_p[ie,0]
@@ -688,14 +736,14 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     ComputerPrecisions = (REAL, CMPLX, INT)
 
-    Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val]
+    Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
     CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
     CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles]                                                  # batch n_jsets
 
-    Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,batches]
+    Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,chargedElastic, debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, norm_info,effect_norm,p_mask,data_p, AAL,base, Search,Iterations,restarts]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,p_mask,data_p, AAL,base, Search,Iterations,restarts]
 
     Data_Control = [Pleg, ExptAint,ExptTot]     # batch n_angle_integrals,  n_totals  
     
@@ -713,10 +761,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #  Write back fitted parameters into evaluation:
         E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) 
         g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
-        norm_val = searchpars_n[border[1]:border[2]] ** 2
+        norm_val =numpy.zeros([n_norms]) # searchpars_n[border[2]:border[3]] ** 2 + 
 
         newname = {}
-        for ip in range(border[0]): #### Extract parameters after previous search:
+        for ip in range(border[0],border[1]): #### Extract parameters after previous search:
             i = searchloc[ip,0]
             jset = i//n_poles;  n = i%n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
@@ -727,7 +775,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #             print(ip,'j,n E',searchnames[ip],'renamed to',nam)
             newname[searchnames[ip]] = nam
 
-        for ip in range(frontier[0]): #### Extract parameters after previous search:
+        for ip in range(frontier[0],frontier[1]): #### Extract parameters after previous search:
             i = fixedloc[ip,0]
             jset = i//n_poles;  n = i%n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
@@ -738,7 +786,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #             print(ip,'j,n fixed E',fixednames[ip],'renamed to',nam)
             newname[fixednames[ip]] = nam        
                     
-        for ip in range(border[0],border[1]): ##                i = (jset*n_poles+n)*n_chans+c
+        for ip in range(border[1],border[2]): ##                i = (jset*n_poles+n)*n_chans+c
             i = searchloc[ip,0]
             c = i%n_chans;  n = ( (i-c)//n_chans )%n_poles; jset = ((i-c)//n_chans -n)//n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
@@ -749,7 +797,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #             print(ip,'j,n,c width',searchnames[ip],'renamed to',wnam)
             newname[searchnames[ip]] = wnam        
         
-        for ip in range(frontier[0],frontier[1]): ##                i = (jset*n_poles+n)*n_chans+c
+        for ip in range(frontier[1],frontier[2]): ##                i = (jset*n_poles+n)*n_chans+c
             i = fixedloc[ip,0]
             c = i%n_chans;  n = ( (i-c)//n_chans )%n_poles; jset = ((i-c)//n_chans -n)//n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
@@ -760,6 +808,13 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #             print(ip,'j,n,c fixed width',fixednames[ip],'renamed to',wnam)
             newname[fixednames[ip]] = wnam        
 #         print('newname:',newname)
+
+        for ip in range(border[2],border[3]): ## merge variable norms
+            ni = searchloc[ip,0]
+            norm_val[ni] = searchpars_n[ip]**2
+        for ip in range(frontier[2],frontier[3]): ## merge fixed norms
+            ni = fixedloc[ip,0]
+            norm_val[ni] = fixed_norms[ni]**2
         
 # Copy back into GNDS 
         jset = 0
@@ -785,7 +840,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 newRname = newname.get(searchnames[p],'')
                 if newRname == searchnames[p]: newRname = ''
                 sp = searchpars0[p]; sg = grad0[p]
-                if p >= border[1]:
+                if p >= border[2]:
                     sg /= 2.*sp
                     sp = sp**2
                 print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p],newRname) )
@@ -795,24 +850,24 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         else:
             fmt = '%4i %4i   S: %10.5f %10.5f  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
             print('   P  Loc   Start:    V       grad    Final:     V      grad        1sig   Percent error     Parameter        new name')
-            if frontier[2]>0: print('Varying:')
+            if frontier[3]>0: print('Varying:')
             for p in range(n_pars):   
                 sig = inverse_hessian[p,p]**0.5
                 sp0 = searchpars0[p]; sg0 = grad0[p]
-                if p >= border[1]:
+                if p >= border[2]:
                     sg0 /= 2.*sp0
                     sp0 = sp0**2
                 sp1 = searchpars_n[p]; sg1 = grad1[p]
-                if p >= border[1]:
+                if p >= border[2]:
                     sg1 /= 2.*sp1
                     sp1 = sp1**2
                 print(fmt % (p,searchloc[p,0],sp0,sg0,sp1,sg1,sig, sig/searchpars_n[p],searchnames[p],newname.get(searchnames[p],'') ) )
             fmt2 = '%4i %4i   S: %10.5f   %s     %s'
-            if frontier[2]>0: print('Fixed:')
-            for p in range(frontier[2]):   
+            if frontier[3]>0: print('Fixed:')
+            for p in range(frontier[3]):   
                 print(fmt2 % (p,fixedloc[p,0],fixedpars[p],fixednames[p],newname.get(fixednames[p],'')) )
                 
-            print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[2])]))
+            print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[3])]))
 
             print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %e11.3' % (chisqF_n/n_data,chisqF_n/ndof,ndof,chisqF_n))
                     
@@ -876,7 +931,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             docLines = [' ','Fitted by Rflow','   '+inFile,time.ctime(),pwd.getpwuid(os.getuid())[4],' ',' ']
             docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n/n_data)]
             docLines += [' Final   chisq/pt: %12.5f' % (chisqF_n/n_data),' /dof= %12.5f for %i' % (chisqF_n/ndof,ndof),' ']
-            docLines += ['  Fitted norm %12.5f for %s' % (searchpars_n[n+border[1]],searchnames[n+border[1]] ) for n in range(n_norms)] 
+            docLines += ['  Fitted norm %12.5f for %s' % (searchpars_n[n+border[2]],searchnames[n+border[2]] ) for n in range(n_norms)] 
             docLines += [' '] 
         
             code = 'Fit quality'
@@ -900,7 +955,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 if __name__=='__main__':
     import argparse,re
 
-    print('\nRflow-t')
+    print('\nRflow-s')
     # print('\nrflow2-v1i.py\n')
     cmd = ' '.join(sys.argv[:])
     print('Command:',cmd ,'\n')
@@ -1129,35 +1184,50 @@ if __name__=='__main__':
     f.close( )    
     n_norms= len(norm_lines)
     norm_val = numpy.zeros(n_norms, dtype=REAL)  # norm,step,expect,syserror
-    norm_info = numpy.zeros([n_norms,2], dtype=REAL)  # norm,step,expect,syserror
+    norm_info = numpy.zeros([n_norms,3], dtype=REAL)  # norm,step,expect,syserror
     norm_refs= []    
     ni = 0
     n_cnorms = 0
+    n_fixed = 0
+    n_free = 0
     tempfixes = 0
     for l in norm_lines:
         parts = l.split()
 #         print(parts)
         norm,step, name,expect,syserror,reffile = parts
         norm,step,expect,syserror = float(norm),float(step),float(expect),float(syserror)
-        if args.normsfixed and  syserror > 0.: 
-            tempfixes += 1
-            continue
+
         fitted = Fitted_norm.get(name,None)
 #         print('For name',name,'find',fitted)
         if fitted is not None and not args.norm1:
             print("Using previously fitted norm for %-20s: %10.5f instead of %10.5f" % (name,fitted,norm) )
             norm = fitted
         norm_val[ni] = norm
-        chi_scale = 1.0/syserror if syserror > 0. else 0.0
-        norm_info[ni,:] = (expect,chi_scale)
+        if syserror > 0.:   # fitted norm
+            chi_scale = 1.0/syserror 
+            if args.normsfixed:
+                fixed = 1
+                chi_scale = 0.
+                tempfixes += 1
+            else:
+                fixed = 0
+                n_cnorms += 1
+        elif syserror < 0.: # free norm
+            fixed = 0
+            chi_scale = 0
+            n_free += 1
+        else:               # fixed norm
+            fixed = 1
+            chi_scale = 0
+            n_fixed += 1
+        norm_info[ni,:] = (expect,chi_scale,fixed)
         norm_refs.append([name,reffile])
-        if syserror>0: n_cnorms += 1
         ni += 1
 
     n_totals = n_data - n_angles - n_angle_integrals
-    print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals',
-        '\nData groups:',len(groups),'\nX4 groups:',len(X4groups),'\nVariable norms:',n_norms,' of which constrained:',n_cnorms,
-        '\nTemporarily fixed norms:',tempfixes)
+    print('\nData points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals',
+          '\nData groups:',len(groups),'\nX4 groups:',len(X4groups),
+          '\nVariable norms:',n_norms,' of which ',n_cnorms,',constrained,',n_free,'free, and',n_fixed,' fixed (',tempfixes,'temporarily)\n')
     
     effect_norm = numpy.zeros([n_norms,n_data], dtype=REAL)
     for ni in range(n_norms):
@@ -1188,6 +1258,7 @@ if __name__=='__main__':
     if args.single: base += 's'
     base += '+%s' % args.dataFile.replace('.data','')
     if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',':')
+    if args.normsfixed is not None: base += '+n' 
     if args.pmin       is not None: base += '-p%s' % args.pmin
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
     if args.emin       is not None: base += '-e%s' % args.emin
@@ -1212,6 +1283,7 @@ if __name__=='__main__':
     print("Finish rflow call: ",tim.toString( ))
     chisqPN = chisqtot / n_data
     print('\n ChiSq/pt = %10.4f from %i points' % (chisqPN,n_data))
+#     print('Output norms:',norm_val)
 
     XSp_tot_n,XSp_cap_n,XSp_mat_n = XS_totals
     pname,tname, za,zb, npairs,cm2lab,QI,ipair = ch_info
