@@ -329,7 +329,7 @@ parser.add_argument("-d", "--Dir", type=str,  default="Data_X4s", help="output d
 parser.add_argument("-o", "--Out", type=str,  default="flow.data", help="output data file")
 parser.add_argument("-n", "--Norms", type=str,  default="flow.norms", help="output normalization file")
 parser.add_argument("-S", "--Sfresco", action="store_true", help="Outputs for Sfresco")
-parser.add_argument(      "--SF", action="store_true", help="Do NOT convert S-factors to cross-sections")
+parser.add_argument(      "--SF", action="store_true", help="Plot S-factor data, not as cross-sections")
 parser.add_argument("-T", "--Term0", type=int, default=0, help="First 'term' in Sfresco output")
 
 parser.add_argument(      "--CSV", type=str,  default="datafile.props.csv", help="property datafile.props.csv in args.Dir")

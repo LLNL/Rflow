@@ -15,7 +15,7 @@ def quickName(p,t):     #   (He4,Be11_e3) -> a3
     return(ln + str(tlevel) if tlevel>0 else ln)
         
         
-def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base,n_data,E_scat,EIndex,cm2lab,QI,ipair,Eframe):
+def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base,n_data,E_scat,data_p,EIndex,cm2lab,QI,ipair,Eframe):
         
 #  Eframe False:   plot as function of cm energy in the partition ipair (the projectile frame in gnds source)
 #  Eframe True:    plot as function of lab energy in the incident partition for each transitiion.
@@ -34,20 +34,21 @@ def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, 
         neut = za[pin]*zb[pin] == 0    # calculate total cross-sections for neutrons
         if neut: pnin = pin
         fname = base + '-%stot_%s' % (sym,pn)
-        cname = base + '-%scap_%s' % (sym,pn)
+#         cname = base + '-%scap_%s' % (sym,pn)
 #         Gnames.append(fname)
             
-        print('Total cross-sections for incoming',pin,'to file',fname,' and capture to',cname)
+        print('Total cross-sections for incoming',pin,'to file',fname) #,' and capture to',cname)
         fout = open(fname,'w')
-        cout = open(cname,'w')
+#         cout = open(cname,'w')
         for ie0 in range(n_data):
             ie = EIndex[ie0]
+            if pin != data_p[ie,0] or -1 != data_p[ie,1]: continue
 #           E_scat[ie]      is lab incident energy in nominal entrance partition  ipair
 #                 E = E_scat[ie]      # lab incident energy
 #                 E = Ein_list[ie]    # incident energy in EXFOR experiment
 
-            x = XSp_tot_n[ie,pin] 
-            c = XSp_cap_n[ie,pin] 
+            x = XSp_tot_n[ie] 
+#             c = XSp_cap_n[ie] 
             if Eframe:
                 E = E_scat[ie]/cm2lab[ipair] + QI[pin] - QI[ipair]
                 Elab = E * cm2lab[pin]
@@ -57,9 +58,9 @@ def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, 
                 totals[-1,pin,ie] = x
         
             if x>0: print(Eout,x, file=fout)
-            if c>0: print(Eout,c, file=cout)
+#             if c>0: print(Eout,c, file=cout)
         fout.close()
-        cout.close()
+#         cout.close()
 
         for pout in range(npairs):
             if pin==pout and not neut: continue
@@ -72,7 +73,8 @@ def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, 
         
             for ie0 in range(n_data):
                 ie = EIndex[ie0]
-                x = XSp_mat_n[ie,pout,pin]
+                if pin != data_p[ie,0] or pout != data_p[ie,1]: continue
+                x = XSp_mat_n[ie]
 #                     E = E_scat[ie]
 #                     E = Ein_list[ie]
                 if Eframe:

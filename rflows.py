@@ -40,15 +40,14 @@ print("First imports done rflow: ",tim.toString( ))
 
 
 # TO DO:
-#   Use nch to set search parameters even if widths=0 (i.e. decide on filler vs real level info)
 #   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
 #   Multiple GPU strategies
 #   Estimate initial Hessian by 1+delta parameter shift. Try various delta to make BFGS search smoother
 #   Options to set parameter and search again.
+#   Reread snap file (eg if crash) for re-initializing same search 
 
 # Search options:
 #   Fix or search on Reich-Moore widths
-#   FIXING NORMS ; FREE NORMS. Many errors in pipeline
 #   Command input, e.g. as with Sfresco?
 
 # Maybe:
@@ -390,7 +389,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     maxpc = numpy.amax(all_partition_channels)
     print('Max channels in each partition:',all_partition_channels,' max=',maxpc)
     for jset in range(n_jsets):
-        print('Channel ranges for each parition:',[[c0[jset,pair],cn[jset,pair]] for pair in range(npairs)])
+        if debug: print('Channel ranges for each parition:',[[c0[jset,pair],cn[jset,pair]] for pair in range(npairs)])
 
     if brune:  # S_poles: Shift functions at pole positions for Brune basis   
         S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
@@ -567,13 +566,12 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
               
 ## ANGULAR-MOMENTUM ARRAYS:
 
-    gfac = numpy.zeros([n_data,n_jsets,npairs,maxpc], dtype=REAL)
-    for jset in range(n_jsets):
-        for pair in range(npairs):     # incoming partition
-            denom = (2.*jp[pair]+1.) * (2.*jt[pair]+1)
-            nic = cn[jset,pair] - c0[jset,pair]
-            for ie in range(n_data):
-                gfac[ie,jset,pair,0:nic] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom * 10.  # mb
+    gfac = numpy.zeros([n_data,n_jsets], dtype=REAL)
+    for ie in range(n_data):
+        pin = data_p[ie,0]   # incoming partition
+        for jset in range(n_jsets):
+            denom = (2.*jp[pin]+1.) * (2.*jt[pin]+1)
+            gfac[ie,jset] = pi * (2*J_set[jset]+1) * rksq_val[ie,pin] / denom * 10.  # mb
 
        
     Gfacc = numpy.zeros(n_angles, dtype=REAL)    
@@ -730,6 +728,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Number of search parameters:',searchpars0.shape[0])
 
     print("To start tf: ",tim.toString( ))
+    sys.stdout.flush()
 
 ################################################################    
 ## TENSORFLOW CALL:
@@ -754,6 +753,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
         
     print("Finished tf: ",tim.toString( ))
+    sys.stdout.flush()
 #  END OF TENSORFLOW CALL
 ################################################################
         
@@ -1258,7 +1258,7 @@ if __name__=='__main__':
     if args.single: base += 's'
     base += '+%s' % args.dataFile.replace('.data','')
     if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',':')
-    if args.normsfixed is not None: base += '+n' 
+    if args.normsfixed            : base += '+n' 
     if args.pmin       is not None: base += '-p%s' % args.pmin
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
     if args.emin       is not None: base += '-e%s' % args.emin
@@ -1290,8 +1290,8 @@ if __name__=='__main__':
 
     EIndex = numpy.argsort(data_val[:,0])
     if args.TransitionMatrix >= 0:
-        pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,True)
-        pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,False)
+        pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],data_p,EIndex,cm2lab,QI,ipair,True)
+        pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],data_p,EIndex,cm2lab,QI,ipair,False)
         pnin = 'for %s' % pnin
     else:
         totals = None
