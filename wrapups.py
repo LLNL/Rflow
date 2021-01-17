@@ -67,7 +67,7 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
 def plotOut(n_data,n_norms,dof,args, base,info,dataDir, 
     chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
     groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, TransitionMatrix,
-    EIndex,totals,pname,tname,datasize, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
+    EIndex,totals,pname,tname,datasize,Aintrange, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
 
     print('pname:',pname)
     ngraphAll = 0
@@ -75,6 +75,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
     chisqAll = 0
 #     plot_cmds = []
     plot_cmd = 'xmgr '
+
     for group in groups:
 
         found = False
@@ -149,7 +150,10 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
     
 #     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
 
-
+#     with open('data.out','w') as fout:
+#         for id in range(n_data):
+#             pin,pout = data_p[id,:]
+#             print(id,data_val[id,:],'for',pin,pout,':', totals[pout,pin,EIndex[id]] , file=fout)
     
     X4groups = sorted(X4groups)
     print('\nX4groups sorted:',X4groups)
@@ -376,7 +380,6 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
     with open(p_out,'w') as ofile:
        json.dump([1,1,cmd,PoleGraphList],ofile, default=to_serializable)
             
-            
 # chi from norm_vals themselves:
     for ni in range(n_norms):
         chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
@@ -420,6 +423,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
                 LineModel = [{}, [[],[],[],[]] ]
                 for i0 in range(nmodelpts):
                     i = EIndex[i0]
+                    if pinG != data_p[i,0] or poutG != data_p[i,1] : continue
                     LineModel[1][0].append(data_val[i,0]*lab2cm)
                     LineModel[1][1].append(totals[poutG,pinG,i])
                     LineModel[1][2].append(0.)
@@ -469,12 +473,12 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
             
                         LineData  = [{}, [[],[],[],[]] ]
                         np = 0
-                        for id in range(n_data):
+                        for id in range(n_data): # range(Aintrange[0],Aintrange[1]): # range(n_data):  # # n_angle_integrals0:n_totals0
                             gld = group_list[id]
                             cluster = cluster_list[id]
                             if gld != tag: continue
                             if cluster != 'I': continue # angle-integrated data only here
- 
+#                             if pin != data_p[id,0] or pout != data_p[id,1] : continue
                             E_Gproj = data_val[id,0]*lab2cm
                             Data = data_val[id,2]*fac
                             DataErr = data_val[id,3]*fac        

@@ -23,7 +23,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 #     ComputerPrecisions = (REAL, CMPLX, INT)
 # 
 #     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
-#     CoulombFunctions_data = (L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac)    # batch n_data
+#     CoulombFunctions_data = (L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac)    # batch n_data
 #     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles)                                                  # batch n_jsets
 # 
 #     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches)
@@ -41,7 +41,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
     REAL, CMPLX, INT = ComputerPrecisions
 
     ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val = Channels
-    L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac = CoulombFunctions_data   # batch n_data
+    L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac = CoulombFunctions_data   # batch n_data
     S_poles,dSdE_poles,EO_poles = CoulombFunctions_poles                                                  # batch n_jsets
 
     n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches = Dimensions
@@ -107,7 +107,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             
  
         @tf.function
-        def R2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans):
+        def R2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans):
         # Now do TF:
             GL = tf.expand_dims(g_poles,2)
             GR = tf.expand_dims(g_poles,3)
@@ -125,20 +125,16 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             C_mat = tf.eye(n_chans, dtype=CMPLX) - RMATC * tf.expand_dims(L_diag,2);            # print('C_mat',C_mat.dtype,C_mat.get_shape())
 
             D_mat = tf.linalg.solve(C_mat,RMATC);                                               # print('D_mat',D_mat.dtype,D_mat.get_shape())
-
         #    S_mat = Om2_mat + complex(0.,2.) * tf.expand_dims(POm_diag,3) * D_mat * tf.expand_dims(POm_diag,2);
         #  T=I-S
             T_mat = tf.eye(n_chans, dtype=CMPLX) - (Om2_mat + complex(0.,2.) * tf.expand_dims(POm_diag,3) * D_mat * tf.expand_dims(POm_diag,2) )
-    
-        # multiply left and right by Coulomb phases:
-            TC_mat = tf.expand_dims(CS_diag,3) * T_mat * tf.expand_dims(CS_diag,2)
             
-            TCp_mat = tf.gather_nd(TC_mat, Tind, batch_dims=2) * tf.constant(Mind)   #  in/out partitions for batch data spec. With Coulomb phases.
+            Tp_mat = tf.gather_nd(T_mat, Tind, batch_dims=2) * tf.constant(Mind)   #  in/out partitions for batch data spec.
             
-            return(TCp_mat)
+            return(Tp_mat)
 
         @tf.function
-        def LM2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles):
+        def LM2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles):
         # Use Level Matrix A to get T=1-S:
         #     print('g_poles',g_poles.dtype,g_poles.get_shape())
 
@@ -182,24 +178,22 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                 T_matList.append( T_matJ ) 
                 
             T_mat = tf.stack(T_matList, 1) #; print('T_mat',T_mat.dtype,T_mat.get_shape())
-        # multiply left and right by Coulomb phases:
-            TC_mat = tf.expand_dims(CS_diag,3) * T_mat * tf.expand_dims(CS_diag,2)
 
-            TCp_mat = tf.gather_nd(TC_mat, Tind, batch_dims=2) * tf.constant(Mind)  # ie,jset,p1,c1,p2,c2
+            Tp_mat = tf.gather_nd(T_mat, Tind, batch_dims=2) * tf.constant(Mind)   # ie,jset,p1,c1,p2,c2 in/out partitions for batch data spec.
             
-            return(TCp_mat)
+            return(Tp_mat)
             
         @tf.function
-        def T2X_transformsTF(TCp_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs,maxpc):
+        def T2X_transformsTF(Tp_mat,gfac, n_jsets,n_chans,npairs,maxpc):
         
         #for  1 - Re(S) = Re(1-S) = Re(T)
-            TOT_mat = tf.math.real(tf.linalg.diag_part(TCp_mat))   #  ie,jset,a,b -> ie,jset,ad   # valid for pin=pout from (ie )
+            TOT_mat = tf.math.real(tf.linalg.diag_part(Tp_mat))   #  ie,jset,a,b -> ie,jset,ad   # valid for pin=pout from (ie )
                          
             XS_tot  = TOT_mat * tf.expand_dims(gfac, 2)                          #  ie,jset,a  * gfac[ie,jset,1]
             XSp_tot = 2. *  tf.reduce_sum(  XS_tot, [1,2])     # convert ie,jset,a to ie by summing over jset,a
 
 
-            Tmod2 = tf.math.real(  TCp_mat * tf.math.conj(TCp_mat) )   # ie,jset,ao,ai
+            Tmod2 = tf.math.real(  Tp_mat * tf.math.conj(Tp_mat) )   # ie,jset,ao,ai
             XSp_mat = tf.reduce_sum (Tmod2 * tf.reshape(gfac, [-1,n_jsets,1,1] ), [1,2,3])  # sum over jset,ao,ai  giving ie which implies po,pi
                             
             return(XSp_mat,XSp_tot) 
@@ -255,10 +249,12 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             norm_val =                       (norm_valv+ fixed_norms)**2
     
             if not LMatrix:
-                 TCp_mat = R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans ) 
+                 Tp_mat = R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
             else:
-                 TCp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles) 
+                 Tp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles) 
         
+        # multiply left and right by Coulomb phases:
+            TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat * tf.expand_dims(CSp_diag_in,2)
 
             Ax = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles,batches)
 
@@ -267,7 +263,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             else:
                 AxA = Ax * Gfacc
                 
-            XSp_mat,XSp_tot  = T2X_transformsTF(TCp_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs,maxpc)
+            XSp_mat,XSp_tot  = T2X_transformsTF(Tp_mat,gfac, n_jsets,n_chans,npairs,maxpc)
                 
             AxI = XSp_mat[n_angle_integrals0:n_totals0] 
             AxT = XSp_tot[n_totals0:n_data] 
@@ -277,11 +273,11 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 
             Grads = tf.gradients(chisq, searchpars) 
 
-            return(chisq,A_t,Grads,  TCp_mat, XSp_mat,XSp_tot)
+            return(chisq,A_t,Grads,  Tp_mat, XSp_mat,XSp_tot)
         
         print("First FitStatusTF: ",tim.toString( ))
 
-        chisq0,A_tF,Grads,  TCp_mat, XSp_mat,XSp_tot = FitStatusTF(searchpars)                 
+        chisq0,A_tF,Grads,  Tp_mat, XSp_mat,XSp_tot = FitStatusTF(searchpars)                 
 #         stuffs = FitStatusTF(searchpars)  
 #         for stuff in stuffs:
 #             print(stuff.dtype,stuff.get_shape())   
@@ -315,7 +311,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
         if verbose: print('Grads:',grad0)
 
         if debug:
-            TCp_mat_n = TCp_mat.numpy()
+            Tp_mat_n = Tp_mat.numpy()
             SMAT = numpy.zeros(n_chans, dtype=CMPLX)
             for ie in range(n_data):
                 for jset in range(n_jsets):
@@ -330,7 +326,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                             if npb == data_p[ie,0] and npa == data_p[ie,1]: 
                                 ca = a - c0[jset,npa]
                                 cb = b - c0[jset,npb]
-                                SMAT[b] = (1 if a==b else 0) - numpy.conj(CS_diag[ie,jset,a]) * TCp_mat_n[ie,jset,ca,cb]  # remove Coulomb phases
+                                SMAT[b] = (1 if a==b else 0) - Tp_mat_n[ie,jset,ca,cb]  # remove Coulomb phases
                             else:
                                 SMAT[b] = -.1
                         print('   ',a,'row: ',',  '.join(['{:.5f}'.format(SMAT[b]) for b in range(n_chans)]) )                    
@@ -380,10 +376,13 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                 norm_val =                       (norm_valv+ fixed_norms)**2
 
                 if not LMatrix:
-                     TCp_mat = R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans ) 
+                     Tp_mat = R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
                 else:
-                     TCp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
-
+                     Tp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
+        
+            # multiply left and right by Coulomb phases:
+                TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat * tf.expand_dims(CSp_diag_in,2)
+            
                 Ax = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles,batches)
 
                 if chargedElastic:                          
@@ -391,7 +390,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                 else:
                     AxA =  Ax * Gfacc
             
-                XSp_mat,XSp_tot  = T2X_transformsTF(TCp_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs,maxpc)
+                XSp_mat,XSp_tot  = T2X_transformsTF(Tp_mat,gfac, n_jsets,n_chans,npairs,maxpc)
     
                 AxI = XSp_mat[n_angle_integrals0:n_totals0] 
                 AxT = XSp_tot[n_totals0:n_data] 
@@ -444,10 +443,13 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                                  print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],S_poles[jset,n,c],
                                          100*dSdE_poles[jset,n,c]*(EO_poles[jset,n]-EOO_poles[jset,n])/ (S_poles[jset,n,c] - SOO_poles[jset,n,c])))
                     
-                    TCp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
+                    Tp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
-                    XSp_mat,XSp_tot  = T2X_transformsTF(TCp_mat,CS_diag,gfac,p_mask, n_jsets,n_chans,npairs,maxpc)
-                
+                    XSp_mat,XSp_tot  = T2X_transformsTF(Tp_mat,gfac, n_jsets,n_chans,npairs,maxpc)
+        
+                # multiply left and right by Coulomb phases:
+                    TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat * tf.expand_dims(CSp_diag_in,2)    
+                            
                     AxA = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles,batches)
                     AxA = AddCoulombsTF(AxA,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
                     
@@ -485,7 +487,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             searchpars_n = searchpars0
         
         print("Second FitStatusTF start: ",tim.toString( ))
-        chisqF,A_tF,Grads,  TCp_mat, XSp_mat,XSp_tot = FitStatusTF(searchpars) 
+        chisqF,A_tF,Grads,  Tp_mat, XSp_mat,XSp_tot = FitStatusTF(searchpars) 
         chisqF_n = chisqF.numpy()
         A_tF_n = A_tF.numpy()
         grad1 = Grads[0].numpy()

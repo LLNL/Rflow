@@ -1218,8 +1218,8 @@ if __name__=='__main__':
 
     EIndex = numpy.argsort(data_val[:,0])
     if args.TransitionMatrix >= 0:
-        pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,True)
-        pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,False)
+        pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],data_p,EIndex,cm2lab,QI,ipair,True)
+        pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],data_p,EIndex,cm2lab,QI,ipair,False)
         pnin = 'for %s' % pnin
     else:
         totals = None

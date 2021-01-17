@@ -581,13 +581,15 @@ for datFile in args.InFiles:
     except:
         print('Unwanted projectile',projectile,": SKIP")
         continue
+        
     try:
         iti = args.Projectiles.index(ejectile)
     except:
-        print('Unwanted ejectile',ejectile,": SKIP")
-        continue
+        if ejectile!='TOT':
+            print('Unwanted ejectile',ejectile,": SKIP")
+            continue
         
-    if args.LevelsMax is not None and level > args.LevelsMax[iti]:
+    if args.LevelsMax is not None and level > args.LevelsMax[ipi]:
         print('Level',ia-1,'is above level limit',args.LevelsMax[ipi],"for %s+%s" % (ejectile,residual),": SKIP")
         continue         
     levels[residual].add(level)
