@@ -6,9 +6,8 @@ tim = times.times()
 import os,math,numpy,cmath,pwd,sys,time,json
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
-from evaluates import evaluate_tf
-from wrapups import plotOut,saveNorms2gnds
-from printExcitationFunctions import *
+from evaluatef import evaluatef
+from wrapups import saveNorms2gnds
 
 from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
@@ -18,18 +17,6 @@ from fudge.gnds import reactionSuite as reactionSuiteModule
 from fudge.gnds import styles        as stylesModule
 from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
-from functools import singledispatch
-
-@singledispatch
-def to_serializable(val):
-    """Used by default."""
-    return str(val)
-
-
-@to_serializable.register(numpy.float32)
-def ts_float32(val):
-    """Used if *val* is an instance of numpy.float32."""
-    return numpy.float64(val)
 
 REAL = numpy.double
 CMPLX = numpy.complex128
@@ -229,7 +216,6 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     pi_set = numpy.zeros(n_jsets, dtype=INT)
     L_val  =  numpy.zeros([n_jsets,n_chans], dtype=INT)
     S_val  =  numpy.zeros([n_jsets,n_chans], dtype=REAL)
-    p_mask =  numpy.zeros([npairs,n_jsets,n_chans], dtype=REAL)
     seg_val=  numpy.zeros([n_jsets,n_chans], dtype=INT) - 1 
     seg_col=  numpy.zeros([n_jsets], dtype=INT) 
 
@@ -289,7 +275,6 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 has_widths[jset,:rows] = 1
             
                 seg_val[jset,c] = pair
-                p_mask[pair,jset,c] = 1.0
                 partition_channels[pair] += 1
             
                 Spins[pair].add(S)
@@ -765,13 +750,13 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,chargedElastic, debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,p_mask,data_p, AAL,base, Search,Iterations,restarts]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,restarts]
 
-    Data_Control = [Pleg, ExptAint,ExptTot]     # batch n_angle_integrals,  n_totals  
+    # Data_Control = [Pleg]     # batch n_angle_integrals,  n_totals  
     
-    searchpars_n, chisqF_n, A_tF_n, grad1, inverse_hessian,XS_totals, chisq0_n,grad0 = evaluate_tf(ComputerPrecisions, Channels,
+    searchpars_n, chisqF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluatef(ComputerPrecisions, Channels,
         CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
-        Search_Control,Data_Control, searchpars0, data_val, tim)
+        Search_Control,Pleg, searchpars0, data_val, tim)
         
     ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
         
@@ -784,7 +769,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #  Write back fitted parameters into evaluation:
         E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) 
         g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
-        norm_val =numpy.zeros([n_norms]) # searchpars_n[border[2]:border[3]] ** 2 + 
+        norm_val =numpy.zeros([n_norms]) # searchpars_n[border[2]:border[3]] ** 2
+        
+        chisqpdof = chisqF_n*n_data/ndof
 
         newname = {}
         for ip in range(border[0],border[1]): #### Extract parameters after previous search:
@@ -868,7 +855,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     sp = sp**2
                 print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p],newRname) )
 #             fmt2 = '%4i %4i   S: %10.5f   %s') )
-            print('\n*** chisq/pt=',chisqF_n/n_data)
+            print('\n*** chisq/pt =',chisqF_n,
+                  '\n    chisq/dof=',chisqF_n*n_data/ndof)
             
         else:
             fmt = '%4i %4i   S: %10.5f %10.5f  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
@@ -892,7 +880,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 
             print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[3])]))
 
-            print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %e11.3' % (chisqF_n/n_data,chisqF_n/ndof,ndof,chisqF_n))
+            print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %11.3e' % (chisqF_n,chisqpdof,ndof,chisqF_n*n_data))
                     
             covariance1 = inverse_hessian
             from scipy.linalg import eigh
@@ -949,12 +937,13 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 lowest_chisq = min(lowest_chisq,chisqr)
             snapl.close()                
         
-
+            print('\n*** chisq/pt =',chisqF_n,
+                  '\n    chisq/dof=',chisqF_n*n_data/ndof)
           
             n_normsFitted = border[3]-border[2]
             docLines = [' ','Fitted by Rflow','   '+inFile,time.ctime(),pwd.getpwuid(os.getuid())[4],' ',' ']
-            docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n/n_data)]
-            docLines += [' Final   chisq/pt: %12.5f' % (chisqF_n/n_data),' /dof= %12.5f for %i' % (chisqF_n/ndof,ndof),' ']
+            docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n)]
+            docLines += [' Final   chisq/pt: %12.5f' % (chisqF_n),' /dof= %12.5f for %i' % (chisqpdof,ndof),' ']
             docLines += ['  Fitted norm %12.5f for %s' % (searchpars_n[n+border[2]],searchnames[n+border[2]] ) for n in range(n_normsFitted)] 
             docLines += [' '] 
         
@@ -969,18 +958,17 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             computerCode.note.body = '\n'.join( docLines )
             RMatrix.documentation.computerCodes.add( computerCode )
     
-        return(chisqF_n,A_tF_n,norm_val,n_pars,XS_totals,ch_info)
+        return(chisqF_n,norm_val,n_pars)
         
     else:
-        return(chisq_n,A_tF_n,norm_val,n_pars,XS_totals,ch_info)
+        return(chisq_n,norm_val,n_pars)
 
 ############################################## main
 
 if __name__=='__main__':
     import argparse,re
 
-    print('\nRflow-s')
-    # print('\nrflow2-v1i.py\n')
+    print('\nRflowf')
     cmd = ' '.join(sys.argv[:])
     print('Command:',cmd ,'\n')
 
@@ -1297,29 +1285,15 @@ if __name__=='__main__':
     if args.Cross_Sections or args.Matplot or args.TransitionMatrix >= 0 : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
-    chisqtot,xsc,norm_val,n_pars,XS_totals,ch_info = Rflow(
+    chisqppt,norm_val,n_pars  = Rflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
                         Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
 
-    print("Finish rflow call: ",tim.toString( ))
-    chisqPN = chisqtot / n_data
-    print('\n ChiSq/pt = %10.4f from %i points' % (chisqPN,n_data))
-#     print('Output norms:',norm_val)
-
-    XSp_tot_n,XSp_cap_n,XSp_mat_n = XS_totals
-    pname,tname, za,zb, npairs,cm2lab,QI,ipair = ch_info
-
-    EIndex = numpy.argsort(data_val[:,0])
-    if args.TransitionMatrix >= 0:
-        pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],data_p,EIndex,cm2lab,QI,ipair,True)
-        pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],data_p,EIndex,cm2lab,QI,ipair,False)
-        pnin = 'for %s' % pnin
-    else:
-        totals = None
-        pnin = ''
+#     print("Finish rflow call: ",tim.toString( ))
+#     print('\n ChiSq/pt = %10.4f from %i points' % (chisqppt,n_data))
 
     if args.Search:  
         print('Revised norms:',norm_val)
@@ -1329,17 +1303,5 @@ if __name__=='__main__':
         newFitFile = base  + '-fit.xml'
         open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
         print('Written new fit file:',newFitFile)
-    else:
-        info = '' 
-
-
-    dof = n_data + n_cnorms - n_norms - n_pars
-    n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
-    n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
-    
-    plotOut(n_data,n_norms,dof,args, base,info,dataDir, 
-        chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
-        groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, args.TransitionMatrix,
-        EIndex,totals,pname,tname,args.datasize,(n_angle_integrals0,n_totals0),ipair,cm2lab, emin,emax,pnin,gnd,cmd )
         
     print("Final rflow: ",tim.toString( ))
