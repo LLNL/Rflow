@@ -7,7 +7,7 @@ import os,math,numpy,cmath,pwd,sys,time,json
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from evaluates import evaluate_tf
-from wrapups import plotOut,saveNorms2gnds
+from wrapup import plotOut,saveNorms2gnds
 from printExcitationFunctions import *
 
 from pqu import PQU as PQUModule
@@ -56,6 +56,7 @@ print("First imports done rflow: ",tim.toString( ))
 # Doing:
 
 ##############################################  Rflow
+# based on rflows4.py
 
 hbc =   197.3269788e0             # hcross * c (MeV.fm)
 finec = 137.035999139e0           # 1/alpha (fine-structure constant)
@@ -73,7 +74,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         Search,Iterations,restarts,Distant,Background,ReichMoore, 
         verbose,debug,inFile,fitStyle,tag,large):
         
-#     global L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
+#     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
+    global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
 
     PoPs = gnd.PoPs
     projectile = gnd.PoPs[gnd.projectile]
@@ -246,74 +248,12 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     L_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
     POm_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
     Om2_mat = numpy.zeros([n_data,n_jsets,n_chans,n_chans], dtype=CMPLX)
-#     CS_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
+    CS_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
     Spins = [set() for pair in range(npairs)]
 
     
 ## DATA
-# Indexing to channels, etc
-    jset = 0
-    tot_channels = 0; tot_poles = 0
-    all_partition_channels = numpy.zeros(npairs, dtype=INT)
-    c0 = numpy.zeros([n_jsets,npairs], dtype=INT)
-    cn = numpy.zeros([n_jsets,npairs], dtype=INT)
-    for Jpi in RMatrix.spinGroups:
-        J_set[jset] = Jpi.spin
-        pi_set[jset] = Jpi.parity
-        parity = '+' if pi_set[jset] > 0 else '-'
-        R = Jpi.resonanceParameters.table
-        cols = R.nColumns - 1  # ignore energy col
-        rows = R.nRows
-        nch[jset] = cols
-        npl[jset] = rows
-        if True: print('J,pi =%5.1f %s, channels %3i, poles %3i' % (J_set[jset],parity,cols,rows) )
-        tot_channels += cols
-        tot_poles    += rows
-        seg_col[jset] = cols    
 
-        c = 0
-        All_spins = set()
-        partition_channels = numpy.zeros(npairs, dtype=INT)
-        partition_channels = numpy.zeros(npairs, dtype=INT)
-
-        for pair in range(npairs):
-            c0[jset,pair] = c
-            for ch in Jpi.channels:
-                rr = ch.resonanceReaction
-                pairc = partitions.get(rr,None)
-                if pairc is None or pairc!=pair: continue
-                m = ch.columnIndex - 1
-                L_val[jset,c] = ch.L
-                S = float(ch.channelSpin)
-                S_val[jset,c] = S
-                has_widths[jset,:rows] = 1
-            
-                seg_val[jset,c] = pair
-                p_mask[pair,jset,c] = 1.0
-                partition_channels[pair] += 1
-            
-                Spins[pair].add(S)
-                All_spins.add(S)    
-    
-                c += 1
-            cn[jset,pair] = c
-        all_partition_channels = numpy.maximum(all_partition_channels,partition_channels)
-        jset += 1   
-
-    print(' Total channels',tot_channels,' and total poles',tot_poles,'\n')
-    maxpc = numpy.amax(all_partition_channels)
-    print('Max channels in each partition:',all_partition_channels,' max=',maxpc)
-    for jset in range(n_jsets):
-        if debug: print('Channel ranges for each parition:',[[c0[jset,pair],cn[jset,pair]] for pair in range(npairs)])
-        
-    if debug:
-        print('All spins:',All_spins)
-        print('All channel spins',Spins)
-                
-    CSp_diag_in  = numpy.zeros([n_data,n_jsets,maxpc], dtype=CMPLX)
-    CSp_diag_out = numpy.zeros([n_data,n_jsets,maxpc], dtype=CMPLX)
-    
-    
 #  Calculate Coulomb functions on data Energy Grid
     for pair in range(npairs):
         for ie in range(n_data):
@@ -360,30 +300,56 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             
 #  SECOND: fill in arrays:
     jset = 0
+    tot_channels = 0; tot_poles = 0
+    all_partition_channels = numpy.zeros(npairs, dtype=INT)
+    c0 = numpy.zeros([n_jsets,npairs], dtype=INT)
+    cn = numpy.zeros([n_jsets,npairs], dtype=INT)
     for Jpi in RMatrix.spinGroups:
+        J_set[jset] = Jpi.spin
+        pi_set[jset] = Jpi.parity
+        parity = '+' if pi_set[jset] > 0 else '-'
         R = Jpi.resonanceParameters.table
         cols = R.nColumns - 1  # ignore energy col
         rows = R.nRows
+        nch[jset] = cols
+        npl[jset] = rows
+        if True: print('J,pi =%5.1f %s, channels %3i, poles %3i' % (J_set[jset],parity,cols,rows) )
+        tot_channels += cols
+        tot_poles    += rows
+        seg_col[jset] = cols
         E_poles[jset,:rows] = numpy.asarray( R.getColumn('energy','MeV') , dtype=REAL)   # lab MeV
         widths = [R.getColumn( col.name, 'MeV' ) for col in R.columns if col.name != 'energy']
 
 #         if verbose:  print("\n".join(R.toXMLList()))       
         n = None
         c = 0
+        All_spins = set()
+        partition_channels = numpy.zeros(npairs, dtype=INT)
+        partition_channels = numpy.zeros(npairs, dtype=INT)
+
         for pair in range(npairs):
+            c0[jset,pair] = c
             for ch in Jpi.channels:
-                ic = c - c0[jset,pair]
                 rr = ch.resonanceReaction
                 pairc = partitions.get(rr,None)
                 if pairc is None or pairc!=pair: continue
                 m = ch.columnIndex - 1
                 g_poles[jset,:rows,c] = numpy.asarray(widths[m][:],  dtype=REAL) 
+                L_val[jset,c] = ch.L
+                S = float(ch.channelSpin)
+                S_val[jset,c] = S
+                has_widths[jset,:rows] = 1
+            
+                seg_val[jset,c] = pair
+                p_mask[pair,jset,c] = 1.0
+                partition_channels[pair] += 1
+            
+                Spins[pair].add(S)
+                All_spins.add(S)
 
-            # Find S, P, phi, sigma for all data points
+            # Find S and P:
                 for ie in range(n_data):
-                    pin = data_p[ie,0]
-                    pout= data_p[ie,1]
-                    if pout == -1: pout = pin # to get total cross-section
+
                     if bndx == 'L' or bndx == '-L':
                         B = -ch.L
                     elif bndx == 'Brune':
@@ -411,14 +377,20 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
                     POm_diag[ie,jset,c]      = Psr * Omega
                     Om2_mat[ie,jset,c,c]     = Omega**2
-#                     CS_diag[ie,jset,c]       = Csig_exp[ie,pair,ch.L]
-                    if pair==pin : CSp_diag_in[ie,jset,ic]       = Csig_exp[ie,pair,ch.L]
-                    if pair==pout: CSp_diag_out[ie,jset,ic]      = Csig_exp[ie,pair,ch.L]
+                    CS_diag[ie,jset,c]       = Csig_exp[ie,pair,ch.L]
                 c += 1
+            cn[jset,pair] = c
         if debug:
             print('J set %i: E_poles \n' % jset,E_poles[jset,:])
             print('g_poles \n',g_poles[jset,:,:])
+        all_partition_channels = numpy.maximum(all_partition_channels,partition_channels)
         jset += 1   
+
+    print(' Total channels',tot_channels,' and total poles',tot_poles,'\n')
+    maxpc = numpy.amax(all_partition_channels)
+    print('Max channels in each partition:',all_partition_channels,' max=',maxpc)
+    for jset in range(n_jsets):
+        print('Channel ranges for each parition:',[[c0[jset,pair],cn[jset,pair]] for pair in range(npairs)])
 
     if brune:  # S_poles: Shift functions at pole positions for Brune basis   
         S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
@@ -431,7 +403,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         dSdE_poles = None
         EO_poles = None
 
-
+        
+    if debug:
+        print('All spins:',All_spins)
+        print('All channel spins',Spins)
 #     print('E_poles \n',E_poles[:,:])
 #     print('g_poles \n',g_poles[:,:,:])
 #     print('norm_val \n',norm_val[:])
@@ -569,7 +544,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         searchparms[ip] = search_vars[ip][0]
         searchloc[ip,0] = search_vars[ip][1]
 
-    print('Variable parameters - E,w,norms: ',border[1]-border[0],border[2]-border[1],border[3]-border[2],' =',n_pars) 
+    print('Variable parameters - E,w,norms: ',border[1]-border[0],border[2]-border[1],border[3]-border[2
+    
+    
+    ],' =',n_pars) 
     print('Fixed    parameters - E,w,norms: ',frontier[1]-frontier[0],frontier[2]-frontier[1],frontier[3]-frontier[2],' =',n_fixed) 
     print('# zero widths  =',numpy.count_nonzero(g_poles == 0) ,'\n')
     ndof = n_data - n_pars
@@ -589,12 +567,13 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
               
 ## ANGULAR-MOMENTUM ARRAYS:
 
-    gfac = numpy.zeros([n_data,n_jsets], dtype=REAL)
-    for ie in range(n_data):
-        pin = data_p[ie,0]   # incoming partition
-        for jset in range(n_jsets):
-            denom = (2.*jp[pin]+1.) * (2.*jt[pin]+1)
-            gfac[ie,jset] = pi * (2*J_set[jset]+1) * rksq_val[ie,pin] / denom * 10.  # mb
+    gfac = numpy.zeros([n_data,n_jsets,npairs,maxpc], dtype=REAL)
+    for jset in range(n_jsets):
+        for pair in range(npairs):     # incoming partition
+            denom = (2.*jp[pair]+1.) * (2.*jt[pair]+1)
+            nic = cn[jset,pair] - c0[jset,pair]
+            for ie in range(n_data):
+                gfac[ie,jset,pair,0:nic] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom * 10.  # mb
 
        
     Gfacc = numpy.zeros(n_angles, dtype=REAL)    
@@ -680,7 +659,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     if n_angles > 0:
         cc = (n_jsets*n_chans**2)**2
         ccp = (n_jsets*maxpc**2)**2
-#         print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,n_chans))
+        print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,n_chans))
         print('AAL, AA sizes/p= %5.3f, %5.3f GB' % (ccp*npairs**2*NL*8/1e9, ccp*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,maxpc))
         AAL = numpy.zeros([npairs,npairs, n_jsets,maxpc,maxpc, n_jsets,maxpc,maxpc ,NL], dtype=REAL)
 
@@ -759,7 +738,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     ComputerPrecisions = (REAL, CMPLX, INT)
 
     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
-    CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
+    CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
     CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles]                                                  # batch n_jsets
 
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
@@ -884,7 +863,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if p >= border[2]:
                     sg1 /= 2.*sp1
                     sp1 = sp1**2
-                print(fmt % (p,searchloc[p,0],sp0,sg0,sp1,sg1,sig, sig/(searchpars_n[p]+1e-10),searchnames[p],newname.get(searchnames[p],'') ) )
+                print(fmt % (p,searchloc[p,0],sp0,sg0,sp1,sg1,sig, sig/searchpars_n[p],searchnames[p],newname.get(searchnames[p],'') ) )
             fmt2 = '%4i %4i   S: %10.5f   %s     %s'
             if frontier[3]>0: print('Fixed:')
             for p in range(frontier[3]):   
@@ -951,11 +930,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         
 
           
-            n_normsFitted = border[3]-border[2]
             docLines = [' ','Fitted by Rflow','   '+inFile,time.ctime(),pwd.getpwuid(os.getuid())[4],' ',' ']
             docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n/n_data)]
             docLines += [' Final   chisq/pt: %12.5f' % (chisqF_n/n_data),' /dof= %12.5f for %i' % (chisqF_n/ndof,ndof),' ']
-            docLines += ['  Fitted norm %12.5f for %s' % (searchpars_n[n+border[2]],searchnames[n+border[2]] ) for n in range(n_normsFitted)] 
+            docLines += ['  Fitted norm %12.5f for %s' % (searchpars_n[n+border[2]],searchnames[n+border[2]] ) for n in range(n_norms)] 
             docLines += [' '] 
         
             code = 'Fit quality'
@@ -1314,8 +1292,8 @@ if __name__=='__main__':
 
     EIndex = numpy.argsort(data_val[:,0])
     if args.TransitionMatrix >= 0:
-        pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],data_p,EIndex,cm2lab,QI,ipair,True)
-        pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],data_p,EIndex,cm2lab,QI,ipair,False)
+        pnin,unused = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,True)
+        pnin,totals = printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, npairs, base+'/'+base,n_data,data_val[:,0],EIndex,cm2lab,QI,ipair,False)
         pnin = 'for %s' % pnin
     else:
         totals = None
@@ -1334,12 +1312,9 @@ if __name__=='__main__':
 
 
     dof = n_data + n_cnorms - n_norms - n_pars
-    n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
-    n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
-    
     plotOut(n_data,n_norms,dof,args, base,info,dataDir, 
         chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
         groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, args.TransitionMatrix,
-        EIndex,totals,pname,tname,args.datasize,(n_angle_integrals0,n_totals0),ipair,cm2lab, emin,emax,pnin,gnd,cmd )
+        EIndex,totals,pname,tname,args.datasize,ipair,cm2lab, emin,emax,pnin,gnd,cmd )
         
     print("Final rflow: ",tim.toString( ))
