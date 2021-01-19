@@ -389,8 +389,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print(' Total channels',tot_channels,' and total poles',tot_poles,'\n')
     maxpc = numpy.amax(all_partition_channels)
     print('Max channels in each partition:',all_partition_channels,' max=',maxpc)
-    for jset in range(n_jsets):
-        print('Channel ranges for each parition:',[[c0[jset,pair],cn[jset,pair]] for pair in range(npairs)])
+#     for jset in range(n_jsets):
+#         print('Channel ranges for each parition:',[[c0[jset,pair],cn[jset,pair]] for pair in range(npairs)])
 
     if brune:  # S_poles: Shift functions at pole positions for Brune basis   
         S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
@@ -477,10 +477,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if E == 0: continue   # invalid energy: filler
                 i = (jset*n_poles+n)*n_chans+c
                 if abs(E) < Distant or not Background:
-                    nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E)
+                    nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E)
                 else:
                     nam='BG:%.1f%s' % (J_set[jset],parity)
-                wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
+                wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='P' else nam)
 #                 varying = abs(g_poles[jset,n,c])>1e-20 
                 varying = c < nch[jset] and n < npl[jset] 
                 if pmin is not None and pmax is not None and pmin > pmax:   # -p,-P fix both energies and widths
@@ -772,7 +772,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             parity = '+' if pi_set[jset] > 0 else '-'
             E_poles[jset,n] = searchpars_n[ip]
             varying = abs(E_poles[jset,n]) < Distant and searchnames[ip] not in fixedlistex
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  searchnames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
 #             print(ip,'j,n E',searchnames[ip],'renamed to',nam)
             newname[searchnames[ip]] = nam
@@ -783,7 +783,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             parity = '+' if pi_set[jset] > 0 else '-'
             E_poles[jset,n] = fixedpars[ip]
             varying = abs(E_poles[jset,n]) < Distant and  fixednames[ip] not in fixedlistex
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  fixednames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
 #             print(ip,'j,n fixed E',fixednames[ip],'renamed to',nam)
             newname[fixednames[ip]] = nam        
@@ -793,9 +793,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             c = i%n_chans;  n = ( (i-c)//n_chans )%n_poles; jset = ((i-c)//n_chans -n)//n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
             g_poles[jset,n,c] = searchpars_n[ip]
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  searchnames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
-            wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
+            wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='P' else nam)
 #             print(ip,'j,n,c width',searchnames[ip],'renamed to',wnam)
             newname[searchnames[ip]] = wnam        
         
@@ -804,9 +804,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             c = i%n_chans;  n = ( (i-c)//n_chans )%n_poles; jset = ((i-c)//n_chans -n)//n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
             g_poles[jset,n,c] = fixedpars[ip]
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  fixednames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
-            wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
+            wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='P' else nam)
 #             print(ip,'j,n,c fixed width',fixednames[ip],'renamed to',wnam)
             newname[fixednames[ip]] = wnam        
 #         print('newname:',newname)
@@ -1068,7 +1068,7 @@ if __name__=='__main__':
         p,t = partition.ejectile,partition.residual
         if partition.Q is not None:
             QI = partition.Q.getConstantAs('MeV')
-        else:
+        else: 
             QI = reaction.getQ('MeV')
         if p == projectile4LabEnergies:
             p4LE = PoPs[p].getMass('amu');   t4LE = PoPs[t].getMass('amu'); 
@@ -1078,26 +1078,32 @@ if __name__=='__main__':
             Qvaluei = QI
             
             
-    print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
+#     print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
+    if args.exclude is not None:
+        print('Exclude any data line with these substrings:',' '.join(args.exclude))
     EminFound = 1e6; EmaxFound = -1e6
-    if args.emin is None and args.EMAX is None:
+    if args.emin is None and args.EMAX is None and args.exclude is None:
         data_lines = f.readlines( )
+        n_data = len(data_lines)
         lines_excluded = 'No'
     else:
         data_lines = []
-        lines_excluded= 0      
+        lines_excluded= 0   
+        n_data = 0   
         for line in f.readlines():
+            n_data += 1
             Ed = float(line.split()[0])# in lab frame of data file
             Ecm  = Ed*lab2cmd - Qvalued + Qvaluei # in cm frame of gnds projectile.
-            if emin < Ecm < emax:
+            includE = emin < Ecm < emax
+            includN = args.exclude is None or not any(sub in line for sub in args.exclude)
+            if includE and includN:
                 data_lines.append(line)  
                 EminFound = min(EminFound,Ecm)
                 EmaxFound = max(EmaxFound,Ecm)
             else:
-                lines_excluded += 1      
+                lines_excluded += 1         
         
-    n_data = len(data_lines)
-    print(n_data,'data lines after lab energies defined by projectile',projectile4LabEnergies,'(',lines_excluded,'lines excluded)')
+    print(n_data-lines_excluded,'data lines after -x and lab energies defined by projectile',projectile4LabEnergies,'(',lines_excluded,'lines excluded)')
     if EminFound < EmaxFound: print('Kept data in the Ecm g-p range [',EminFound,',',EmaxFound,'] using Qd,Qi =',Qvalued,Qvaluei,'\n')
     if args.maxData is not None: 
         if args.maxData < 0:

@@ -340,6 +340,7 @@ print('Command:',' '.join(sys.argv[:]) ,'\n')
     
 args = parser.parse_args()
 Dir = args.Dir + '/'
+os.system('mkdir '+Dir)
 EmaxCN = args.EmaxCN
 Projectiles = args.Projectiles
 LevelsMax = args.LevelsMax

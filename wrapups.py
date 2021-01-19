@@ -332,7 +332,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
     jset = 0
     PoleGraphList = []
     ngraphAll = 0
-    print('Kept data in the range [',emin,',',emax,'] for lab',pLab)
+    print('Kept data in cm range [',emin,',',emax,'] for projectile',pname[ipair])
 
     for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
         J_set = Jpi.spin
@@ -351,7 +351,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
         for pole in range(rows):
             E_pole = R.data[pole][0]      
             E_cm = E_pole / cm2lab[ipair]
-            if not (emin < E_pole < emax): continue
+            if not (emin < E_cm < emax): continue
             LineData[1][0].append(E_cm)
             LineData[1][1].append(float(J_set) + bit)
             LineData[1][2].append(0)

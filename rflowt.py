@@ -466,10 +466,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if E == 0: continue   # invalid energy: filler
                 i = (jset*n_poles+n)*n_chans+c
                 if abs(E) < Distant or not Background:
-                    nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E)
+                    nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E)
                 else:
                     nam='BG:%.1f%s' % (J_set[jset],parity)
-                wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
+                wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='P' else nam)
                 varying = abs(g_poles[jset,n,c])>1e-20 
 #                 varying = c <= nch[jset] and n <= n_poles[jset] 
                 if pmin is not None and pmax is not None and pmin > pmax:   # -p,-P fix both energies and widths
@@ -722,7 +722,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             parity = '+' if pi_set[jset] > 0 else '-'
             E_poles[jset,n] = searchpars_n[ip]
             varying = abs(E_poles[jset,n]) < Distant and searchnames[ip] not in fixedlistex
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  searchnames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
 #             print(ip,'j,n E',searchnames[ip],'renamed to',nam)
             newname[searchnames[ip]] = nam
@@ -733,7 +733,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             parity = '+' if pi_set[jset] > 0 else '-'
             E_poles[jset,n] = fixedpars[ip]
             varying = abs(E_poles[jset,n]) < Distant and  fixednames[ip] not in fixedlistex
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  fixednames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
 #             print(ip,'j,n fixed E',fixednames[ip],'renamed to',nam)
             newname[fixednames[ip]] = nam        
@@ -743,9 +743,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             c = i%n_chans;  n = ( (i-c)//n_chans )%n_poles; jset = ((i-c)//n_chans -n)//n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
             g_poles[jset,n,c] = searchpars_n[ip]
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  searchnames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
-            wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
+            wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='P' else nam)
 #             print(ip,'j,n,c width',searchnames[ip],'renamed to',wnam)
             newname[searchnames[ip]] = wnam        
         
@@ -754,9 +754,9 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             c = i%n_chans;  n = ( (i-c)//n_chans )%n_poles; jset = ((i-c)//n_chans -n)//n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
             g_poles[jset,n,c] = fixedpars[ip]
-            nam='J%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
+            nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
             if not varying and  fixednames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
-            wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='J' else nam)
+            wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='P' else nam)
 #             print(ip,'j,n,c fixed width',fixednames[ip],'renamed to',wnam)
             newname[fixednames[ip]] = wnam        
 #         print('newname:',newname)
