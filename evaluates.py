@@ -83,9 +83,9 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                          TAind[:,jset,np1,ic1,np2,ic2,:] = numpy.asarray([c1,c2]) 
                          MAind[:,jset,np1,ic1,np2,ic2]   = 1.0 
                          
-    Tind = numpy.zeros([n_data,n_jsets,maxpc,maxpc,2], dtype=INT) 
-    Mind = numpy.zeros([n_data,n_jsets,maxpc,maxpc], dtype=CMPLX)
-    print('TCp_mat size',n_data*n_jsets*(npairs*maxpc)**2*16/1e9,'GB')
+    Tind = numpy.zeros([n_angles,n_jsets,maxpc,maxpc,2], dtype=INT) 
+    Mind = numpy.zeros([n_angles,n_jsets,maxpc,maxpc], dtype=CMPLX)
+    print('TCp_mat size',n_angles*n_jsets*(npairs*maxpc)**2*16/1e9,'GB')
     for jset in range(n_jsets):
         for ie in range(n_angles):
             pin = data_p[ie,0]
@@ -149,7 +149,10 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             TC_mat = tf.expand_dims(CS_diag,3) * T_mat * tf.expand_dims(CS_diag,2)
             
             TAp_mat = tf.gather_nd(T_mat, TAind, batch_dims=2) * MAind  #  all in/out partitions. No Coulomb phases/
-            TCp_mat = tf.gather_nd(TC_mat, Tind, batch_dims=2) * Mind   #  in/out partitions for batch data spec. With Coulomb phases.
+            if n_angles>0:
+                TCp_mat = tf.gather_nd(TC_mat[:n_angles,...], Tind, batch_dims=2) * Mind   #  in/out partitions for batch data spec. With Coulomb phases.
+            else:
+                TCp_mat = tf.zeros_like(Mind)
             
             return( TAp_mat,TCp_mat)
 
@@ -202,8 +205,11 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             TC_mat = tf.expand_dims(CS_diag,3) * T_mat * tf.expand_dims(CS_diag,2)
 
             TAp_mat = tf.gather_nd(T_mat, TAind, batch_dims=2) * tf.constant(MAind)
-            TCp_mat = tf.gather_nd(TC_mat, Tind, batch_dims=2) * tf.constant(Mind)  # ie,jset,p1,c1,p2,c2
-            
+            if n_angles>0:
+                TCp_mat = tf.gather_nd(TC_mat[:n_angles,...], Tind, batch_dims=2) * tf.constant(Mind)  # ie,jset,p1,c1,p2,c2
+            else:
+                TCp_mat = tf.zeros_like(Mind)
+                
             return( TAp_mat,TCp_mat)
             
         @tf.function

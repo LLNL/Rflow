@@ -19,7 +19,6 @@ strategy = tf.distribute.MirroredStrategy()
 def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
                  Search_Control,Pleg, searchpars0, data_val,tim):
 
-
 #     ComputerPrecisions = (REAL, CMPLX, INT)
 # 
 #     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
@@ -32,11 +31,10 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
 #     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,restarts)
 # 
 #     Pleg     # batch n_angle_integrals,  n_totals  
-                                                #   (Pleg, AAL) or AA
+#
 #     searchpars0  # initial values
 #  
 #     Dataset = data_val                              # batch n_data 
-#     tim
 
     REAL, CMPLX, INT = ComputerPrecisions
 
@@ -257,7 +255,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
                  Tp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
     
         # multiply left and right by Coulomb phases:
-            TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat * tf.expand_dims(CSp_diag_in,2)
+            TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat[:n_angles,...] * tf.expand_dims(CSp_diag_in,2)
         
             Ax = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles,batches)
 
@@ -294,12 +292,6 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
         sys.stdout.flush()
 
         if Search:
-#             initial_objective = FitMeasureTF(searchpars) 
-#             chisq0 = initial_objective[0]
-#             grad0 = initial_objective[1].numpy()
-#             chisq0_n = chisq0.numpy()
-#             print('Initial position:',chisq0_n/n_data )
-#             if verbose: print('Initial grad:',grad0 )
     
             import tensorflow_probability as tfp   
             print('Start search'); sys.stdout.flush()
