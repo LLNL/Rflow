@@ -40,7 +40,7 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
 
     docLines = ['Rflow:']
     for n in range(n_norms):
-        docLines.append("&variable name='%s' kind=5 dataset=0, 0 datanorm=%f step=0.01, reffile='%s'/" % ( norm_refs[n][0] ,norm_val[n], norm_refs[n][1]) ) 
+        docLines.append("&variable name='%s' kind=5 dataset=0, 0 datanorm=%12.5e step=0.01, reffile='%s'/" % ( norm_refs[n][0] ,norm_val[n], norm_refs[n][1]) ) 
     docLines.append('\n')
     docLines.append('\n'.join(docData) )
 #         print('docLines:',docLines)

@@ -1145,7 +1145,7 @@ if __name__=='__main__':
         fitted = Fitted_norm.get(name,None)
 #         print('For name',name,'find',fitted)
         if fitted is not None and not args.norm1:
-            print("Using previously fitted norm for %-20s: %10.5f instead of %10.5f" % (name,fitted,norm) )
+            print("Using previously fitted norm for %-20s: %12.5e instead of %12.5e" % (name,fitted,norm) )
             norm = fitted
         norm_val[ni] = norm
         chi_scale = 1.0/syserror if syserror > 0. else 0.0

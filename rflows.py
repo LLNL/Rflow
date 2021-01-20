@@ -1128,9 +1128,14 @@ if __name__=='__main__':
     data_lines = angular_lines + aint_lines + tot_lines
     
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]), float(x.split()[1]) ) )
-    if args.debug: 
-        with open(args.dataFile+'-sorted','w') as fout: fout.writelines([projectile4LabEnergies] + data_lines)
-
+    
+    dataFilter = ''
+    if args.emin       is not None: dataFilter += '-e%s' % args.emin
+    if args.EMAX       is not None: dataFilter += '-E%s' % args.EMAX
+    if args.maxData    is not None: dataFilter += '_m%s' % args.maxData
+    if args.anglesData is not None: dataFilter += '_a%s' % args.anglesData
+    
+    with open(args.dataFile.replace('.data',dataFilter+'.data')+'2','w') as fout: fout.writelines([projectile4LabEnergies+'\n'] + data_lines)
     
     n_data = len(data_lines)
     data_val = numpy.zeros([n_data,5], dtype=REAL)    # Elab,mu, datum,absError
@@ -1208,7 +1213,7 @@ if __name__=='__main__':
         fitted = Fitted_norm.get(name,None)
 #         print('For name',name,'find',fitted)
         if fitted is not None and not args.norm1:
-            print("Using previously fitted norm for %-20s: %10.5f instead of %10.5f" % (name,fitted,norm) )
+            print("Using previously fitted norm for %-20s: %12.5e instead of %12.5e" % (name,fitted,norm) )
             norm = fitted
         norm_val[ni] = norm
         if syserror > 0.:   # fitted norm
@@ -1252,6 +1257,7 @@ if __name__=='__main__':
 #         for id in range(n_data):
 #             print('VN for id',id,':',effect_norm[:,id])
 
+
     if args.Fixed is not None: 
         print('Fixed variables:',args.Fixed)
     else:
@@ -1262,19 +1268,20 @@ if __name__=='__main__':
     fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
             derivedFrom=gnd.styles.getEvaluatedStyle().label )
 
+# parameter input
     base = args.inFile
     if args.single: base += 's'
+# data input
     base += '+%s' % args.dataFile.replace('.data','')
+    base += dataFilter
+# searching
     if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',':')
     if args.normsfixed            : base += '+n' 
     if args.pmin       is not None: base += '-p%s' % args.pmin
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
-    if args.emin       is not None: base += '-e%s' % args.emin
-    if args.EMAX       is not None: base += '-E%s' % args.EMAX
-    if args.maxData    is not None: base += '_m%s' % args.maxData
-    if args.anglesData is not None: base += '_a%s' % args.anglesData
     if args.Search     is not None: base += '+S' 
     if args.Iterations is not None: base += '_I%s' % args.Iterations
+# tag
     if args.tag != '': base = base + '_'+args.tag
      
     dataDir = base 
