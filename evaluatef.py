@@ -226,7 +226,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
     
         # chi from cross-sections
             one = tf.constant(1.0, dtype=REAL)
-            fac = tf.reduce_sum(tf.expand_dims(norm_val[:]-one,1) * effect_norm, 0) + one
+            fac = tf.reduce_sum(tf.expand_dims(norm_val[:]-one,0) * effect_norm, 1) + one
 
             chi = (A_t/fac/data_val[:,4] - data_val[:,2])/data_val[:,3]
             chisq = tf.reduce_sum(chi**2)

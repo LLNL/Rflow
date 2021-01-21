@@ -229,7 +229,7 @@ def evaluate_MSf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFuncti
     
         # chi from cross-sections
             one = tf.constant(1.0, dtype=REAL)
-            fac = tf.reduce_sum(tf.expand_dims(norm_val[:]-one,1) * effect_norm, 0) + one
+            fac = tf.reduce_sum(tf.expand_dims(norm_val[:]-one,0) * effect_norm, 1) + one
 
             chi = (A_t/fac/data_val[:,4] - data_val[:,2])/data_val[:,3]
             chisq = tf.reduce_sum(chi**2)
@@ -297,7 +297,7 @@ def evaluate_MSf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFuncti
             
         def split_data_model(n):
             AAn = [ AA[jl][n::npal,...]  for jl in range(n_jsets)]
-            datas = (data_val[n::npal,:],norm_info[n::npal,:],effect_norm[:,n::npal],gfac[n::npal,:],
+            datas = (data_val[n::npal,:],norm_info[n::npal,:],effect_norm[n::npal,:],gfac[n::npal,:],
                     Rutherford[n::npal],InterferenceAmpl[n::npal,:,:],Gfacc[n::npal], AAn, 
                     CSp_diag_in[n::npal,:,:],CSp_diag_out[n::npal,:,:],Om2_mat[n::npal,:,:],POm_diag[n::npal,:,:],
                     L_diag[n::npal,:,:]  )
@@ -307,6 +307,7 @@ def evaluate_MSf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFuncti
                      S_poles,dSdE_poles,EO_poles )
             this_part = (datas,model)
             return this_part
+#         dist_dataset = my_strategy.experimental_distribute_dataset(dataset)   HOW FOR MY DATA??
             
         n_angles_n = stride_size(0,n_angles, npal)
         n_angle_integrals_n = stride_size(n_angles,n_angles+n_angle_integrals ,npal)

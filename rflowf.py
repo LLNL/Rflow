@@ -1270,20 +1270,20 @@ if __name__=='__main__':
     if dataFilter != '':
         with open(args.normFile.replace('.norms',dataFilter+'.norms')+'2','w') as fout: fout.writelines(norm_lines)
     
-    effect_norm = numpy.zeros([n_norms,n_data], dtype=REAL)
+    effect_norm = numpy.zeros([n_data,n_norms], dtype=REAL)
     for ni in range(n_norms):
         reffile = norm_refs[ni][1]
         pattern = re.compile(reffile)
         for id in range(n_data):
             matching = pattern.match(group_list[id])
-            effect_norm[ni,id] = 1.0 if matching else 0.0
+            effect_norm[id,ni] = 1.0 if matching else 0.0
 #             if matching and args.debug: 
 #                 print('Pattern',reffile,' ? ',group_list[id],':', matching)
     if args.debug:
         for ni in range(n_norms):
             print('norm_val[%i]' % ni,norm_val[ni],norm_info[ni,:])
 #         for id in range(n_data):
-#             print('VN for id',id,':',effect_norm[:,id])
+#             print('VN for id',id,':',effect_norm[id,:])
 
     if args.Fixed is not None: 
         print('Fixed variables:',args.Fixed)
