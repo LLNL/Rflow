@@ -6,7 +6,6 @@ tim = times.times()
 import os,math,numpy,cmath,pwd,sys,time,json
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
-from evaluatef import evaluatef
 from wrapups import saveNorms2gnds
 
 from pqu import PQU as PQUModule
@@ -55,7 +54,7 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,MS,
         norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
         Search,Iterations,restarts,Distant,Background,ReichMoore, 
         verbose,debug,inFile,fitStyle,tag,large):
@@ -69,10 +68,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     if hasattr(projectile, 'nucleus'): projectile = projectile.nucleus
     if hasattr(target, 'nucleus'):     target = target.nucleus
     pZ = projectile.charge[0].value; tZ =  target.charge[0].value
-    chargedElastic =  pZ*tZ != 0
     identicalParticles = gnd.projectile == gnd.target
     rStyle = fitStyle.label
-#     if debug: print("Charged-particle elastic:",chargedElastic,",  identical:",identicalParticles,' rStyle:',rStyle)
     
     rrr = gnd.resonances.resolved
     Rm_Radius = gnd.resonances.scatteringRadius
@@ -123,6 +120,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     channels = {}
     pair = 0
     inpair = None
+    chargedElastic = False
     for partition in RMatrix.resonanceReactions:
         kp = partition.label
         if partition.eliminated:  
@@ -143,7 +141,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
         za[pair]    = projectile.charge[0].value;  
         zb[pair]  = target.charge[0].value
-        if partition.Q is not None:
+        if za[pair]*zb[pair] != 0: chargedElastic = True
+        if partition.Q is not None: 
             QI[pair] = partition.Q.getConstantAs('MeV')
         else:
             QI[pair] = reaction.getQ('MeV')
@@ -167,6 +166,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         print(pair,":",kp,' Q =',QI[pair],'R =',prmax[pair])
         pair += 1
     if verbose: print("\nElastic channel is",elasticChannel,'with IFG=',IFG)
+#     if debug: print("Charged-particle elastic:",chargedElastic,",  identical:",identicalParticles,' rStyle:',rStyle)
     npairs  = pair
     if not IFG:
         print("Not yet coded for IFG =",IFG)
@@ -586,8 +586,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Gfacc = numpy.zeros(n_angles, dtype=REAL)    
     NL = 2*Lmax + 1
     Pleg = numpy.zeros([n_angles,NL], dtype=REAL)
-    ExptAint = numpy.zeros([n_angle_integrals,npairs, npairs], dtype=REAL)
-    ExptTot = numpy.zeros([n_totals,npairs], dtype=REAL)
+#     ExptAint = numpy.zeros([n_angle_integrals,npairs, npairs], dtype=REAL)
+#     ExptTot = numpy.zeros([n_totals,npairs], dtype=REAL)
 
     for ie in range(n_angles):
         pin = data_p[ie,0]
@@ -602,14 +602,14 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         for L in range(NL):
             Pleg[ie,L] = Legendre(L, mu)
                         
-    for ie in range(n_angle_integrals):
-        pin = data_p[n_angle_integrals0+ie,0]
-        pout= data_p[n_angle_integrals0+ie,1]
-        ExptAint[ie,pout,pin] = 1.
-        
-    for ie in range(n_totals):
-        pin = data_p[n_totals0+ie,0]
-        ExptTot[ie,pin] = 1.
+#     for ie in range(n_angle_integrals):
+#         pin = data_p[n_angle_integrals0+ie,0]
+#         pout= data_p[n_angle_integrals0+ie,1]
+#         ExptAint[ie,pout,pin] = 1.
+#         
+#     for ie in range(n_totals):
+#         pin = data_p[n_totals0+ie,0]
+#         ExptTot[ie,pin] = 1.
         
     if chargedElastic:
         Rutherford = numpy.zeros([n_angles], dtype=REAL)
@@ -755,10 +755,19 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     # Data_Control = [Pleg]     # batch n_angle_integrals,  n_totals  
     
-    searchpars_n, chisqF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluatef(ComputerPrecisions, Channels,
-        CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
-        Search_Control,Pleg, searchpars0, data_val, tim)
-        
+    if MS:
+        print('\nUse TF MirroredStrategy')
+        from evaluate_MSf import evaluate_MSf
+        searchpars_n, chisqF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_MSf(ComputerPrecisions, Channels,
+            CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+            Search_Control,Pleg, searchpars0, data_val, tim)
+    else:
+        from evaluatef import evaluatef
+        searchpars_n, chisqF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluatef(ComputerPrecisions, Channels,
+            CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+            Search_Control,Pleg, searchpars0, data_val, tim)
+
+
     ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
         
     print("Finished tf: ",tim.toString( ))
@@ -1006,11 +1015,14 @@ if __name__=='__main__':
     parser.add_argument("-M", "--Matplot", action="store_true", help="Matplotlib data in .json output files")
     parser.add_argument("-T", "--TransitionMatrix",  type=int, default=1, help="Produce cross-section transition matrix functions in *tot_a and *fch_a-to-b")
     parser.add_argument("-l", "--logs", type=str, default='', help="none, x, y or xy for plots")
+
+    parser.add_argument("-s", "--single", action="store_true", help="Single precision: float32, complex64")
+    parser.add_argument(      "--MS", action="store_true", help="Use MirroredStrategy in TF")
+
     parser.add_argument(      "--datasize", type=float,  metavar="size", default="0.2", help="Font size for experiment symbols. Default=0.2")
     parser.add_argument("-t", "--tag", type=str, default='', help="Tag identifier for this run")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("-d", "--debug", action="store_true", help="Debugging output (more than verbose)")
-    parser.add_argument("-s", "--single", action="store_true", help="Single precision: float32, complex64")
     args = parser.parse_args()
 
     if args.single:
@@ -1097,6 +1109,7 @@ if __name__=='__main__':
         data_lines = f.readlines( )
         n_data = len(data_lines)
         lines_excluded = 'No'
+        lines_excluded = 0
     else:
         data_lines = []
         lines_excluded= 0   
@@ -1146,7 +1159,8 @@ if __name__=='__main__':
     if args.maxData    is not None: dataFilter += '_m%s' % args.maxData
     if args.anglesData is not None: dataFilter += '_a%s' % args.anglesData
     
-    with open(args.dataFile.replace('.data',dataFilter+'.data')+'2','w') as fout: fout.writelines([projectile4LabEnergies+'\n'] + data_lines)
+    if dataFilter != '':
+        with open(args.dataFile.replace('.data',dataFilter+'.data')+'2','w') as fout: fout.writelines([projectile4LabEnergies+'\n'] + data_lines)
     
     n_data = len(data_lines)
     data_val = numpy.zeros([n_data,5], dtype=REAL)    # Elab,mu, datum,absError
@@ -1253,7 +1267,8 @@ if __name__=='__main__':
           '\nData groups:',len(groups),'\nX4 groups:',len(X4groups),
           '\nVariable norms:',n_norms,' of which ',n_cnorms,',constrained,',n_free,'free, and',n_fixed,' fixed (',tempfixes,'temporarily)\n')
 
-    with open(args.normFile.replace('.norms',dataFilter+'.norms')+'2','w') as fout: fout.writelines(norm_lines)
+    if dataFilter != '':
+        with open(args.normFile.replace('.norms',dataFilter+'.norms')+'2','w') as fout: fout.writelines(norm_lines)
     
     effect_norm = numpy.zeros([n_norms,n_data], dtype=REAL)
     for ni in range(n_norms):
@@ -1283,6 +1298,7 @@ if __name__=='__main__':
 # parameter input
     base = args.inFile
     if args.single: base += 's'
+    if args.MS: base += 'm'
 # data input
     base += '+%s' % args.dataFile.replace('.data','')
     base += dataFilter
@@ -1302,7 +1318,7 @@ if __name__=='__main__':
  
     chisqppt,norm_val,n_pars  = Rflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,
+                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.MS,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
                         args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)

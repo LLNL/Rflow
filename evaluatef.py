@@ -14,10 +14,10 @@ except:
   pass
 # tf.logging.set_verbosity(tf.logging.ERROR)
 
-strategy = tf.distribute.MirroredStrategy()
 
 def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
                  Search_Control,Pleg, searchpars0, data_val,tim):
+#   strategy = tf.distribute.MirroredStrategy()
 
 #     ComputerPrecisions = (REAL, CMPLX, INT)
 # 
@@ -65,7 +65,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
 
     Tind = numpy.zeros([n_data,n_jsets,maxpc,maxpc,2], dtype=INT) 
     Mind = numpy.zeros([n_data,n_jsets,maxpc,maxpc], dtype=CMPLX)
-    print('Tp_mat size',n_data*n_jsets*(npairs*maxpc)**2*16/1e9,'GB')
+    print('\nTp_mat size',n_data*n_jsets*(npairs*maxpc)**2*16/1e9,'GB')
     for jset in range(n_jsets):
         for ie in range(n_data):
             pin = data_p[ie,0]
@@ -200,7 +200,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
             return(XSp_mat,XSp_tot) 
 
         @tf.function
-        def T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles,batches):
+        def T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles):
 
         #  T= T_mat[:,n_jsets,npairs,maxpc,npairs,maxpc]
             T_left = tf.reshape(TCp_mat[:n_angles,:,:,:],  [-1,n_jsets,maxpc,maxpc, 1,1,1])  #; print(' T_left', T_left.get_shape())
@@ -257,7 +257,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
         # multiply left and right by Coulomb phases:
             TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat[:n_angles,...] * tf.expand_dims(CSp_diag_in,2)
         
-            Ax = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles,batches)
+            Ax = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles)
 
             if chargedElastic:                          
                 AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
@@ -334,7 +334,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
                 # multiply left and right by Coulomb phases:
                     TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat * tf.expand_dims(CSp_diag_in,2)    
                             
-                    AxA = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles,batches)
+                    AxA = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles)
                     AxA = AddCoulombsTF(AxA,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
                     
                     AxI = XSp_mat[n_angle_integrals0:n_totals0] 

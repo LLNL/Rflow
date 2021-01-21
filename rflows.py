@@ -1086,6 +1086,7 @@ if __name__=='__main__':
         data_lines = f.readlines( )
         n_data = len(data_lines)
         lines_excluded = 'No'
+        lines_excluded = 0
     else:
         data_lines = []
         lines_excluded= 0   
