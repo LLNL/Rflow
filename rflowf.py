@@ -7,6 +7,7 @@ import os,math,numpy,cmath,pwd,sys,time,json
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from wrapups import saveNorms2gnds
+from write_covariances import write_gnds_covariances
 
 from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
@@ -53,7 +54,7 @@ etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
-def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
+def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
         Ein_list, fixedlist, emind,emaxd,pmin,pmax,MS,
         norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
         Search,Iterations,restarts,Distant,Background,ReichMoore, 
@@ -212,6 +213,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     has_widths = numpy.zeros([n_jsets,n_poles], dtype=INT)
     g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
     g_poles_fixed = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL) # fixed in search
+    
+    GNDS_order = numpy.zeros([n_jsets,n_poles,n_chans+1], dtype=INT) # [,,0] is energy, as in GNDS
     J_set = numpy.zeros(n_jsets, dtype=REAL)
     pi_set = numpy.zeros(n_jsets, dtype=INT)
     L_val  =  numpy.zeros([n_jsets,n_chans], dtype=INT)
@@ -345,13 +348,19 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             
 #  SECOND: fill in arrays:
     jset = 0
+    G_order = 0 
     for Jpi in RMatrix.spinGroups:
         R = Jpi.resonanceParameters.table
         cols = R.nColumns - 1  # ignore energy col
         rows = R.nRows
         E_poles[jset,:rows] = numpy.asarray( R.getColumn('energy','MeV') , dtype=REAL)   # lab MeV
-        widths = [R.getColumn( col.name, 'MeV' ) for col in R.columns if col.name != 'energy']
+        for n in range(rows):
+            for c in range(cols+1):
+                GNDS_order[jset,n,c] = G_order  # order of variables in GNDS and ENDF, needed for covariance matrix
+                G_order += 1 
 
+        widths = [R.getColumn( col.name, 'MeV' ) for col in R.columns if col.name != 'energy']
+        
 #         if verbose:  print("\n".join(R.toXMLList()))       
         n = None
         c = 0
@@ -428,6 +437,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     t_vars = n_poles* n_jsets + n_poles*n_jsets*n_chans + n_norms   # max possible # variables
     fixedpars = numpy.zeros(t_vars, dtype=REAL)
     fixedloc  = numpy.zeros([t_vars,1], dtype=INT)  
+    GNDS_loc  = numpy.zeros([t_vars,1], dtype=INT)  
     
     searchnames = []
     fixednames = []
@@ -462,6 +472,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #                 searchloc[ip,0] = i
                 searchnames += [nam]
                 search_vars.append([E,i])
+                GNDS_loc[ip] = GNDS_order[jset,n,0]
                 ip += 1
             else:
                 fixedlistex.add(nam)
@@ -511,6 +522,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #                     searchloc[ip,0] = i
                     searchnames += [wnam]
                     search_vars.append([g_poles[jset,n,c],i])
+                    GNDS_loc[ip] = GNDS_order[jset,n,c+1]
                     ip += 1
                 else:   # fixed
                     fixedlistex.add(wnam)
@@ -836,7 +848,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             ni = fixedloc[ip,0]
             norm_val[ni] = fixed_norms[ni]**2
         
-# Copy back into GNDS 
+# Copy parameters back into GNDS 
         jset = 0
         for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
             parity = '+' if pi_set[jset] > 0 else '-'
@@ -867,6 +879,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #             fmt2 = '%4i %4i   S: %10.5f   %s') )
             print('\n*** chisq/pt =',chisqF_n,
                   '\n    chisq/dof=',chisqF_n*n_data/ndof)
+            covarianceSuite = None
             
         else:
             fmt = '%4i %4i   S: %10.5f %10.5f  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
@@ -892,16 +905,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
             print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %11.3e' % (chisqF_n,chisqpdof,ndof,chisqF_n*n_data))
                     
-            covariance1 = inverse_hessian
-            from scipy.linalg import eigh
-            eigval1,evec1 = eigh(covariance1)
-            if debug:
-                print("  Covariance eigenvalue     Vector")
-                for kk in range(n_pars):
-                    k = n_pars-kk - 1
-                    print(k,"%11.3e " % eigval1[k] , numpy.array_repr(evec1[:,k],max_line_width=200,precision=3, suppress_small=True))
-            else:
-                print('Covariance matrix eigenvalues:\n', numpy.array_repr(eigval1[:],max_line_width=200,precision=3, suppress_small=False) ) 
+
+# Copy covariance matrix back into GNDS 
+            covarianceSuite = write_gnds_covariances(gnd,n_pars,inverse_hessian,GNDS_loc,border,  verbose,debug)
+                                
 
             trace = open('%s/%s-bfgs_min.trace'% (base,base),'r')
             tracel = open('%s/%s-bfgs_min.tracel'% (base,base),'w')
@@ -968,10 +975,10 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             computerCode.note.body = '\n'.join( docLines )
             RMatrix.documentation.computerCodes.add( computerCode )
     
-        return(chisqF_n,norm_val,n_pars)
+        return(chisqF_n,norm_val,n_pars,covarianceSuite)
         
     else:
-        return(chisq_n,norm_val,n_pars)
+        return(chisq_n,norm_val,n_pars,None)
 
 ############################################## main
 
@@ -1295,7 +1302,7 @@ if __name__=='__main__':
     fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
             derivedFrom=gnd.styles.getEvaluatedStyle().label )
 
-# parameter input
+# parameter input for computer method
     base = args.inFile
     if args.single: base += 's'
     if args.MS: base += 'm'
@@ -1316,7 +1323,7 @@ if __name__=='__main__':
     if args.Cross_Sections or args.Matplot or args.TransitionMatrix >= 0 : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
-    chisqppt,norm_val,n_pars  = Rflow(
+    chisqppt,norm_val,n_pars,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
                         Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.MS,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
@@ -1334,5 +1341,9 @@ if __name__=='__main__':
         newFitFile = base  + '-fit.xml'
         open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
         print('Written new fit file:',newFitFile)
+        
+        if cov is not None:
+            newCovFile = base  + '-fit_covs.xml'
+            open( newCovFile, mode='w' ).writelines( line+'\n' for line in cov.toXMLList( ) )            
         
     print("Final rflow: ",tim.toString( ))
