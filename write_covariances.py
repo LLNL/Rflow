@@ -9,7 +9,7 @@ import xData.xDataArray as arrayModule
 
 
 # Copy covariance matrix back into GNDS 
-def write_gnds_covariances(gnds,n_pars,inverse_hessian,GNDS_loc,border,  verbose,debug):
+def write_gnds_covariances(gnds,inverse_hessian,GNDS_loc,border,  verbose,debug):
                                    
     nVaried = border[2]  # number of varied parameters (energies, widths, but not norms)
 
@@ -32,7 +32,6 @@ def write_gnds_covariances(gnds,n_pars,inverse_hessian,GNDS_loc,border,  verbose
             matrix[GNDS_loc[i],GNDS_loc[j]] = inverse_hessian[i,j]
     
     if debug: 
-        print(parameters.toXML(),'\n')
         print(type(matrix))
         print('matrix:\n',matrix)
         

@@ -7,7 +7,7 @@ import os,math,numpy,cmath,pwd,sys,time,json
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from evaluates import evaluate_tf
-from wrapup import plotOut,saveNorms2gnds
+from wrapups import plotOut,saveNorms2gnds
 from printExcitationFunctions import *
 
 from pqu import PQU as PQUModule
@@ -1192,7 +1192,7 @@ if __name__=='__main__':
         if CMangle < 0 and ejectile != 'TOT': n_angle_integrals = id+1  - n_angles  # number of Angle-ints after the angulars
         id += 1
     
-    print('Fitted norms:',Fitted_norm)
+    if not args.norm1: print('Fitted norms:',Fitted_norm)
     f = open( args.normFile )
     norm_lines = f.readlines( )
     f.close( )    
@@ -1211,12 +1211,6 @@ if __name__=='__main__':
         norm,step, name,expect,syserror,reffile = parts
         norm,step,expect,syserror = float(norm),float(step),float(expect),float(syserror)
 
-        fitted = Fitted_norm.get(name,None)
-#         print('For name',name,'find',fitted)
-        if fitted is not None and not args.norm1:
-            print("Using previously fitted norm for %-20s: %12.5e instead of %12.5e" % (name,fitted,norm) )
-            norm = fitted
-        norm_val[ni] = norm
         if syserror > 0.:   # fitted norm
             chi_scale = 1.0/syserror 
             if args.normsfixed:
@@ -1230,10 +1224,18 @@ if __name__=='__main__':
             fixed = 0
             chi_scale = 0
             n_free += 1
-        else:               # fixed norm
+        else:               # fixed norm - syserror=0
             fixed = 1
             chi_scale = 0
             n_fixed += 1
+
+        fitted = Fitted_norm.get(name,None)
+#         print('For name',name,'find',fitted)
+        if fitted is not None and not args.norm1:
+            print("Using previously fitted norm for %-20s: %12.5e instead of %12.5e" % (name,fitted,norm) )
+            norm = fitted
+
+        norm_val[ni] = norm
         norm_info[ni,:] = (expect,chi_scale,fixed)
         norm_refs.append([name,reffile])
         ni += 1

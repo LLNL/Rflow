@@ -575,7 +575,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     if debug:
         print('\n Variable parameters:',' '.join(searchnames)) 
         print('Fixed    parameterlist:',' '.join(fixedlistex))
-        print('Searching on pole energies:',searchparms[border[0]:border[1]])
+    print('Searching on pole energies:',searchparms[border[0]:border[1]])
+    print('Keep fixed   pole energies:',fixednames[frontier[0]:frontier[1]])
     
     if brune and False:
         for jset in range(n_jsets):
@@ -907,7 +908,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     
 
 # Copy covariance matrix back into GNDS 
-            covarianceSuite = write_gnds_covariances(gnd,n_pars,inverse_hessian,GNDS_loc,border,  verbose,debug)
+            covarianceSuite = write_gnds_covariances(gnd,inverse_hessian,GNDS_loc,border,  verbose,debug)
                                 
 
             trace = open('%s/%s-bfgs_min.trace'% (base,base),'r')

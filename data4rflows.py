@@ -653,7 +653,8 @@ for datFile in args.InFiles:
         datum[3] *= xs_scale * scalefactor
         
 #         if staterror>0: datum[3] = max(datum[2]*staterror,datum[3])
-        if staterror>0 and datum[3]==0.: datum[3] = datum[2]*staterror
+#       if staterror>0 and datum[3]==0.: datum[3] = datum[2]*staterror
+        if staterror>0 and datum[3]<=datum[2]*stat_percent/100: datum[3] = datum[2]*staterror
         data.append(datum)
         energies.add(datum[0])   
         a = datum[1]
@@ -706,7 +707,8 @@ for datFile in args.InFiles:
         datakeep = []
         for datum in data:
             datum[1] = -1   # indicated angle-integrated data
-            if datum[3]==0.0: 
+#            if datum[3]==0.0: 
+            if datum[3]<=datum[2]*stat_percent/100.:
                 z_errors.add('File %s excludes zero-error data! Changed to %.1f%%' % (base_v,stat_percent ))
                 datum[3] = datum[2]*stat_percent/100.
                 
@@ -754,7 +756,8 @@ for datFile in args.InFiles:
         pts = 0
 
         for datum in sorted(data, key=lambda x: x[0]):
-            if datum[3]==0.0: 
+#           if datum[3]==0.0: 
+            if datum[3]<=datum[2]*stat_percent/100:
                 z_errors.add('File %s excludes zero-error data! Changed to %.1f%%' % (base_v,stat_percent ))
                 datum[3] = datum[2]*stat_percent/100.
             if not lab:

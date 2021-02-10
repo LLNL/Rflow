@@ -58,8 +58,8 @@ nat = args.nat
 allObs = ['CS','DA','DA/DE','DE']
 plots1d = ['CS','NU']
 plots2d = ['DA','NU/DE','DA-G']
-classes = ['INL','NON']
 classes = []
+classes = ['INL','NON']
 No_neg_errorbars = not args.allowNeg
 
 exclude = args.exclude
@@ -194,7 +194,7 @@ if __name__ == "__main__":
 #                 if ejectile == 'N': continue
 #                 if ejectile == 'G': continue
 #                 if ejectile == 'NON': continue
-#                 if ejectile == 'INL': continue
+                if ejectile == 'INL': residual = t.replace('-','')
 
                 for obs in allObs:
                     searchX4 = "\n ***** Search X4 for %s(%s), %s with Q2gs=%7.3f MeV" % (t,reaction,obs,Qvalue_to_gs)
@@ -224,6 +224,8 @@ if __name__ == "__main__":
                         for d in ds:
                             print()
                             npoints = 0
+                            relErrMin = 1e6
+                            relErrMax = 0
                             result = str( ds[ d ] ) 
                             Authors = ', '.join(ds[d].author[:])
                             author1 =  ds[d].author[0].split('.')[-1]
@@ -797,6 +799,9 @@ if __name__ == "__main__":
 
                                     print(E, Ang, Data , dData, file=data_output)   # MeV, mb units
                                 
+                                    relErr = dData/max(Data,1e-6)
+                                    relErrMin = min(relErrMin, relErr)
+                                    relErrMax = max(relErrMax, relErr)
                                     npoints += 1
                             
                                 data_output.close()
@@ -811,7 +816,7 @@ if __name__ == "__main__":
                                     level = leveltag[2:]
                                 sys_error = '5'  if ejectile != 'TOT' else '1' 
                                 if shape_data is not None and shape_data: sys_error = '-1'
-                                stat_error= '10' if ejectile != 'TOT' else '2' #  for when pointwise errors are 0.0
+                                stat_error= '5' if ejectile != 'TOT' else '2' #  for when pointwise errors are 0.0
                                 angle_integrated = 'TRUE' if obs=='CS' else 'FALSE'
                                 norm = str(1)
                                 group = ''
@@ -850,12 +855,14 @@ if __name__ == "__main__":
                                 if target == natT+'0': target = natT + natA
                                 nucname = target  # TEMPORARY ??
                                 Aflip = 'TRUE' if Aflip else 'FALSE'
+                                s_relErrMin = '%.2e' % relErrMin
+                                s_relErrMax = '%.2e' % relErrMax
                                 print('shape_data:',shape_data)
-                                print(projectile,ejectile,target,residual,level,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npoints,X4_tag)
+                                print(projectile,ejectile,target,residual,level,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npoints,X4_tag,s_relErrMin,s_relErrMax)
                                 if included:
         #                             subentries.append(', '.join(['"'+part+'"' for part in [subent,x4file,t,reaction,obs,Reaction,str(emin),str(emax),
         #                                 str(n),errs,Authors,ds[d].year,str(ds[d].reference)]]))
-                                    subentries.append(','.join([projectile,ejectile,target,residual,level,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npts,X4_tag]))
+                                    subentries.append(','.join([projectile,ejectile,target,residual,level,file,sys_error,stat_error,angle_integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,Sfactor,npts,X4_tag,s_relErrMin,s_relErrMax]))
                                 #                             if 0.0 in levels: levels = levels.remove(0.0)
 #                             print('Looked for levels',levels,'in',residual) 
                             if levels is not None:
@@ -874,7 +881,7 @@ if __name__ == "__main__":
         fn = dir + '/datafile.props.csv'
         print('\nWrite csv file',fn,'for',len(subentries),'subentries')
         f = open ( fn , 'w')
-        print('projectile,ejectile,target,residual,level,file,sys-error,stat-error,angle-integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,S_factor,Npoints,EXFOR',file=f)
+        print('projectile,ejectile,target,residual,level,file,sys-error,stat-error,angle-integrated,norm,group,splitnorms,lab,abserr,scale,filedir,Aflip,Ein,eshift,ecalib,splitshifts,ratioRuth,S_factor,Npoints,EXFOR,minRelErr,maxRelErr',file=f)
         ents = set()
         for subent in sorted(list(subentries)):
             psubent = subent.replace('"','')

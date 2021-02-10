@@ -67,7 +67,7 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
 def plotOut(n_data,n_norms,dof,args, base,info,dataDir, 
     chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
     groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, TransitionMatrix,
-    EIndex,totals,pname,tname,datasize,Aintrange, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
+    EIndex,totals,pname,tname,datasize, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
 
     print('pname:',pname)
     ngraphAll = 0
@@ -201,10 +201,11 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
                 ptsInCurve[curve] = ptsInCurve.get(curve,0) + 1
                 
                 pin,pout = data_p[id,:]   # assume same for all data(id) in this curve!
+                pn = quickName(pname[pin],tname[pin])
                 if pout == -1:
-                    reaction = 'total'
+                    reaction = '%s total' % pn
                 elif pout == pin:
-                    reaction = 'elastic'
+                    reaction = '%s elastic' % pn
                 else:
                     reaction = pins[pin]+'->'+pins[pout]
                     
@@ -450,9 +451,9 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
                             pin,pout = data_p[id,:]   # assume same for all data(id) in this curve!
                             if pin != pinG or pout != poG: continue
                             if pout == -1:
-                                reaction = 'total'
+                                reaction = '%s total' % pn
                             elif pout == pin:
-                                reaction = 'elastic'
+                                reaction = '%s elastic' % pn
                             else:
                                 reaction = pins[pin]+'->'+pins[pout]
                     
@@ -489,17 +490,18 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
                             LineData[1][3].append(DataErr)
                             np += 1
                             dataPoints += 1
-                        if np>0: print('    Curve',ng,':',tag,'has',np,'data points')
+                        if np>0: 
+                            print('    Curve',ng,':',tag,'has',np,'data points')
                                 
-                        ng += 1
-                        ic = (ng+ npairs-1) % 14 + 1  # for colors
-                        leg = tag if '/' not in tag else tag.split('/')[1]
-                        legend = leg.replace('-Aint','') # if len(leg) < 12 else leg[:12]
-                        LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
-                            'symbol': plsymbol[ng%13], 'symbolsize':datasize   }
-#                         print('    Finishing I curve',ng,'for',curve,'with legend',legend,'with',ptsInCurve[curve],'pts for ',reaction)
+                            ng += 1
+                            ic = (ng+ npairs-1) % 14 + 1  # for colors
+                            leg = tag if '/' not in tag else tag.split('/')[1]
+                            legend = leg.replace('-Aint','') + ' * %.2f' % fac # if len(leg) < 12 else leg[:12]
+                            LineData[0] =  {'kind':'Data',  'color':plcolor[ic-1], 'capsize':0.10, 'legend':legend, 'legendsize':legendsize,
+                                'symbol': plsymbol[ng%13], 'symbolsize':datasize   }
+    #                         print('    Finishing I curve',ng,'for',curve,'with legend',legend,'with',ptsInCurve[curve],'pts for ',reaction)
 
-                        DataLines.append(LineData)
+                            DataLines.append(LineData)
                 selection = 'all' if TransitionMatrix<=0 else '(>= %i datapt)' % TransitionMatrix
                 subtitle = '' # "Using " + args.inFile + ' with  '+args.dataFile+" & "+args.normFile
                 kind     = "R-matrix fit for incident %s+%s  (%s)  (units mb and %s MeV cm)" % (pname[pinG],tname[pinG],pn,pname[ipair])
