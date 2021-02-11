@@ -759,7 +759,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
     CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
-    CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles]                                                  # batch n_jsets
+    CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles,has_widths]                                                  # batch n_jsets
 
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,chargedElastic, debug,verbose]

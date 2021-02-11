@@ -1,5 +1,16 @@
 
-import numpy,os,sys
+import numpy,os,sys,math
+from CoulCF import Pole_Shifts
+
+hbc =   197.3269788e0             # hcross * c (MeV.fm)
+finec = 137.035999139e0           # 1/alpha (fine-structure constant)
+amu   = 931.4940954e0             # 1 amu/c^2 in MeV
+
+coulcn = hbc/finec                # e^2
+fmscal = 2e0 * amu / hbc**2
+etacns = coulcn * math.sqrt(fmscal) * 0.5e0
+pi = 3.1415926536
+rsqr4pi = 1.0/(4*pi)**0.5
 
 # import tensorflow as tf
 import tensorflow.compat.v2 as tf
@@ -23,7 +34,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
 # 
 #     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
 #     CoulombFunctions_data = (L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac)    # batch n_data
-#     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles)                                                  # batch n_jsets
+#     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles,has_widths)                                                  # batch n_jsets
 # 
 #     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches)
 #     Logicals = (LMatrix,brune,chargedElastic, debug,verbose)
@@ -40,7 +51,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
 
     ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val = Channels
     L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac = CoulombFunctions_data   # batch n_data
-    S_poles,dSdE_poles,EO_poles = CoulombFunctions_poles                                                  # batch n_jsets
+    S_poles,dSdE_poles,EO_poles,has_widths = CoulombFunctions_poles                                                  # batch n_jsets
 
     n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches = Dimensions
     LMatrix,brune,chargedElastic, debug,verbose = Logicals
@@ -302,40 +313,49 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
             searchpars = optim_results.position
             
             for restart in range(restarts):
-                searchpars_n = optim_results.position.numpy()
+                searchpars_n = searchpars.numpy()
 
                 print('More pole energies:',searchpars_n[border[0]:border[1]])
                 print('Before restart',restart,' objective chisq/pt',last_cppt)
                 print('And objective FitMeasureTF =',FitMeasureTF(searchpars)[0].numpy()/n_data )
             
                 if brune:
+                    E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,   searchpars[border[0]:border[1]], [n_jsets*n_poles] )
+                    g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,   searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
+                    norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
+        
+                    E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
+                    g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
+                    E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
+                    norm_val =                       (norm_valv+ fixed_norms)**2
+
                     EOO_poles = EO_poles.copy()
                     SOO_poles = S_poles.copy()
                     for ip in range(border[0],border[1]): #### Extract parameters after previous search:
                         i = searchloc[ip,0]
                         jset = i//n_poles;  n = i%n_poles
-                        EO_poles[jset,n] = searchpars[ip]
+                        EO_poles[jset,n] = searchpars_n[ip]
                         
                     # Re-evaluate pole shifts
                     Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
                 
-                    # Print out differences in shifts:
-                    for jset in range(n_jsets):
-                        for n in range(n_poles):
-                            print('j/n=',jset,n,' E old,new:',EOO_poles[jset,n],EO_poles[jset,n])
-                            for c in range(n_chans):
-                                 print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],S_poles[jset,n,c],
-                                         100*dSdE_poles[jset,n,c]*(EO_poles[jset,n]-EOO_poles[jset,n])/ (S_poles[jset,n,c] - SOO_poles[jset,n,c])))
+                    if debug:                         # Print out differences in shifts:
+                        for jset in range(n_jsets):
+                            for n in range(n_poles):
+                                print('j/n=',jset,n,' E old,new:',EOO_poles[jset,n],EO_poles[jset,n])
+                                for c in range(n_chans):
+                                     print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],S_poles[jset,n,c],
+                                             100*dSdE_poles[jset,n,c]*(EO_poles[jset,n]-EOO_poles[jset,n])/ (S_poles[jset,n,c] - SOO_poles[jset,n,c])))
                     
                     Tp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
                     XSp_mat,XSp_tot  = T2X_transformsTF(Tp_mat,gfac, n_jsets,n_chans,npairs,maxpc)
         
                 # multiply left and right by Coulomb phases:
-                    TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat * tf.expand_dims(CSp_diag_in,2)    
+                    TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat[:n_angles,...] * tf.expand_dims(CSp_diag_in,2)
                             
-                    AxA = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles)
-                    AxA = AddCoulombsTF(AxA,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
+                    Ax  = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles)
+                    AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
                     
                     AxI = XSp_mat[n_angle_integrals0:n_totals0] 
                     AxT = XSp_tot[n_totals0:n_data] 
@@ -343,12 +363,14 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
                     A_t = tf.concat([AxA, AxI, AxT], 0) 
     
                     chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
-                    print('And ChiSqTF again =',chisq.numpy()/n_data )
+                    print('  After pole shifts: ChiSqTF =',chisq.numpy()/n_data )
+                    sys.stdout.flush()
                 
                 optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
                         max_iterations=Iterations, tolerance=float(Search))
+                searchpars = optim_results.position
                 new_cppt = optim_results.objective_value.numpy()/n_data
-                if new_cppt >= last_cppt: break
+#               if new_cppt >= last_cppt: break
                 last_cppt = new_cppt
                       
             print('\nResults:')

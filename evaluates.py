@@ -1,5 +1,17 @@
 
-import numpy,os,sys
+import numpy,os,sys,math
+from CoulCF import Pole_Shifts
+
+
+hbc =   197.3269788e0             # hcross * c (MeV.fm)
+finec = 137.035999139e0           # 1/alpha (fine-structure constant)
+amu   = 931.4940954e0             # 1 amu/c^2 in MeV
+
+coulcn = hbc/finec                # e^2
+fmscal = 2e0 * amu / hbc**2
+etacns = coulcn * math.sqrt(fmscal) * 0.5e0
+pi = 3.1415926536
+rsqr4pi = 1.0/(4*pi)**0.5
 
 # import tensorflow as tf
 import tensorflow.compat.v2 as tf
@@ -26,7 +38,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
 # 
 #     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
 #     CoulombFunctions_data = (L_diag, Om2_mat,POm_diag,CS_diag, Rutherford, InterferenceAmpl, Gfacc,gfac)    # batch n_data
-#     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles)                                                  # batch n_jsets
+#     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles,has_widths)                                                  # batch n_jsets
 # 
 #     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches)
 #     Logicals = (LMatrix,brune,chargedElastic, debug,verbose)
@@ -438,19 +450,28 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
             searchpars = optim_results.position
             
             for restart in range(restarts):
-                searchpars_n = optim_results.position.numpy()
+                searchpars_n = searchpars.numpy()
 
                 print('More pole energies:',searchpars_n[border[0]:border[1]])
                 print('Before restart',restart,' objective chisq/pt',last_cppt)
                 print('And objective FitMeasureTF =',FitMeasureTF(searchpars)[0].numpy()/n_data )
             
                 if brune:
+                    E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,      searchpars[border[0]:border[1]], [n_jsets*n_poles] )
+                    g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,      searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
+                    norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,      searchpars[border[2]:border[3]], [n_norms] )
+        
+                    E_cpoles = tf.complex(tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL))
+                    g_cpoles = tf.complex(tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
+                    E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL))
+                    norm_val =                       (norm_valv+ fixed_norms)**2
+
                     EOO_poles = EO_poles.copy()
                     SOO_poles = S_poles.copy()
                     for ip in range(border[0],border[1]): #### Extract parameters after previous search:
                         i = searchloc[ip,0]
                         jset = i//n_poles;  n = i%n_poles
-                        EO_poles[jset,n] = searchpars[ip]
+                        EO_poles[jset,n] = searchpars_n[ip]
                         
                     # Re-evaluate pole shifts
                     Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
@@ -480,6 +501,7 @@ def evaluate_tf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctio
                 
                 optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
                         max_iterations=Iterations, tolerance=float(Search))
+                searchpars = optim_results.position
                 new_cppt = optim_results.objective_value.numpy()/n_data
                 if new_cppt >= last_cppt: break
                 last_cppt = new_cppt
