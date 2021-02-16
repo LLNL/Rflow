@@ -1349,3 +1349,4 @@ if __name__=='__main__':
             open( newCovFile, mode='w' ).writelines( line+'\n' for line in cov.toXMLList( ) )            
         
     print("Final rflow: ",tim.toString( ))
+    print("Target stdout:",dataDir + '.out')

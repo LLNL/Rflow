@@ -83,6 +83,6 @@ def write_gnds_covariances(gnds,inverse_hessian,GNDS_loc,border,  verbose,debug)
 
     if debug: print(covarianceSuite.toXMLList())
 #     if verbose: 
-    covarianceSuite.saveToFile('CovariancesSuite.xml')
+#   covarianceSuite.saveToFile('CovariancesSuite.xml')
     
     return covarianceSuite

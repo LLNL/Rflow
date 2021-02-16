@@ -26,7 +26,7 @@ except:
   pass
 # tf.logging.set_verbosity(tf.logging.ERROR)
 
-strategy = tf.distribute.MirroredStrategy()
+# strategy = tf.distribute.MirroredStrategy()
 
 # based on evaluates4.py
 
