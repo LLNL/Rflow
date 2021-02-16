@@ -407,6 +407,8 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
         for pinG in range(npairs):
             pn = quickName(pname[pinG],tname[pinG])
             print('In:',pn,'from',pinG)
+            tnucl,tlevel = nuclIDs(tname[pinG])
+            if tlevel>0: continue  # don't bother with initial excited states.
             GraphList = []
             ngraphAll = 0
 
@@ -424,13 +426,14 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
                 LineModel = [{}, [[],[],[],[]] ]
                 for i0 in range(nmodelpts):
                     i = EIndex[i0]
-                    if pinG != data_p[i,0] or poutG != data_p[i,1] : continue
+                    if totals[poG,pinG,i] < 0.0: continue
+#                     if pinG != data_p[i,0] or poG != data_p[i,1] : continue
                     LineModel[1][0].append(data_val[i,0]*lab2cm)
-                    LineModel[1][1].append(totals[poutG,pinG,i])
+                    LineModel[1][1].append(totals[poG,pinG,i])
                     LineModel[1][2].append(0.)
                     LineModel[1][3].append(0.)    
                 legend = '%s %s' % (pn,po) #+ ' (%s,%s=%s)' % (pinG,poutG,poG)
-                LineModel[0] = {'kind':'Model', 'color':plcolor[0], 'linestyle': pldashes[pinG % 4], 'evaluation':legend}  #, 'legend': legend } 
+                LineModel[0] = {'kind':'Model', 'color':'orange', 'linestyle': 'solid', 'evaluation':legend}  #, 'legend': legend } 
                 ModelLines.append(LineModel)
                 print('  Curve for',legend)
                 
