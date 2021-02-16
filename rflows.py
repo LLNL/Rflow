@@ -304,6 +304,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     all_partition_channels = numpy.zeros(npairs, dtype=INT)
     c0 = numpy.zeros([n_jsets,npairs], dtype=INT)
     cn = numpy.zeros([n_jsets,npairs], dtype=INT)
+    All_spins = set()
     for Jpi in RMatrix.spinGroups:
         J_set[jset] = Jpi.spin
         pi_set[jset] = Jpi.parity
@@ -323,7 +324,6 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #         if verbose:  print("\n".join(R.toXMLList()))       
         n = None
         c = 0
-        All_spins = set()
         partition_channels = numpy.zeros(npairs, dtype=INT)
         partition_channels = numpy.zeros(npairs, dtype=INT)
 

@@ -189,7 +189,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     for i in range(n_data):
         if not max(emin,Elarge) <= E_scat[i] <= emax:
             # print('Datum at energy %10.4f MeV outside evaluation range [%.4f,%.4f]' % (E_scat[i],emin,emax))
-            Elarge = E_scat[i]
+#           Elarge = E_scat[i]
             nExcluded += 1
     if nExcluded > 0: print('\n %5i points excluded as outside range [%s, %s]' % (nExcluded,emin,emax))
     
@@ -246,6 +246,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     all_partition_channels = numpy.zeros(npairs, dtype=INT)
     c0 = numpy.zeros([n_jsets,npairs], dtype=INT)
     cn = numpy.zeros([n_jsets,npairs], dtype=INT)
+    All_spins = set()
     for Jpi in RMatrix.spinGroups:
         J_set[jset] = Jpi.spin
         pi_set[jset] = Jpi.parity
@@ -261,7 +262,6 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         seg_col[jset] = cols    
 
         c = 0
-        All_spins = set()
         partition_channels = numpy.zeros(npairs, dtype=INT)
         partition_channels = numpy.zeros(npairs, dtype=INT)
 
@@ -1321,7 +1321,8 @@ if __name__=='__main__':
     if args.tag != '': base = base + '_'+args.tag
      
     dataDir = base 
-    if args.Cross_Sections or args.Matplot or args.TransitionMatrix >= 0 : os.system('mkdir '+dataDir)
+#   if args.Cross_S0ctions or args.Matplot or args.TransitionMatrix >= 0 : os.system('mkdir '+dataDir)
+    if args.Search : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
     chisqppt,norm_val,n_pars,cov  = Gflow(
