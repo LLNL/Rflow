@@ -324,6 +324,7 @@ parser.add_argument('-s', '--scalefactors', type=str, default='../ScalingFactors
 # parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Subentries to exclude if any string within subentry name")
 
 parser.add_argument(      "--pops", type=str, default=defaultPops, help="pops files with all the level information from RIPL3. Default = %s" % defaultPops)
+parser.add_argument(      "--pops2", type=str, help="local pops file")
 
 parser.add_argument("-d", "--Dir", type=str,  default="Data_X4s", help="output data directory for small filesdu")
 parser.add_argument("-o", "--Out", type=str,  default="flow.data", help="output data file")
@@ -345,6 +346,7 @@ EmaxCN = args.EmaxCN
 Projectiles = args.Projectiles
 LevelsMax = args.LevelsMax
 pops = databaseModule.database.readFile( args.pops )
+if args.pops2 is not None: pops.addFile( args.pops2 , replace=True)
     
 scales = {-1: "nodim", 0: "fm^2", 1: "b", 2:"mb", 3:"mic-b"}
 rscales = {"nodim": -1, "fm^2":0, "b":1, "mb":2, "mic-b":3, "microbarns":3}
@@ -590,8 +592,9 @@ for datFile in args.InFiles:
             print('Unwanted ejectile',ejectile,": SKIP")
             continue
         
-    if args.LevelsMax is not None and level > args.LevelsMax[ipi]:
-        print('Level',ia-1,'is above level limit',args.LevelsMax[ipi],"for %s+%s" % (ejectile,residual),": SKIP")
+    if args.LevelsMax is not None and int(level) > int(args.LevelsMax[iti]):
+        print('Level',level,ia-1,'is above level limit',args.LevelsMax[iti],"for",iti," %s -> %s+%s" % (projectile,ejectile,residual),": SKIP")
+        print('LevelsMax=',args.LevelsMax)
         continue         
     levels[residual].add(level)
 
