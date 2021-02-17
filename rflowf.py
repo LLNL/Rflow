@@ -1315,7 +1315,7 @@ if __name__=='__main__':
     if args.normsfixed            : base += '+n' 
     if args.pmin       is not None: base += '-p%s' % args.pmin
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
-    if args.Search     is not None: base += '+S' 
+    if args.Search     is not None: base += '+S%s'  % args.Search
     if args.Iterations is not None: base += '_I%s' % args.Iterations
 # tag
     if args.tag != '': base = base + '_'+args.tag

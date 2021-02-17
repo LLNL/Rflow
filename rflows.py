@@ -1136,7 +1136,8 @@ if __name__=='__main__':
     if args.maxData    is not None: dataFilter += '_m%s' % args.maxData
     if args.anglesData is not None: dataFilter += '_a%s' % args.anglesData
     
-    with open(args.dataFile.replace('.data',dataFilter+'.data')+'2','w') as fout: fout.writelines([projectile4LabEnergies+'\n'] + data_lines)
+    if dataFilter != '':
+        with open(args.dataFile.replace('.data',dataFilter+'.data')+'2','w') as fout: fout.writelines([projectile4LabEnergies+'\n'] + data_lines)
     
     n_data = len(data_lines)
     data_val = numpy.zeros([n_data,5], dtype=REAL)    # Elab,mu, datum,absError
