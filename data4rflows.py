@@ -292,7 +292,7 @@ def lab2cm(mu_lab, ap,at,ae,ar, E_lab,Q):
 
     x = ((ap*ae * E_cm) / (at*ar * E_out))**0.5
     th_lab = math.acos(mu_lab)
-    mu_l = max(mu_lab,1.0-1e-12)
+    mu_l = min(mu_lab,1.0-1e-12)
     sin_lab = (1-mu_l**2) ** 0.5
     th_cm = th_lab + math.asin(x.real*sin_lab.real)
     cos_cm = math.cos(th_cm)
@@ -311,7 +311,7 @@ parser.add_argument("-B", "--EminCN", type=float, help="Minimum energy relative 
 parser.add_argument("-C", "--EmaxCN", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
 parser.add_argument("-J", "--Jmax", type=float, default=5.0, help="Maximum total J of partial wave set.")
 parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum incident lab energy in first partition.")
-parser.add_argument("-E", "--emaxp", type=float, default=10., help="Maximum incident lab energy in first partition.")
+parser.add_argument("-E", "--emaxp", type=float, default=25., help="Maximum incident lab energy in first partition.")
 parser.add_argument("-R", "--Rmatrix_radius", type=float, default=1.4, help="Reduced R-matrix radius: factor of (A1^1/3+A2^1/3).")
 parser.add_argument("-G", "--GammaChannel", action="store_true", help="Include discrete gamma channel")
 parser.add_argument("-j", "--jdef", type=float, default=2.0, help="Default spins for unknown RIPL states")
@@ -391,7 +391,10 @@ masses={}; qvalue = {}; charges={}
 MP = len(args.Projectiles)
 projs = args.Projectiles 
 print('projs 1',projs)
-if 'photon' not in projs: projs += ['photon']
+if 'photon' not in projs: 
+    projs += ['photon']
+    masses['photon'] = 0.0
+    charges['photon'] = 0.0
 print('projs 2',projs)
 MPT = len(projs)
 targs = ['' for i in range(MPT)]
@@ -455,9 +458,20 @@ for prop in csv.DictReader(csvf):
         continue
     projs[ipi] = projectile
     targs[ipi] = target
+#     print('For ipi, target =',ipi,target,'get',targs)
     ejects[ipi] = ejectile
     resids[ipi] = residual
+    levels[target] = set()
     levels[residual] = set()
+    
+    try:
+        iei = args.Projectiles.index(ejectile)
+    except:
+        print('Unwanted ejectile',ejectile,": SKIP")
+        continue
+    projs[iei] = ejectile
+    targs[iei] = residual    
+    
     for nucl in [projectile,ejectile,target,residual]:
         if nucl in ['TOT','.']: continue
         n = nucl if nucl != '2n' else 'n'
@@ -465,6 +479,7 @@ for prop in csv.DictReader(csvf):
         masses[nucl] = pe.getMass('amu')
         if hasattr(pe, 'nucleus'): pe = pe.nucleus
         charges[nucl] = pe.charge[0].value
+        print('Nuclide ',nucl,'has mass,charge=',masses[nucl],charges[nucl])
 
 p_ref = args.Projectiles[0]
 t_ref = targs[projs.index(p_ref)]
@@ -477,6 +492,7 @@ try:
     targs[ipi] = '%s%s' % (elementSymbolFromZ(ZT),AT)
     print('From Z,A=',ZT,AT,'have target',targs[MP] )
     masses[targs[ipi]] = pops[targs[ipi]].getMass('amu')
+    charges[targs[ipi]] = ZT
 except:
     pass
 
@@ -783,7 +799,6 @@ for datFile in args.InFiles:
                 if abs(ex2cm.imag)>0: 
                     print("STRANGE SUB-THRESHOLD TRANSITION!!!. Omit as ex2cm=",ex2cm)
                     continue
-                
             if rRuth:
                 rmass = masses[p] * masses[t] / (masses[p] + masses[t])
                 k = math.sqrt(fmscal * rmass * Ecm)
@@ -851,7 +866,7 @@ for datFile in args.InFiles:
                         if abs(ex2cm.imag)>0: 
                             print("STRANGE SUB-THRESHOLD TRANSITION!!!. Omit as ex2cm=",ex2cm)
                             continue
-                                             
+
                     if rRuth:
                         rmass = masses[p] * masses[t] / (masses[p] + masses[t])
                         k = math.sqrt(fmscal * rmass * Ecm)
