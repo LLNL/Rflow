@@ -57,7 +57,7 @@ rsqr4pi = 1.0/(4*pi)**0.5
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
         Ein_list, fixedlist, emind,emaxd,pmin,pmax,MS,
         norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
-        Search,Iterations,restarts,Distant,Background,ReichMoore, 
+        init,Search,Iterations,widthWeight,restarts,Distant,Background,ReichMoore, 
         verbose,debug,inFile,fitStyle,tag,large):
         
 #     global L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
@@ -747,7 +747,19 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
 
     searchpars0 = searchparms
-    print('Number of search parameters:',searchpars0.shape[0])
+    npars = searchpars0.shape[0]
+    print('Number of search parameters:',npars)
+    
+    if init is not None:
+        ifile = open(init[1],'r')
+        for i in range(1,int(init[0])):
+            vals = ifile.readline()
+        vals = ifile.readline().replace('[','').replace(']','').split()
+        print('Restart at chisq/pt',vals[0])
+        searchpars0 = vals[1:]
+        if npars != searchpars0.shape[0]:
+            print('Number of reread search parameters',searchpars0.shape[0],' is not',npars,'now expected. STOP')
+            sys.exit()
 
     print("To start tf: ",tim.toString( ))
     sys.stdout.flush()
@@ -764,7 +776,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,chargedElastic, debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,restarts]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts]
 
     # Data_Control = [Pleg]     # batch n_angle_integrals,  n_totals  
     
@@ -917,9 +929,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             trace.close( )
             lowest_chisq = 1e8
             for i,cs in enumerate(traces):
-                chis = float(cs)
+                css = cs.split()
+                chis = float(css[0])
                 lowest_chisq = min(lowest_chisq, chis)
-                print(i+1,lowest_chisq,chis, file=tracel)
+                print(i+1,lowest_chisq,' '.join(css[1:3]),chis, file=tracel)
             tracel.close()
         
             snap = open('%s/%s-bfgs_min.snap'% (base,base),'r')
@@ -987,7 +1000,8 @@ if __name__=='__main__':
     import argparse,re
 
     print('\nRflowf')
-    cmd = ' '.join(sys.argv[:])
+#     cmd = ' '.join(sys.argv[:])
+    cmd = ' '.join([t if '*' not in t else ("'%s'" % t) for t in sys.argv[:]])
     print('Command:',cmd ,'\n')
 
     # Process command line options
@@ -1015,6 +1029,8 @@ if __name__=='__main__':
 
     parser.add_argument("-S", "--Search", type=str, help="Search minimization method.")
     parser.add_argument("-I", "--Iterations", type=int, help="max_iterations for search")
+    parser.add_argument("-i", "--init",type=str, nargs="*", help="iterations and snap file name for starting parameters")
+    parser.add_argument("-w", "--widthWeight", type=float, default=0.0, help="Add widthWeight*vary_widths**2 to chisq during searches")
     
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
     parser.add_argument("-1", "--norm1", action="store_true", help="Use norms=1 in output analysis.")
@@ -1224,7 +1240,7 @@ if __name__=='__main__':
         if CMangle < 0 and ejectile != 'TOT': n_angle_integrals = id+1  - n_angles  # number of Angle-ints after the angulars
         id += 1
     
-    print('Fitted norms:',Fitted_norm)
+#     if not args.norm1: print('Fitted norms:',Fitted_norm)
     f = open( args.normFile )
     norm_lines = f.readlines( )
     f.close( )    
@@ -1315,9 +1331,12 @@ if __name__=='__main__':
     if args.normsfixed            : base += '+n' 
     if args.pmin       is not None: base += '-p%s' % args.pmin
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
+    if args.init       is not None: base += '@i%s'  % args.init[0]
+    if args.init       is not None: print('Re-initialize at line',args.init[0],'of snap file',args.init[1])
     if args.Search     is not None: base += '+S%s'  % args.Search
     if args.Iterations is not None: base += '_I%s' % args.Iterations
-# tag
+    if args.widthWeight is not None and args.widthWeight != 0.0: 
+        base += '_w%s' % args.widthWeight
     if args.tag != '': base = base + '_'+args.tag
      
     dataDir = base 
@@ -1329,7 +1348,7 @@ if __name__=='__main__':
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
                         Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.MS,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
-                        args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
+                        args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
 
 #     print("Finish rflow call: ",tim.toString( ))

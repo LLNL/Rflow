@@ -39,7 +39,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
 #     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches)
 #     Logicals = (LMatrix,brune,chargedElastic, debug,verbose)
 # 
-#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,restarts)
+#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts)
 # 
 #     Pleg     # batch n_angle_integrals,  n_totals  
 #
@@ -56,7 +56,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
     n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches = Dimensions
     LMatrix,brune,chargedElastic, debug,verbose = Logicals
 
-    searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,restarts = Search_Control
+    searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts = Search_Control
 
 #     AAL = numpy.zeros([npairs,npairs, n_jsets,maxpc,maxpc, n_jsets,maxpc,maxpc ,NL], dtype=REAL)
 
@@ -233,7 +233,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
             return(( A_t + Rutherford + tf.reduce_sum (tf.math.imag( InterferenceAmpl * tf.linalg.diag_part(TCp_mat_pdiag[:n_angles,:,:,:]) ) , [1,2])) * Gfacc )
 
         @tf.function
-        def ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm):
+        def ChiSqTF(A_t, widthWeight,searchWidths, data_val,norm_val,norm_info,effect_norm):
     
         # chi from cross-sections
             one = tf.constant(1.0, dtype=REAL)
@@ -245,6 +245,8 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
         # chi from norm_vals themselves:
             chi = (norm_val - norm_info[:,0]) * norm_info[:,1]
             chisq += tf.reduce_sum(chi**2)
+
+            chisq += tf.reduce_sum(searchWidths**2) * widthWeight
     
             return (chisq)
 
@@ -281,11 +283,12 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
             AxT = XSp_tot[n_totals0:n_data] 
         
             A_t = tf.concat([AxA, AxI, AxT], 0)
-            chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
-        
+            chisq = ChiSqTF(A_t, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
+            ww = tf.reduce_sum(searchpars[border[1]:border[2]]**2) * widthWeight
+            
             if Search:
-                tf.print(chisq/n_data,                              output_stream=trace)
-                tf.print(chisq/n_data, searchpars,  summarize=-1,   output_stream=snap)
+                tf.print(chisq/n_data, ww/n_data, (chisq-ww)/n_data,                             output_stream=trace)
+                tf.print(chisq/n_data, ww/n_data, (chisq-ww)/n_data, searchpars,  summarize=-1,   output_stream=snap)
         
             return(chisq, tf.gradients(chisq, searchpars)[0] )
     
@@ -297,8 +300,10 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
 
         chisq0_n = chisq0.numpy()
         grad0 = Grads.numpy()
-
-        print('\nFirst run:',chisq0_n/n_data,'\n')  
+        
+        ww = ( tf.reduce_sum(searchpars[border[1]:border[2]]**2) * widthWeight ).numpy()
+        print('\nFirst run:',chisq0_n/n_data,'including ww',ww/n_data,':',(chisq0_n-ww)/n_data ,'for data.\n') 
+         
         if verbose: print('Grads:',grad0)
         sys.stdout.flush()
 
@@ -362,7 +367,7 @@ def evaluatef(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions
                     
                     A_t = tf.concat([AxA, AxI, AxT], 0) 
     
-                    chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
+                    chisq = ChiSqTF(A_t, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
                     print('  After pole shifts: ChiSqTF =',chisq.numpy()/n_data )
                     sys.stdout.flush()
                 

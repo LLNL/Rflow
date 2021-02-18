@@ -71,7 +71,7 @@ rsqr4pi = 1.0/(4*pi)**0.5
 def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
         Ein_list, fixedlist, emind,emaxd,pmin,pmax,
         norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
-        Search,Iterations,restarts,Distant,Background,ReichMoore, 
+        Search,Iterations,widthWeight,restarts,Distant,Background,ReichMoore, 
         verbose,debug,inFile,fitStyle,tag,large):
         
 #     global L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, data_val, norm_info,effect_norm, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
@@ -744,7 +744,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,chargedElastic, debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,p_mask,data_p, AAL,base, Search,Iterations,restarts]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,p_mask,data_p, AAL,base, Search,Iterations,widthWeight,restarts]
 
     Data_Control = [Pleg, ExptAint,ExptTot]     # batch n_angle_integrals,  n_totals  
     
@@ -985,8 +985,9 @@ if __name__=='__main__':
     parser.add_argument("-p", "--pmin", type=float, help="Min energy of R-matrix pole to fit, in gnds cm energy frame. Overrides --Fixed.")
     parser.add_argument("-P", "--PMAX", type=float, help="Max energy of R-matrix pole to fit. If p>P, create gap.")
 
-    parser.add_argument("-S", "--Search", type=str, help="Search minimization method.")
+    parser.add_argument("-S", "--Search", type=str, help="Ignored. Search minimization method.")
     parser.add_argument("-I", "--Iterations", type=int, help="max_iterations for search")
+    parser.add_argument("-w", "--widthWeight", type=float, default=0.0, help="Add widthWeight*vary_widths**2 to chisq during searches")
     
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
     parser.add_argument("-1", "--norm1", action="store_true", help="Use norms=1 in output analysis.")
@@ -1007,6 +1008,10 @@ if __name__=='__main__':
         CMPLX = numpy.complex64
         INT = numpy.int32
         realSize = 4  # bytes
+        
+#  rflows:
+    args.Search = None
+    
 
     gnd=reactionSuiteModule.readXML(args.inFile)
     p,t = gnd.projectile,gnd.target
@@ -1193,7 +1198,7 @@ if __name__=='__main__':
         if CMangle < 0 and ejectile != 'TOT': n_angle_integrals = id+1  - n_angles  # number of Angle-ints after the angulars
         id += 1
     
-    if not args.norm1: print('Fitted norms:',Fitted_norm)
+#     if not args.norm1: print('Fitted norms:',Fitted_norm)
     f = open( args.normFile )
     norm_lines = f.readlines( )
     f.close( )    
@@ -1285,6 +1290,7 @@ if __name__=='__main__':
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
     if args.Search     is not None: base += '+S' 
     if args.Iterations is not None: base += '_I%s' % args.Iterations
+    if args.widthWeight is not None:base += '_w%s' % args.widthWeight
 # tag
     if args.tag != '': base = base + '_'+args.tag
      
@@ -1296,7 +1302,7 @@ if __name__=='__main__':
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
                         Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
-                        args.Search,args.Iterations,args.restarts,args.Distant,args.Background,args.ReichMoore,  
+                        args.Search,args.Iterations,args.widthWeight,args.restarts,args.Distant,args.Background,args.ReichMoore,  
                         args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
 
     print("Finish rflow call: ",tim.toString( ))
