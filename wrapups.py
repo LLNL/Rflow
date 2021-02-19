@@ -76,6 +76,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
 #     plot_cmds = []
     plot_cmd = 'xmgr '
     worse = []
+    unadjustedShapes = {}
     for group in groups:
 
         found = False
@@ -99,10 +100,19 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
         chisq = 0.0
         for id in range(n_data):
             if group == group_list[id]:
+                gr = group
+                if '/' in gr: gr = gr.split('/')[1]
                 fac = 1.0
+                unadjustedShape = False
                 if not args.norm1:
                     for ni in range(n_norms):
                         fac += (norm_val[ni]-1.) * effect_norm[ni,id]
+                        unadjustedShape  = unadjustedShape or (effect_norm[ni,id] > 0. and norm_info[ni,1] == 0.0 and norm_info[ni,0] == 1.0)  # still original norm = 1
+#                             print('effect_norm[',ni,id,']',effect_norm[ni,id],norm_info[ni,0],norm_info[ni,1] )
+                if unadjustedShape:
+                    if not unadjustedShapes.get(gr,False): print('\n    *** Unadjusted shape datsa:',gr,' -   exclude from chi^2 sum\n')
+                    unadjustedShapes[gr] = True
+                    continue
                 Data = data_val[id,2]*fac
                 DataErr = data_val[id,3]*fac  
                 ex2cm = data_val[id,4] 
@@ -132,7 +142,9 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
             gf.close()
             ef.close()
         print('Model %2i curve (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ngraphAll+1,io,op,chisq/max(1,io),chisq/chisqtot*100.) )
-        worse.append([chisq/chisqtot*100.,group])
+
+        if not unadjustedShapes.get(gr,False): worse.append([chisq/chisqtot*100.,gr])
+        
         if args.Cross_Sections and found: 
             plot_cmd += ' -graph %i -xy %s -xydy %s ' % (ngraphAll,g_out,e_out) 
 #             plot_cmds.append(plot_cmd)
@@ -141,14 +153,19 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
 #     plot_cmds.append(plot_cmd)
 # chi from norm_vals themselves:
     for ni in range(n_norms):
-        chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
-        print('Norm scale   %10.6f         %-30s ~ %10.5f :    chisq    =%9.3f  %8.3f %%' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chi**2, chi**2/chisqtot*100.) )
-        worse.append([chi**2/chisqtot*100.,norm_refs[ni][0]])
-        chisqAll += chi**2
+        chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]
+        chisq = chi**2   
+        chi_note = ' shape' if norm_info[ni,1] == 0.0 else ''
+        if norm_info[ni,0] == 1.0: chi_note += ' unscaled'
+        print('Norm scale   %10.6f         %-30s ~ %10.5f :    chisq    =%9.3f  %8.3f %%  %s' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chisq,chisq/chisqtot*100.,chi_note) )
+        gr = norm_refs[ni][0]
+        if '/' in gr: gr = gr.split('/')[1]
+        if norm_info[ni,1] > 0.0: worse.append([chisq/chisqtot*100., gr])
+        chisqAll += chisq
     print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')\n' )   
-    if args.Cross_Sections and ngraphAll < 20: 
-         print("Plot with\n",plot_cmd,'\n with required rows and cols for',ngraphAll,'graphs')
+#     if args.Cross_Sections and ngraphAll < 20: 
+#          print("Plot with\n",plot_cmd,'\n with required rows and cols for',ngraphAll,'graphs')
     
 #     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
 
@@ -385,8 +402,10 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
             
 # chi from norm_vals themselves:
     for ni in range(n_norms):
-        chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
-        print('Norm scale   %10.6f         %-30s ~ %10.5f :     chisq    =%9.3f  %8.3f %%' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chi**2, chi**2/chisqtot*100.) )
+        chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]
+        chi_note = ' shape' if norm_info[ni,1] == 0.0 else ''
+        if norm_info[ni,0] == 1.0: chi_note += ' unscaled'
+        print('Norm scale   %10.6f         %-30s ~ %10.5f :     chisq    =%9.3f  %8.3f %% %s' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chi**2, chi**2/chisqtot*100.,chi_note) )
         chisqAll += chi**2
     print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')' )   
@@ -555,6 +574,9 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
     for i in range(min(10,len(worse))):
         bad = worse[i]
         print('    %-40s contributes %9.3f %%' % (bad[1],bad[0]))
+    print("\nUnadjusted shape data:")
+    for gr in unadjustedShapes.keys():
+        print('    ',gr)
     print('------')
 
     return

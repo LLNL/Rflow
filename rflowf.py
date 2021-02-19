@@ -879,7 +879,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         print('\nR-matrix parameters:')
          
         if not Search:
-            fmt = '%4i %4i   S: %10.5f %10.5f   %15s     %s'
+            fmt = '%4i %4i   S: %10.5f %10.3f   %15s     %s'
             print('   P  Loc   Start:    V       grad    Parameter         new name')
             for p in range(n_pars):   
                 newRname = newname.get(searchnames[p],'')
@@ -895,7 +895,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             covarianceSuite = None
             
         else:
-            fmt = '%4i %4i   S: %10.5f %10.5f  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
+            fmt = '%4i %4i   S: %10.5f %10.3f  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
             print('   P  Loc   Start:    V       grad    Final:     V      grad        1sig   Percent error     Parameter        new name')
             if frontier[3]>0: print('Varying:')
             for p in range(n_pars):   

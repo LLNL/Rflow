@@ -36,9 +36,11 @@ def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, 
         if neut: pnin = pin
         fname = base + '-%stot_%s' % (sym,pn)
         cname = base + '-%scap_%s' % (sym,pn)
+        fname_e = fname if '/' not in fname else fname.split('/')[1]
+        cname_e = cname if '/' not in cname else cname.split('/')[1]
 #         Gnames.append(fname)
             
-        print('Total cross-sections for incoming',pin,'to file',fname,' and capture to',cname)
+        print('    Total cross-sections for incoming',pin,'to file',fname_e,'\n         and capture to',cname_e)
         fout = open(fname,'w')
         cout = open(cname,'w')
         for ie0 in range(n_data):
@@ -66,7 +68,7 @@ def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, 
             if pin==pout and not neut: continue
             po = quickName(pname[pout],tname[pout])
             fname = base + '-%sch_%s-to-%s' % (sym,pn,po)
-            print('Partition',pin,'to',pout,': angle-integrated cross-sections to file',fname)
+            print('        Partition',pin,'to',pout,': angle-integrated cross-sections to file',fname_e)
             fout = open(fname,'w')
 #             Gnames.append(fname)
 #                     fouo = open(fname+'@','w')

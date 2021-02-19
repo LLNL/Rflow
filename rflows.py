@@ -1011,6 +1011,9 @@ if __name__=='__main__':
         
 #  rflows:
     args.Search = None
+    args.Cross_Sections = True
+    args.Matplot = True
+    args.TransitionMatrix = 1
     
 
     gnd=reactionSuiteModule.readXML(args.inFile)
@@ -1290,9 +1293,11 @@ if __name__=='__main__':
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
     if args.Search     is not None: base += '+S' 
     if args.Iterations is not None: base += '_I%s' % args.Iterations
-    if args.widthWeight is not None:base += '_w%s' % args.widthWeight
+    if args.widthWeight is not None and args.widthWeight > 0.:
+        base += '_w%s' % args.widthWeight
 # tag
     if args.tag != '': base = base + '_'+args.tag
+    base += '@s'
      
     dataDir = base 
     if args.Cross_Sections or args.Matplot or args.TransitionMatrix >= 0 : os.system('mkdir '+dataDir)
