@@ -75,7 +75,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
     chisqAll = 0
 #     plot_cmds = []
     plot_cmd = 'xmgr '
-
+    worse = []
     for group in groups:
 
         found = False
@@ -132,6 +132,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
             gf.close()
             ef.close()
         print('Model %2i curve (%4i pts)%s:   chisq/gp =%9.3f  %8.3f %%' % (ngraphAll+1,io,op,chisq/max(1,io),chisq/chisqtot*100.) )
+        worse.append([chisq/chisqtot*100.,group])
         if args.Cross_Sections and found: 
             plot_cmd += ' -graph %i -xy %s -xydy %s ' % (ngraphAll,g_out,e_out) 
 #             plot_cmds.append(plot_cmd)
@@ -142,6 +143,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
     for ni in range(n_norms):
         chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]        
         print('Norm scale   %10.6f         %-30s ~ %10.5f :    chisq    =%9.3f  %8.3f %%' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chi**2, chi**2/chisqtot*100.) )
+        worse.append([chi**2/chisqtot*100.,norm_refs[ni][0]])
         chisqAll += chi**2
     print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')\n' )   
@@ -156,7 +158,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
 #             print(id,data_val[id,:],'for',pin,pout,':', totals[pout,pin,EIndex[id]] , file=fout)
     
     X4groups = sorted(X4groups)
-    print('\nX4groups sorted:',X4groups)
+#     print('\nX4groups sorted:',X4groups)
 #     if len(X4groups)<1: sys.exit()
     print('Data grouped by X4 subentry:')
     chisqAll = 0
@@ -389,7 +391,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
     print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')' )   
     
-    for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
+#     for plot_cmd in plot_cmds: print("Plot:    ",plot_cmd)
 
     if totals is not None:
         print('\nWrite Angle-integrals-*.json files in the lab frame of gnds projectile')
@@ -522,7 +524,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
                 j_out = 'Angle-integrals-%s-to-%s.json' % (pn,po.replace('-> ',''))
         #         if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
                 j_out = dataDir + '/' + j_out
-                print('Write',j_out,'with',SinglengraphAll)
+#                 print('Write',j_out,'with',SinglengraphAll)
                 with open(j_out,'w') as ofile:
                    json.dump([SinglengraphAll,1,cmd,SingleGraphList],ofile, default=to_serializable)
                 Singleplot_cmds +=  ' ' + j_out
@@ -544,10 +546,15 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
         Globalplot_cmds +=  ' ' + j_out
         
         print('------')
-        print("Single plots:   plotJson.py -w 10,8 ",Singleplot_cmds)
-        print("Incident plots: plotJson.py -w 10,8 ",plot_cmds)
-        print("Global plots:   plotJson.py -w 10,8 ",Globalplot_cmds)
-    print(    "Poles E plot:   plotJson.py -w 10,8 ",p_out)
+#         print("Single plots:   plotJson.py -w 10,8 ",Singleplot_cmds)
+#         print("Incident plots: plotJson.py -w 10,8 ",plot_cmds)
+#         print("Global plots:   plotJson.py -w 10,8 ",Globalplot_cmds)
+#     print(    "Poles E plot:   plotJson.py -w 10,8 ",p_out)
+    print("\nWorst fits:")
+    worse.sort(key = lambda x: -x[0])
+    for i in range(min(10,len(worse))):
+        bad = worse[i]
+        print('    %-40s contributes %9.3f %%' % (bad[1],bad[0]))
     print('------')
 
     return
