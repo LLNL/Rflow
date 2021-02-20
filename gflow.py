@@ -798,7 +798,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     
         from evaluate_s import evaluate_s
-        searchpars_x, chisq_n, A_tF_n, grad1_x, inverse_hessian,XS_totals, chisq0_n,grad0 =  evaluate_s(ComputerPrecisions, Channels,
+        chisq_x, A_tF_n, XS_totals =  evaluate_s(ComputerPrecisions, Channels,
             CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
             Search_Control,Data_Control, searchpars_n, data_val, tim)
         
