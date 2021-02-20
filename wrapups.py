@@ -107,7 +107,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
                 if not args.norm1:
                     for ni in range(n_norms):
                         fac += (norm_val[ni]-1.) * effect_norm[ni,id]
-                        unadjustedShape  = unadjustedShape or (effect_norm[ni,id] > 0. and norm_info[ni,1] == 0.0 and norm_info[ni,0] == 1.0)  # still original norm = 1
+                        unadjustedShape  = unadjustedShape or (effect_norm[ni,id] > 0. and norm_info[ni,1] == 0.0 and norm_val[ni] == 1.0)  # fitted norm still original 1.0
 #                             print('effect_norm[',ni,id,']',effect_norm[ni,id],norm_info[ni,0],norm_info[ni,1] )
                 if unadjustedShape:
                     if not unadjustedShapes.get(gr,False): print('\n    *** Unadjusted shape datsa:',gr,' -   exclude from chi^2 sum\n')
@@ -156,11 +156,12 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
         chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]
         chisq = chi**2   
         chi_note = ' shape' if norm_info[ni,1] == 0.0 else ''
-        if norm_info[ni,0] == 1.0: chi_note += ' unscaled'
+        if norm_val[ni] == 1.0: chi_note += ' unscaled'
         print('Norm scale   %10.6f         %-30s ~ %10.5f :    chisq    =%9.3f  %8.3f %%  %s' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chisq,chisq/chisqtot*100.,chi_note) )
         gr = norm_refs[ni][0]
         if '/' in gr: gr = gr.split('/')[1]
-        if norm_info[ni,1] > 0.0: worse.append([chisq/chisqtot*100., gr])
+#         if norm_info[ni,1] > 0.0: 
+        worse.append([chisq/chisqtot*100., gr])
         chisqAll += chisq
     print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  
     print(  ' Last chisq/dof = %10.5f' % (chisqAll/dof), '(dof =',dof,')\n' )   
@@ -404,7 +405,7 @@ def plotOut(n_data,n_norms,dof,args, base,info,dataDir,
     for ni in range(n_norms):
         chi = (norm_val[ni] - norm_info[ni,0]) * norm_info[ni,1]
         chi_note = ' shape' if norm_info[ni,1] == 0.0 else ''
-        if norm_info[ni,0] == 1.0: chi_note += ' unscaled'
+        if norm_val[ni] == 1.0: chi_note += ' unscaled'
         print('Norm scale   %10.6f         %-30s ~ %10.5f :     chisq    =%9.3f  %8.3f %% %s' % (norm_val[ni] , norm_refs[ni][0],norm_info[ni,0], chi**2, chi**2/chisqtot*100.,chi_note) )
         chisqAll += chi**2
     print('\n Last chisq/pt  = %10.5f from %i points' % (chisqAll/max(1,n_data),n_data) )  

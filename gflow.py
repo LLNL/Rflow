@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 import times
 tim = times.times()
@@ -13,37 +12,11 @@ from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
 from xData.series1d  import Legendre
 
-from fudge.gnds import reactionSuite as reactionSuiteModule
-from fudge.gnds import styles        as stylesModule
 from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
 
-REAL = numpy.double
-CMPLX = numpy.complex128
-INT = numpy.int32
-realSize = 8  # bytes
 
-print("First imports done rflow: ",tim.toString( ))
-
-
-# TO DO:
-#   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
-#   Multiple GPU strategies
-#   Estimate initial Hessian by 1+delta parameter shift. Try various delta to make BFGS search smoother
-#   Options to set parameter and search again.
-#   Reread snap file (eg if crash) for re-initializing same search 
-
-# Search options:
-#   Fix or search on Reich-Moore widths
-#   Command input, e.g. as with Sfresco?
-
-# Maybe:
-#   Fit specific Legendre orders
-
-# Doing:
-
-##############################################  Rflow
-
+# CONSTANTS: 
 hbc =   197.3269788e0             # hcross * c (MeV.fm)
 finec = 137.035999139e0           # 1/alpha (fine-structure constant)
 amu   = 931.4940954e0             # 1 amu/c^2 in MeV
@@ -55,11 +28,12 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,MS,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,Multi,
         norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Distant,Background,ReichMoore, 
-        verbose,debug,inFile,fitStyle,tag,large):
+        Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
         
+    REAL, CMPLX, INT, realSize = ComputerPrecisions
 #     global L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
 
     PoPs = gnd.PoPs
@@ -219,6 +193,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     pi_set = numpy.zeros(n_jsets, dtype=INT)
     L_val  =  numpy.zeros([n_jsets,n_chans], dtype=INT)
     S_val  =  numpy.zeros([n_jsets,n_chans], dtype=REAL)
+    p_mask =  numpy.zeros([npairs,n_jsets,n_chans], dtype=REAL)
     seg_val=  numpy.zeros([n_jsets,n_chans], dtype=INT) - 1 
     seg_col=  numpy.zeros([n_jsets], dtype=INT) 
 
@@ -235,7 +210,6 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     L_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
     POm_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
     Om2_mat = numpy.zeros([n_data,n_jsets,n_chans,n_chans], dtype=CMPLX)
-#     CS_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
     Spins = [set() for pair in range(npairs)]
 
     
@@ -278,6 +252,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 has_widths[jset,:rows] = 1
             
                 seg_val[jset,c] = pair
+                p_mask[pair,jset,c] = 1.0
                 partition_channels[pair] += 1
             
                 Spins[pair].add(S)
@@ -594,7 +569,6 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         for jset in range(n_jsets):
             denom = (2.*jp[pin]+1.) * (2.*jt[pin]+1)
             gfac[ie,jset] = pi * (2*J_set[jset]+1) * rksq_val[ie,pin] / denom * 10.  # mb
-
        
     Gfacc = numpy.zeros(n_angles, dtype=REAL)    
     NL = 2*Lmax + 1
@@ -761,13 +735,41 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             print('Number of reread search parameters',searchpars0.shape[0],' is not',npars,'now expected. STOP')
             sys.exit()
 
+    if Cross_Sections:
+    
+        ExptAint = numpy.zeros([n_angle_integrals,npairs, npairs], dtype=REAL)
+        ExptTot = numpy.zeros([n_totals,npairs], dtype=REAL)
+        for ie in range(n_angle_integrals):
+            pin = data_p[n_angle_integrals0+ie,0]
+            pout= data_p[n_angle_integrals0+ie,1]
+            ExptAint[ie,pout,pin] = 1.
+        for ie in range(n_totals):
+            pin = data_p[n_totals0+ie,0]
+            ExptTot[ie,pin] = 1.
+            
+        CS_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
+        for jset in range(n_jsets):
+            for c in range(n_chans):
+                pair = seg_val[jset,c]
+                if pair >= 0: CS_diag[:,jset,c] = Csig_exp[:,pair,L_val[jset,c]]
+                
+        # for all cross-sections
+        gfac_s = numpy.zeros([n_data,n_jsets,npairs,maxpc], dtype=REAL)
+        for jset in range(n_jsets):
+            for pair in range(npairs):     # incoming partition
+                denom = (2.*jp[pair]+1.) * (2.*jt[pair]+1)
+                nic = cn[jset,pair] - c0[jset,pair]
+                for ie in range(n_data):
+                    gfac_s[ie,jset,pair,0:nic] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom * 10.  # mb
+                
+            
     print("To start tf: ",tim.toString( ))
     sys.stdout.flush()
 
 ################################################################    
 ## TENSORFLOW CALL:
 
-    ComputerPrecisions = (REAL, CMPLX, INT)
+#     ComputerPrecisions = (REAL, CMPLX, INT, realsize)
 
     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
     CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
@@ -780,33 +782,41 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     # Data_Control = [Pleg]     # batch n_angle_integrals,  n_totals  
     
-    if MS:
+    if Multi:
         print('\nUse TF MirroredStrategy')
-        from evaluate_MSf import evaluate_MSf
-        searchpars_n, chisqF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_MSf(ComputerPrecisions, Channels,
+        from evaluate_M import evaluate_M
+        searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_MSf(ComputerPrecisions, Channels,
             CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
             Search_Control,Pleg, searchpars0, data_val, tim)
     else:
-        from evaluatef import evaluatef
-        searchpars_n, chisqF_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluatef(ComputerPrecisions, Channels,
+        from evaluate_f import evaluatef
+        searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluatef(ComputerPrecisions, Channels,
             CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
             Search_Control,Pleg, searchpars0, data_val, tim)
 
+    if Cross_Sections:
+        Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
+    
+        from evaluate_s import evaluate_s
+        searchpars_x, chisq_n, A_tF_n, grad1_x, inverse_hessian,XS_totals, chisq0_n,grad0 =  evaluate_s(ComputerPrecisions, Channels,
+            CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+            Search_Control,Data_Control, searchpars_n, data_val, tim)
+        
 
     ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
-        
+    ww = numpy.sum(searchpars_n[border[1]:border[2]]**2) * widthWeight
     print("Finished tf: ",tim.toString( ))
     sys.stdout.flush()
 #  END OF TENSORFLOW CALL
 ################################################################
         
-    if True:     
+    if Search:     
 #  Write back fitted parameters into evaluation:
         E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) 
         g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
         norm_val =numpy.zeros([n_norms]) # searchpars_n[border[2]:border[3]] ** 2
         
-        chisqpdof = chisqF_n*n_data/ndof
+        chisqpdof = chisq_n*n_data/ndof
 
         newname = {}
         for ip in range(border[0],border[1]): #### Extract parameters after previous search:
@@ -890,8 +900,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     sp = sp**2
                 print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p],newRname) )
 #             fmt2 = '%4i %4i   S: %10.5f   %s') )
-            print('\n*** chisq/pt =',chisqF_n,
-                  '\n    chisq/dof=',chisqF_n*n_data/ndof)
+            print('\n*** chisq/pt =',chisq_n,
+                  '\n    chisq/dof=',chisq_n*n_data/ndof)
             covarianceSuite = None
             
         else:
@@ -916,7 +926,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 
             print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[3])]))
 
-            print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %11.3e' % (chisqF_n,chisqpdof,ndof,chisqF_n*n_data))
+            print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %11.3e' % (chisq_n,chisqpdof,ndof,chisq_n*n_data))
                     
 
 # Copy covariance matrix back into GNDS 
@@ -968,13 +978,12 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 lowest_chisq = min(lowest_chisq,chisqr)
             snapl.close()                
         
-            print('\n*** chisq/pt =',chisqF_n,
-                  '\n    chisq/dof=',chisqF_n*n_data/ndof)
+            print('\n*** chisq/pt = %12.5f including ww %12.5f and chisq/dof= %12.5f  for dof = %s\n' % (chisq_n,ww/ndof,(chisq_n*n_data - ww)/ndof,ndof) )
           
             n_normsFitted = border[3]-border[2]
             docLines = [' ','Fitted by Rflow','   '+inFile,time.ctime(),pwd.getpwuid(os.getuid())[4],' ',' ']
             docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n)]
-            docLines += [' Final   chisq/pt: %12.5f' % (chisqF_n),' /dof= %12.5f for %i' % (chisqpdof,ndof),' ']
+            docLines += [' Final   chisq/pt: %12.5f' % (chisq_n),' /dof= %12.5f for %i' % (chisqpdof,ndof),' ']
             docLines += ['  Fitted norm %12.5f for %s' % (searchpars_n[n+border[2]],searchnames[n+border[2]] ) for n in range(n_normsFitted)] 
             docLines += [' '] 
         
@@ -988,385 +997,15 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             computerCode = computerCodeModule.ComputerCode( label = codeLabel, name = 'Rflow', version = '', date = time.ctime() )
             computerCode.note.body = '\n'.join( docLines )
             RMatrix.documentation.computerCodes.add( computerCode )
-    
-        return(chisqF_n,norm_val,n_pars,covarianceSuite)
-        
-    else:
-        return(chisq_n,norm_val,n_pars,None)
-
-############################################## main
-
-if __name__=='__main__':
-    import argparse,re
-
-    print('\nRflowf')
-#     cmd = ' '.join(sys.argv[:])
-    cmd = ' '.join([t if '*' not in t else ("'%s'" % t) for t in sys.argv[:]])
-    print('Command:',cmd ,'\n')
-
-    # Process command line options
-    parser = argparse.ArgumentParser(description='Compare R-matrix Cross sections with Data')
-    parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
-    parser.add_argument('dataFile', type=str, help='Experimental data to fit' )
-    parser.add_argument('normFile', type=str, help='Experimental norms for fitting' )
-    parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Substrings to exclude if any string within group name")
-
-    parser.add_argument("-F", "--Fixed", type=str, nargs="*", help="Names of variables (as regex) to keep fixed in searches")
-    parser.add_argument("-n", "--normsfixed", action="store_true",  help="Fix all physical experimental norms (but not free norms)")
-
-    parser.add_argument("-r", "--restarts", type=int, default=0, help="max restarts for search")
-    parser.add_argument("-D", "--Distant", type=float, default="25",  help="Pole energy (lab) above which are all distant poles. Fixed in  searches.")
-    parser.add_argument("-B", "--Background", action="store_true",  help="Include BG in name of background poles")
-    parser.add_argument("-R", "--ReichMoore", action="store_true", help="Include Reich-Moore damping widths in search")
-    parser.add_argument("-L", "--LMatrix", action="store_true", help="Use level matrix method if not already Brune basis")
-    parser.add_argument("-g", "--groupAngles", type=int, default="1",  help="Unused. Number of energy batches for T2B transforms, aka batches")
-    parser.add_argument("-a", "--anglesData", type=int, help="Max number of angular data points to use (to make smaller search). Pos: random selection. Neg: first block")
-    parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to use (to make smaller search). Pos: random selection. Neg: first block")
-    parser.add_argument("-e", "--emin", type=float, help="Min cm energy for gnds projectile.")
-    parser.add_argument("-E", "--EMAX", type=float, help="Max cm energy for gnds projectile.")
-    parser.add_argument("-p", "--pmin", type=float, help="Min energy of R-matrix pole to fit, in gnds cm energy frame. Overrides --Fixed.")
-    parser.add_argument("-P", "--PMAX", type=float, help="Max energy of R-matrix pole to fit. If p>P, create gap.")
-
-    parser.add_argument("-S", "--Search", type=str, help="Search minimization method.")
-    parser.add_argument("-I", "--Iterations", type=int, help="max_iterations for search")
-    parser.add_argument("-i", "--init",type=str, nargs="*", help="iterations and snap file name for starting parameters")
-    parser.add_argument("-w", "--widthWeight", type=float, default=0.0, help="Add widthWeight*vary_widths**2 to chisq during searches")
-    
-    parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
-    parser.add_argument("-1", "--norm1", action="store_true", help="Use norms=1 in output analysis.")
-    parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files for grace")
-    parser.add_argument("-c", "--compound", action="store_true", help="Plot -M and -C energies on scale of E* of compound system")
-    parser.add_argument("-M", "--Matplot", action="store_true", help="Matplotlib data in .json output files")
-    parser.add_argument("-T", "--TransitionMatrix",  type=int, default=1, help="Produce cross-section transition matrix functions in *tot_a and *fch_a-to-b")
-    parser.add_argument("-l", "--logs", type=str, default='', help="none, x, y or xy for plots")
-
-    parser.add_argument("-s", "--single", action="store_true", help="Single precision: float32, complex64")
-    parser.add_argument(      "--MS", action="store_true", help="Use MirroredStrategy in TF")
-
-    parser.add_argument(      "--datasize", type=float,  metavar="size", default="0.2", help="Font size for experiment symbols. Default=0.2")
-    parser.add_argument("-t", "--tag", type=str, default='', help="Tag identifier for this run")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
-    parser.add_argument("-d", "--debug", action="store_true", help="Debugging output (more than verbose)")
-    args = parser.parse_args()
-
-    if args.single:
-        REAL = numpy.float32
-        CMPLX = numpy.complex64
-        INT = numpy.int32
-        realSize = 4  # bytes
-
-    gnd=reactionSuiteModule.readXML(args.inFile)
-    p,t = gnd.projectile,gnd.target
-    PoPs = gnd.PoPs
-    projectile = PoPs[p];
-    target     = PoPs[t];
-    pMass = projectile.getMass('amu');   tMass = target.getMass('amu')
-    lab2cmi = tMass / (pMass + tMass)
-        
-    rrr = gnd.resonances.resolved
-    emin = PQUModule.PQU(rrr.domainMin,rrr.domainUnit).getValueAs('MeV')
-    emax = PQUModule.PQU(rrr.domainMax,rrr.domainUnit).getValueAs('MeV')
-    if args.emin is not None: emin = args.emin
-    if args.EMAX is not None: emax = args.EMAX
-    print(' Trim incoming data within [',emin,',',emax,'] in lab MeV for projectile',p)
-            
-# Previous fitted norms:
-# any variable or data namelists in the documentation?
-    docVars = []
-    docData = []
-    RMatrix = gnd.resonances.resolved.evaluated    
-    try:
-        computerCodeFit = RMatrix.documentation.computerCodes['R-matrix fit']
-        ddoc    = computerCodeFit.inputDecks[-1]
-        for line in ddoc.body.split('\n'):
-            if '&variable' in line.lower() :  docVars += [line]
-            if '&data'     in line.lower() :  docData += [line]
-        previousFit = True
-    except:
-        computerCodeFit = None
-        previousFit = False
-        
-    Fitted_norm = {}
-    for line in docVars:
-        if 'kind=5' in line:
-            name = line.split("'")[1].strip()
-            datanorm = float(line.split('datanorm=')[1].split()[0])
-            Fitted_norm[name] = datanorm
-            if args.debug: print("Previous norm for %-20s is %10.5f" % (name,datanorm) )
-
-    pair = 0
-    partitions = {}
-    pins = []
-    for partition in RMatrix.resonanceReactions:
-        kp = partition.label
-        if partition.eliminated: continue
-        p,t = partition.ejectile,partition.residual
-        partitions[kp] = pair
-        pins.append(kp.replace(' ',''))
-        pair += 1
-#                Ecm = E/cm2lab[ipair] + QI[ipair]
-
-
-    f = open( args.dataFile )
-    projectile4LabEnergies =f.readline().split()[0]
-    lab2cmd = None
-    for partition in RMatrix.resonanceReactions:
-        reaction = partition.reactionLink.link
-        p,t = partition.ejectile,partition.residual
-        if partition.Q is not None:
-            QI = partition.Q.getConstantAs('MeV')
+        if Cross_Sections:
+            return(chisq_n,A_tF_n,norm_val,n_pars,XS_totals,ch_info,None)
         else:
-            QI = reaction.getQ('MeV')
-        if p == projectile4LabEnergies:
-            p4LE = PoPs[p].getMass('amu');   t4LE = PoPs[t].getMass('amu'); 
-            lab2cmd = t4LE / (p4LE + t4LE)
-            Qvalued = QI
-        if p == projectile.id:
-            Qvaluei = QI
-            
-            
-#     print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
-    if args.exclude is not None:
-        print('Exclude any data line with these substrings:',' '.join(args.exclude))
-    EminFound = 1e6; EmaxFound = -1e6
-    if args.emin is None and args.EMAX is None and args.exclude is None:
-        data_lines = f.readlines( )
-        n_data = len(data_lines)
-        lines_excluded = 'No'
-        lines_excluded = 0
+            return(chisq_n,None,  norm_val,n_pars,None,     ch_info,covarianceSuite)
+
     else:
-        data_lines = []
-        lines_excluded= 0   
-        n_data = 0   
-        for line in f.readlines():
-            n_data += 1
-            Ed = float(line.split()[0])# in lab frame of data file
-            Ecm  = Ed*lab2cmd - Qvalued + Qvaluei # in cm frame of gnds projectile.
-            includE = emin < Ecm < emax
-            includN = args.exclude is None or not any(sub in line for sub in args.exclude)
-            if includE and includN:
-                data_lines.append(line)  
-                EminFound = min(EminFound,Ecm)
-                EmaxFound = max(EmaxFound,Ecm)
-            else:
-                lines_excluded += 1      
+        print('\n*** chisq/pt = %12.5f including ww %12.5f and chisq/dof= %12.5f  for dof = %s\n' % (chisq_n,ww/ndof,(chisq_n*n_data - ww)/ndof,ndof) )
         
-    print(n_data-lines_excluded,'data lines after -x and lab energies defined by projectile',projectile4LabEnergies,'(',lines_excluded,'lines excluded)')
-    if EminFound < EmaxFound: print('Kept data in the Ecm g-p range [',EminFound,',',EmaxFound,'] using Qd,Qi =',Qvalued,Qvaluei,'\n')
-    if args.maxData is not None: 
-        if args.maxData < 0:
-            data_lines = data_lines[:abs(args.maxData)]
+        if Cross_Sections:
+            return(chisq_n,A_tF_n,norm_val,n_pars,XS_totals,ch_info,None)
         else:
-            data_lines = numpy.random.choice(data_lines,args.maxData)
-            print('Data size reduced from',n_data,'to',len(data_lines))
-    f.close( )
-#     angular_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])>=0.)  )
-    angular_lines = [ x for x in data_lines if float(x.split()[1])>=0. ] 
-    tot_lines     = [ x for x in data_lines if x.split()[4]=='TOT' ] 
-    aint_lines    = [ x for x in data_lines if float(x.split()[1])<0. and x.split()[4]!='TOT'] 
-#     print('Angulars, aints, totals=',len(angular_lines),len(aint_lines),len(tot_lines) )
-    n_angular = len(angular_lines)
-    if args.anglesData is not None: 
-        if args.anglesData < 0:
-            angular_lines = angular_lines[:abs(args.anglesData)]
-        else:
-            angular_lines = list(numpy.random.choice(angular_lines,args.anglesData))
-            print('Angular data size reduced from',n_angular ,'to',len(angular_lines))
-    f.close( )    
-    data_lines = angular_lines + aint_lines + tot_lines
-    
-    data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]), float(x.split()[1]) ) )
-              
-    dataFilter = ''
-    if args.emin       is not None: dataFilter += '-e%s' % args.emin
-    if args.EMAX       is not None: dataFilter += '-E%s' % args.EMAX
-    if args.maxData    is not None: dataFilter += '_m%s' % args.maxData
-    if args.anglesData is not None: dataFilter += '_a%s' % args.anglesData
-    
-    if dataFilter != '':
-        with open(args.dataFile.replace('.data',dataFilter+'.data')+'2','w') as fout: fout.writelines([projectile4LabEnergies+'\n'] + data_lines)
-    
-    n_data = len(data_lines)
-    data_val = numpy.zeros([n_data,5], dtype=REAL)    # Elab,mu, datum,absError
-    data_p   = numpy.zeros([n_data,2], dtype=INT)    # pin,pout
-    
-    groups = set()
-    X4groups = set()
-    group_list   = []
-    cluster_list = []
-    Ein_list = []
-    Aex_list = []
-    id = 0
-    n_angles = 0
-    n_angle_integrals = 0
-    ni = 0
-    for l in data_lines:
-        parts = l.split()
-
-        if len(parts)!=13: 
-            print('Incorrect number of items in',l)
-            sys.exit()
-        Elab,CMangle,projectile,target,ejectile,residual,datum,absError,ex2cm,group,cluster,Ein,Aex = parts
-        Elab,CMangle,datum,absError = float(Elab),float(CMangle),float(datum),float(absError)
-        ex2cm,Aex = float(ex2cm),float(Aex)
-#         print('p,t,e,r =',projectile,target,ejectile,residual)
-        inLabel = projectile + " + " + target
-        outLabel = ejectile + " + " + residual
-        if outLabel == ' + ': outLabel = inLabel   # elastic
-        pin = partitions.get(inLabel,None)
-        pout= partitions.get(outLabel,None) if ejectile != 'TOT' else -1
-        if pin is None:
-            print("Entrance partition",inLabel,"not found in list",partitions.keys(),'in line',l)
-            sys.exit()
-        if pout is None:
-            print("Exit partition",outLabel,"not found in list",partitions.keys(),'in line',l)
-            sys.exit()
-        
-        thrad = CMangle*pi/180.
-        mu = math.cos(thrad)
-        if thrad < 0 : mu = 2   # indicated angle-integrated cross-section data
-        if pout == -1: mu =-2   # indicated total cross-section data
-        group_list.append(group)
-        cluster_list.append(cluster)
-        Ein_list.append(Ein)
-        Aex_list.append(Aex)
-        data_val[id,:] = [Elab,mu, datum,absError,ex2cm]
-        data_p[id,:] = [pin,pout]
-        groups.add(group)
-        X4group = group.split('@')[0] + '@'
-        X4groups.add(X4group)
-        
-        if CMangle > 0:  n_angles = id + 1  # number of angle-data points
-        if CMangle < 0 and ejectile != 'TOT': n_angle_integrals = id+1  - n_angles  # number of Angle-ints after the angulars
-        id += 1
-    
-#     if not args.norm1: print('Fitted norms:',Fitted_norm)
-    f = open( args.normFile )
-    norm_lines = f.readlines( )
-    f.close( )    
-    n_norms= len(norm_lines)
-    norm_val = numpy.zeros(n_norms, dtype=REAL)  # norm,step,expect,syserror
-    norm_info = numpy.zeros([n_norms,3], dtype=REAL)  # norm,step,expect,syserror
-    norm_refs= []    
-    ni = 0
-    n_cnorms = 0
-    n_fixed = 0
-    n_free = 0
-    tempfixes = 0
-    for l in norm_lines:
-        parts = l.split()
-#         print(parts)
-        norm,step, name,expect,syserror,reffile = parts
-        norm,step,expect,syserror = float(norm),float(step),float(expect),float(syserror)
-
-        fitted = Fitted_norm.get(name,None)
-#         print('For name',name,'find',fitted)
-        if fitted is not None and not args.norm1:
-            print("Using previously fitted norm for %-20s: %12.5e instead of %12.5e" % (name,fitted,norm) )
-            norm = fitted
-        norm_val[ni] = norm
-        if syserror > 0.:   # fitted norm
-            chi_scale = 1.0/syserror 
-            if args.normsfixed:
-                fixed = 1
-                chi_scale = 0.
-                tempfixes += 1
-            else:
-                fixed = 0
-                n_cnorms += 1
-        elif syserror < 0.: # free norm
-            fixed = 0
-            chi_scale = 0
-            n_free += 1
-        else:               # fixed norm
-            fixed = 1
-            chi_scale = 0
-            n_fixed += 1
-        norm_info[ni,:] = (expect,chi_scale,fixed)
-        norm_refs.append([name,reffile])
-        ni += 1
-
-    n_totals = n_data - n_angles - n_angle_integrals
-    print('\nData points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals',
-          '\nData groups:',len(groups),'\nX4 groups:',len(X4groups),
-          '\nVariable norms:',n_norms,' of which ',n_cnorms,',constrained,',n_free,'free, and',n_fixed,' fixed (',tempfixes,'temporarily)\n')
-
-    if dataFilter != '':
-        with open(args.normFile.replace('.norms',dataFilter+'.norms')+'2','w') as fout: fout.writelines(norm_lines)
-    
-    effect_norm = numpy.zeros([n_data,n_norms], dtype=REAL)
-    for ni in range(n_norms):
-        reffile = norm_refs[ni][1]
-        pattern = re.compile(reffile)
-        for id in range(n_data):
-            matching = pattern.match(group_list[id])
-            effect_norm[id,ni] = 1.0 if matching else 0.0
-#             if matching and args.debug: 
-#                 print('Pattern',reffile,' ? ',group_list[id],':', matching)
-    if args.debug:
-        for ni in range(n_norms):
-            print('norm_val[%i]' % ni,norm_val[ni],norm_info[ni,:])
-#         for id in range(n_data):
-#             print('VN for id',id,':',effect_norm[id,:])
-
-    if args.Fixed is not None: 
-        print('Fixed variables:',args.Fixed)
-    else:
-        args.Fixed = []
-    print('Energy limits.   Data min,max:',args.emin,args.EMAX,'.  Poles min,max:',args.pmin,args.PMAX)
-
-    finalStyleName = 'fitted'
-    fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
-            derivedFrom=gnd.styles.getEvaluatedStyle().label )
-
-# parameter input for computer method
-    base = args.inFile
-    if args.single: base += 's'
-    if args.MS: base += 'm'
-# data input
-    base += '+%s' % args.dataFile.replace('.data','')
-    base += dataFilter
-# searching
-    if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',':')
-    if args.normsfixed            : base += '+n' 
-    if args.pmin       is not None: base += '-p%s' % args.pmin
-    if args.PMAX       is not None: base += '-P%s' % args.PMAX
-    if args.init       is not None: base += '@i%s'  % args.init[0]
-    if args.init       is not None: print('Re-initialize at line',args.init[0],'of snap file',args.init[1])
-    if args.Search     is not None: base += '+S%s'  % args.Search
-    if args.Iterations is not None: base += '_I%s' % args.Iterations
-    if args.widthWeight is not None and args.widthWeight != 0.0: 
-        base += '_w%s' % args.widthWeight
-    if args.tag != '': base = base + '_'+args.tag
-    base += '@f'
-     
-    dataDir = base 
-#   if args.Cross_S0ctions or args.Matplot or args.TransitionMatrix >= 0 : os.system('mkdir '+dataDir)
-    if args.Search : os.system('mkdir '+dataDir)
-    print("Finish setup: ",tim.toString( ))
- 
-    chisqppt,norm_val,n_pars,cov  = Gflow(
-                        gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.MS,
-                        norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
-                        args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Distant,args.Background,args.ReichMoore,  
-                        args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large)
-
-#     print("Finish rflow call: ",tim.toString( ))
-#     print('\n ChiSq/pt = %10.4f from %i points' % (chisqppt,n_data))
-
-    if args.Search:  
-        print('Revised norms:',norm_val)
-        saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm_refs)
-
-        info = '+S_' + args.tag
-        newFitFile = base  + '-fit.xml'
-        open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
-        print('Written new fit file:',newFitFile)
-        
-        if cov is not None:
-            newCovFile = base  + '-fit_covs.xml'
-            open( newCovFile, mode='w' ).writelines( line+'\n' for line in cov.toXMLList( ) )            
-        
-    print("Final rflow: ",tim.toString( ))
-    print("Target stdout:",dataDir + '.out')
+            return(chisq_n,None,  norm_val,n_pars,None,     ch_info,None)
