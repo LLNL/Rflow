@@ -761,7 +761,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 nic = cn[jset,pair] - c0[jset,pair]
                 for ie in range(n_data):
                     gfac_s[ie,jset,pair,0:nic] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom * 10.  # mb
-                
+    else:
+        ExptAint,ExptTot,CS_diag,p_mask,gfac_s = None, None, None, None, None
             
     print("To start tf: ",tim.toString( ))
     sys.stdout.flush()
@@ -778,30 +779,37 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,chargedElastic, debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts,Cross_Sections]
 
-    # Data_Control = [Pleg]     # batch n_angle_integrals,  n_totals  
+    Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     
-    if Multi:
-        print('\nUse TF MirroredStrategy')
-        from evaluate_M import evaluate_M
-        searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_MSf(ComputerPrecisions, Channels,
-            CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
-            Search_Control,Pleg, searchpars0, data_val, tim)
-    else:
-        from evaluate_f import evaluatef
-        searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluatef(ComputerPrecisions, Channels,
-            CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
-            Search_Control,Pleg, searchpars0, data_val, tim)
+    from evaluate import evaluate
+    searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0, A_tF_n, XS_totals = evaluate(Multi,ComputerPrecisions, Channels,
+        CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+        Search_Control,Data_Control, searchpars0, data_val, tim)
 
-    if Cross_Sections:
-        Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     
-        from evaluate_s import evaluate_s
-        chisq_x, A_tF_n, XS_totals =  evaluate_s(ComputerPrecisions, Channels,
-            CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
-            Search_Control,Data_Control, searchpars_n, data_val, tim)
-        
+    
+#     if Multi:
+#         print('\nUse TF MirroredStrategy')
+#         from evaluate_M import evaluate_M
+#         searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_MSf(ComputerPrecisions, Channels,
+#             CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+#             Search_Control,Pleg, searchpars0, data_val, tim)
+#     else:
+#         from evaluate_f import evaluatef
+#         searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluatef(ComputerPrecisions, Channels,
+#             CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+#             Search_Control,Pleg, searchpars0, data_val, tim)
+# 
+#     if Cross_Sections:
+#         Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
+#     
+#         from evaluate_s import evaluate_s
+#         chisq_x, A_tF_n, XS_totals =  evaluate_s(ComputerPrecisions, Channels,
+#             CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+#             Search_Control,Data_Control, searchpars_n, data_val, tim)
+#         
 
     ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
     ww = numpy.sum(searchpars_n[border[1]:border[2]]**2) * widthWeight

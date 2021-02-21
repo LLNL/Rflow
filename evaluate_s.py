@@ -129,7 +129,7 @@ def evaluate_s(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunction
             
  
         @tf.function
-        def R2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans):
+        def R2T_transforms_s(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans):
         # Now do TF:
             GL = tf.expand_dims(g_poles,2)
             GR = tf.expand_dims(g_poles,3)
@@ -164,7 +164,7 @@ def evaluate_s(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunction
             return( TAp_mat,TCp_mat)
 
         @tf.function
-        def LM2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles):
+        def LM2T_transforms_s(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles):
         # Use Level Matrix A to get T=1-S:
         #     print('g_poles',g_poles.dtype,g_poles.get_shape())
 
@@ -220,7 +220,7 @@ def evaluate_s(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunction
             return( TAp_mat,TCp_mat)
             
         @tf.function
-        def T2X_transformsTF(TAp_mat,CS_diag,gfac_s,p_mask, n_jsets,n_chans,npairs,maxpc):
+        def T2X_transforms_s(TAp_mat,CS_diag,gfac_s,p_mask, n_jsets,n_chans,npairs,maxpc):
         
             nm = npairs*maxpc
             TOT_mat = tf.reshape( 
@@ -239,7 +239,7 @@ def evaluate_s(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunction
             return(XSp_mat,XSp_tot,XSp_cap) 
 
         @tf.function
-        def T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles,batches):
+        def T2B_transforms_s(TCp_mat,AA, n_jsets,n_chans,n_angles,batches):
 
         #  T= T_mat[:,n_jsets,npairs,maxpc,npairs,maxpc]
             T_left = tf.reshape(TCp_mat[:n_angles,:,:,:],  [-1,n_jsets,maxpc,maxpc, 1,1,1])  #; print(' T_left', T_left.get_shape())
@@ -256,12 +256,12 @@ def evaluate_s(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunction
             return(Ax)  
                                 
         @tf.function
-        def AddCoulombsTF(A_t,  Rutherford, InterferenceAmpl, TCp_mat_pdiag, Gfacc, n_angles):
+        def AddCoulombs_s(A_t,  Rutherford, InterferenceAmpl, TCp_mat_pdiag, Gfacc, n_angles):
         
             return(( A_t + Rutherford + tf.reduce_sum (tf.math.imag( InterferenceAmpl * tf.linalg.diag_part(TCp_mat_pdiag[:n_angles,:,:,:]) ) , [1,2])) * Gfacc )
 
         @tf.function
-        def ChiSqTF(A_t, widthWeight,searchWidths, data_val,norm_val,norm_info,effect_norm):
+        def ChiSq_s(A_t, widthWeight,searchWidths, data_val,norm_val,norm_info,effect_norm):
     
         # chi from cross-sections
             one = tf.constant(1.0, dtype=REAL)
@@ -279,7 +279,7 @@ def evaluate_s(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunction
             return (chisq)
                         
         @tf.function
-        def FitStatusTF(searchpars):
+        def FitStatus_s(searchpars):
 
             E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,      searchpars[border[0]:border[1]], [n_jsets*n_poles] )
             g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,      searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
@@ -291,25 +291,25 @@ def evaluate_s(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunction
             norm_val =                       (norm_valv+ fixed_norms)**2
     
             if not LMatrix:
-                 TAp_mat,TCp_mat = R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans ) 
+                 TAp_mat,TCp_mat = R2T_transforms_s(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans ) 
             else:
-                 TAp_mat,TCp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles) 
+                 TAp_mat,TCp_mat = LM2T_transforms_s(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag,CS_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles) 
         
 
-            Ax = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles,batches)
+            Ax = T2B_transforms_s(TCp_mat,AA, n_jsets,n_chans,n_angles,batches)
 
             if chargedElastic:                          
-                AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
+                AxA = AddCoulombs_s(Ax,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
             else:
                 AxA = Ax * Gfacc
                 
-            XSp_mat,XSp_tot,XSp_cap  = T2X_transformsTF(TAp_mat,CS_diag,gfac_s,p_mask, n_jsets,n_chans,npairs,maxpc)
+            XSp_mat,XSp_tot,XSp_cap  = T2X_transforms_s(TAp_mat,CS_diag,gfac_s,p_mask, n_jsets,n_chans,npairs,maxpc)
                 
             AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
             AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
 
             A_t = tf.concat([AxA,AxI,AxT], 0)
-            chisq = ChiSqTF(A_t, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
+            chisq = ChiSq_s(A_t, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
 
 #           Grads = tf.gradients(chisq, searchpars) 
             Grads = [tf.zeros(n_pars) ]
@@ -318,7 +318,7 @@ def evaluate_s(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunction
         
         print("First FitStatusTF: ",tim.toString( ))
 
-        chisq0,A_tF,Grads,  TAp_mat,TCp_mat, XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars)                 
+        chisq0,A_tF,Grads,  TAp_mat,TCp_mat, XSp_mat,XSp_tot,XSp_cap = FitStatus_s(searchpars)                 
                             
         A_tF_n = A_tF.numpy()
         chisq0_n = chisq0.numpy()
@@ -373,7 +373,7 @@ def evaluate_s(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunction
 #         searchpars_n = searchpars0
 #         
 #         print("Second FitStatusTF start: ",tim.toString( ))
-# #         chisqF,A_tF,Grads,  TAp_mat,TCp_mat, XSp_mat,XSp_tot,XSp_cap = FitStatusTF(searchpars) 
+# #         chisqF,A_tF,Grads,  TAp_mat,TCp_mat, XSp_mat,XSp_tot,XSp_cap = FitStatus_s(searchpars) 
 #         chisqF_n = chisqF.numpy()
 #         A_tF_n = A_tF.numpy()
 #         grad1 = Grads[0].numpy()
