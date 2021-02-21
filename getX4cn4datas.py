@@ -193,7 +193,7 @@ if __name__ == "__main__":
         
 #                 if ejectile == 'N': continue
 #                 if ejectile == 'G': continue
-#                 if ejectile == 'NON': continue
+                if ejectile == 'NON': continue
                 if ejectile == 'INL': residual = t.replace('-','')
 
                 for obs in allObs:
@@ -429,6 +429,7 @@ if __name__ == "__main__":
                                     Emin_in = stuff[E_index_min] if E_index_min is not None else 0.0
                                     Emax_in = stuff[E_index_max]
                                     E = (Emin_in + Emax_in)*0.5
+                                if E is None: continue
                                 if not (ElabMin < E*E_scale < ElabMax): continue
                                 
                                 if level_index is not None and obs in ['DA','CS'] and stuff[level_index] is not None:
@@ -514,6 +515,7 @@ if __name__ == "__main__":
                                 data_scale = 1.
                             if Data_units.lower() in ['mb','mb/sr']: data_scale = 1e-3 
                             if Data_units.lower() in ['micro-b','micro-b/sr','mu-b/sr']: data_scale = 1e-6
+                            if Data_units.lower() in ['nb','nb/sr']: data_scale = 1e-9 
                             if Data_units.lower() in ['1/mev']: data_scale = 1
                             if Data_units.lower() in ['1/mev']: data_scale = 1
                             if Data_units.lower() in ['b*rt-ev']: RT_data_scale = 1e6  # divide data by sqrt(E*RT_data_scale) when E is MeV
@@ -581,6 +583,7 @@ if __name__ == "__main__":
                                 if dData_units.lower() in ['no-dim','prt/fis','arb-units']: ddata_scale = 1.
                                 if dData_units.lower() in ['mb','mb/sr']: ddata_scale = 1e-3
                                 if dData_units.lower() in ['micro-b','micro-b/sr','mu-b/sr']: ddata_scale = 1e-6
+                                if dData_units.lower() in ['nb','nb/sr']: ddata_scale = 1e-9
                                 if dData_units.lower() in ['1/mev']: ddata_scale = 1
                                 if 'times 4 pi' in Reaction:
                                     # print(10*' ',' Has "times 4 pi", so divide by 4pi')
@@ -634,6 +637,7 @@ if __name__ == "__main__":
                                         Emin_in = stuff[E_index_min] if E_index_min is not None else 0.0
                                         Emax_in = stuff[E_index_max]
                                         E = (Emin_in + Emax_in)*0.5
+                                    if E is None: continue
                                     if not (ElabMin < E*E_scale < ElabMax): continue
 
                                     if E is None: continue

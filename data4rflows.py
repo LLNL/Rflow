@@ -580,6 +580,9 @@ for datFile in args.InFiles:
         continue
 
     leveltag = '_e%s' % level if level != '0' else ''
+    if level == '*': 
+        print('Unspecified non-elastic: SKIP')
+        continue
     level = int(level)
     p,e,x = projectile,ejectile,level
     try:

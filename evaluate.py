@@ -66,7 +66,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches = Dimensions
     LMatrix,brune,chargedElastic, debug,verbose = Logicals
 
-    searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections = Search_Control
+    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections = Search_Control
 
     Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s = Data_Control
 
@@ -107,7 +107,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
     n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
                    
-    n_pars = border[3]
+    n_pars = border[4]
     n_norms = fixed_norms.shape[0]
     print('Search parameters :',n_pars)
     ndof = n_data - n_pars
@@ -269,8 +269,9 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,   searchpars[border[0]:border[1]], [n_jsets*n_poles] )
         g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,   searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
         norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
+        D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
 
-        E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
+        E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]), -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])) 
         g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
         E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
         norm_val =                       (norm_valv+ fixed_norms)**2
@@ -429,8 +430,9 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
                     E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,   searchpars[border[0]:border[1]], [n_jsets*n_poles] )
                     g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,   searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
                     norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
-        
-                    E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
+                    D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
+
+                    E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]), -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])) 
                     g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
                     E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
                     norm_val =                       (norm_valv+ fixed_norms)**2
@@ -579,9 +581,10 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
             E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,      searchpars[border[0]:border[1]], [n_jsets*n_poles] )
             g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,      searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
-            norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,      searchpars[border[2]:border[3]], [n_norms] )
+            norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
+            D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
 
-            E_cpoles = tf.complex(tf.reshape(E_pole_v + E_poles_fixed_v,[n_jsets,n_poles]),        tf.constant(0., dtype=REAL)) 
+            E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]), -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])) 
             g_cpoles = tf.complex(tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
             E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
             norm_val =                       (norm_valv+ fixed_norms)**2

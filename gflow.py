@@ -72,10 +72,12 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     
     np = len(RMatrix.resonanceReactions)
     ReichMoore = False
-    if RMatrix.resonanceReactions[0].eliminated: 
-        print('Exclude Reich-Moore channel')
-        ReichMoore = True
-        np -= 1   # exclude Reich-Moore channel here
+    for pair in range(np):
+        if RMatrix.resonanceReactions[pair].eliminated: 
+            ReichMoore = True
+            damping_pair = pair
+            damping_label = RMatrix.resonanceReactions[pair].label
+            print('\nReich-Moore channel is',damping_pair,':',damping_label)
         
     prmax = numpy.zeros(np, dtype=REAL)
     QI = numpy.zeros(np, dtype=REAL)
@@ -98,7 +100,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     chargedElastic = False
     for partition in RMatrix.resonanceReactions:
         kp = partition.label
-        if partition.eliminated:  
+        if partition.eliminated: # no two-body kinematics
             partitions[kp] = None
             continue
         channels[pair] = kp
@@ -151,7 +153,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #
 # Find energies in the lab frame of partition 'ipair' as needed for the R-matrix pole energies, not data lab frame:
 #
-    print('Transform main energy vector from',pname[dlabpair],'to',pname[ipair],' projectile lab frames')
+    if dlabpair != ipair: print('Transform main energy vector from',pname[dlabpair],'to',pname[ipair],' projectile lab frames')
     data_val[:,0]  = (data_val[:,0]/cm2lab[dlabpair] - QI[dlabpair] + QI[ipair] ) * cm2lab[ipair]
     E_scat  = data_val[:,0]
 #     if dlabpair != ipair: print('Transformed E:',E_scat[:4])
@@ -184,11 +186,13 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     npl = numpy.zeros(n_jsets, dtype=INT)
     E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL)
     E_poles_fixed = numpy.zeros([n_jsets,n_poles], dtype=REAL)    # fixed in search
+    D_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL)
+    D_poles_fixed = numpy.zeros([n_jsets,n_poles], dtype=REAL)    # fixed in search
     has_widths = numpy.zeros([n_jsets,n_poles], dtype=INT)
     g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
     g_poles_fixed = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL) # fixed in search
     
-    GNDS_order = numpy.zeros([n_jsets,n_poles,n_chans+1], dtype=INT) # [,,0] is energy, as in GNDS
+    GNDS_order = numpy.zeros([n_jsets,n_poles,n_chans+2], dtype=INT) # [,,0] is energy, 1 is damping, as in GNDS
     J_set = numpy.zeros(n_jsets, dtype=REAL)
     pi_set = numpy.zeros(n_jsets, dtype=INT)
     L_val  =  numpy.zeros([n_jsets,n_chans], dtype=INT)
@@ -237,8 +241,6 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
         c = 0
         partition_channels = numpy.zeros(npairs, dtype=INT)
-        partition_channels = numpy.zeros(npairs, dtype=INT)
-
         for pair in range(npairs):
             c0[jset,pair] = c
             for ch in Jpi.channels:
@@ -326,11 +328,18 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     G_order = 0 
     for Jpi in RMatrix.spinGroups:
         R = Jpi.resonanceParameters.table
+#         print('R:\n',R.data)
         cols = R.nColumns - 1  # ignore energy col
         rows = R.nRows
         E_poles[jset,:rows] = numpy.asarray( R.getColumn('energy','MeV') , dtype=REAL)   # lab MeV
+        ncols = cols + 1
+        if ReichMoore: 
+#             D_poles[jset,:rows] = numpy.asarray( R.getColumn(damping_label,'MeV') , dtype=REAL)   # lab MeV
+            for n in range(rows):
+                D_poles[jset,n] = R.data[n][damping_pair+1]
+            if IFG==1:     D_poles[jset,:] = 2*D_poles[jset,:]**2
         for n in range(rows):
-            for c in range(cols+1):
+            for c in range(ncols):
                 GNDS_order[jset,n,c] = G_order  # order of variables in GNDS and ENDF, needed for covariance matrix
                 G_order += 1 
 
@@ -401,11 +410,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         dSdE_poles = None
         EO_poles = None
 
-
 #     print('E_poles \n',E_poles[:,:])
+#     print('D_poles \n',D_poles[:,:])
 #     print('g_poles \n',g_poles[:,:,:])
 #     print('norm_val \n',norm_val[:])
-
     
     n_norms = norm_val.shape[0]
     fixed_norms= numpy.zeros([n_norms], dtype=REAL) # fixed in search
@@ -420,8 +428,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     
     ip = 0
     ifixed = 0
-    border = numpy.zeros(4, dtype=INT)     # variable parameters
-    frontier = numpy.zeros(4, dtype=INT)   # fixed parameters
+    border = numpy.zeros(5, dtype=INT)     # variable parameters
+    frontier = numpy.zeros(5, dtype=INT)   # fixed parameters
     patterns = [ re.compile(fix_regex) for fix_regex in fixedlist] 
     fixedlistex = set()
     
@@ -532,8 +540,45 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             ifixed += 1   
     border[3] = ip
     frontier[3] = ifixed
-    n_pars = border[3]
-    n_fixed = frontier[3]
+    
+    for jset in range(n_jsets):
+        parity = '+' if pi_set[jset] > 0 else '-'
+        for n in range(n_poles):
+            i = jset*n_poles+n
+            E = E_poles[jset,n]
+            if E == 0: continue   # invalid energy: filler
+            D = D_poles[jset,n]
+            if D == 0: continue   # decided to vary only non-zero damping
+            nam='PJ%.1f%s:D%.3e' % (J_set[jset],parity, E)
+            varying =  n < npl[jset]
+            if pmin is not None and pmax is not None and pmin > pmax: 
+                varying = E > pmin or E < pmax
+            else:
+                if pmin is not None: varying = varying and E > pmin
+                if pmax is not None: varying = varying and E < pmax
+            for pattern in patterns:
+                 varying = varying and not pattern.match(nam) 
+#             print('Pole',jset,n,'named',nam,'at',E, 'vary:',varying)
+            if varying: 
+                searchnames += [nam]
+                search_vars.append([D,i])
+                GNDS_loc[ip] = GNDS_order[jset,n,0]
+                ip += 1
+            else:
+                fixedlistex.add(nam)
+                D_poles_fixed[jset,n] = D_poles[jset,n]
+                if Search:
+                    print('    Fixed %5.1f%1s pole %2i at E = %7.3f MeV with D = %.3e' % (J_set[jset],parity,n,E,D) )
+                # print('E[',jset,n,'] is fixed',ifixed,'at',E_poles[jset,n])
+                fixedpars[ifixed] = E_poles[jset,n]
+                fixedloc[ifixed,0] = i
+                fixednames += [nam]
+                ifixed += 1
+    border[4] = ip
+    frontier[4] = ifixed 
+    
+    n_pars = border[4]
+    n_fixed = frontier[4]
     
     print('Variable borders:',border,'and Fixed frontiers:',frontier)
     searchparms = numpy.zeros(n_pars, dtype=REAL)
@@ -542,8 +587,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         searchparms[ip] = search_vars[ip][0]
         searchloc[ip,0] = search_vars[ip][1]
 
-    print('Variable parameters - E,w,norms: ',border[1]-border[0],border[2]-border[1],border[3]-border[2],' =',n_pars) 
-    print('Fixed    parameters - E,w,norms: ',frontier[1]-frontier[0],frontier[2]-frontier[1],frontier[3]-frontier[2],' =',n_fixed) 
+    print('Variable parameters - E,w,norms,D: ',border[1]-border[0],border[2]-border[1],border[3]-border[2],border[4]-border[3],' =',n_pars) 
+    print('Fixed    parameters - E,w,norms,D: ',frontier[1]-frontier[0],frontier[2]-frontier[1],frontier[3]-frontier[2],frontier[4]-frontier[3],' =',n_fixed) 
     print('# zero widths  =',numpy.count_nonzero(g_poles == 0) ,'\n')
     ndof = n_data - n_pars
     
@@ -552,6 +597,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         print('Fixed    parameterlist:',' '.join(fixedlistex))
     print('Searching on pole energies:',searchparms[border[0]:border[1]])
     print('Keep fixed   pole energies:',fixednames[frontier[0]:frontier[1]])
+    print('Searching on damp energies:',searchparms[border[3]:border[4]])
     
     if brune and False:
         for jset in range(n_jsets):
@@ -714,6 +760,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     E_poles_fixed_v = numpy.ravel(E_poles_fixed)
     g_poles_fixed_v = numpy.ravel(g_poles_fixed)
+    D_poles_fixed_v = numpy.ravel(D_poles_fixed)
     
     n_angle_integrals = n_data - n_totals - n_angles
     n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
@@ -779,7 +826,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,chargedElastic, debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts,Cross_Sections]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts,Cross_Sections]
 
     Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     
@@ -878,27 +925,52 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         for ip in range(frontier[2],frontier[3]): ## merge fixed norms
             ni = fixedloc[ip,0]
             norm_val[ni] = fixed_norms[ni]**2
+
+        for ip in range(border[3],border[4]): #### Extract parameters after previous search:
+            i = searchloc[ip,0]
+            jset = i//n_poles;  n = i%n_poles
+            parity = '+' if pi_set[jset] > 0 else '-'
+            D_poles[jset,n] = searchpars_n[ip]
+            varying = abs(E_poles[jset,n]) < Distant and searchnames[ip] not in fixedlistex
+            nam='PJ%.1f%s:D%.3f' % (J_set[jset],parity, D_poles[jset,n])
+            newname[searchnames[ip]] = nam
+
+        for ip in range(frontier[3],frontier[4]): #### Extract parameters after previous search:
+            i = fixedloc[ip,0]
+            jset = i//n_poles;  n = i%n_poles
+            parity = '+' if pi_set[jset] > 0 else '-'
+            D_poles[jset,n] = fixedpars[ip]
+            varying = abs(E_poles[jset,n]) < Distant and  fixednames[ip] not in fixedlistex
+            nam='PJ%.1f%s:D%.3f' % (J_set[jset],parity, D_poles[jset,n])
+            newname[fixednames[ip]] = nam 
         
 # Copy parameters back into GNDS 
         jset = 0
         for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
             parity = '+' if pi_set[jset] > 0 else '-'
-#             if True: print('J,pi =',J_set[jset],parity)
+#           if True: print('J,pi =',J_set[jset],parity)
             R = Jpi.resonanceParameters.table
             rows = R.nRows
             cols = R.nColumns - 1  # without energy col
             for pole in range(rows):
+#               print('Update',pole,'pole',R.data[pole][0],'to',E_poles[jset,pole])
                 R.data[pole][0] = E_poles[jset,pole]
+                c_start = 1
+                if ReichMoore:
+                    R.data[pole][1] = D_poles[jset,pole]
+                    c_start = 2
+                    cols -= 1
                 for c in range(cols):
-                    R.data[pole][c+1] = g_poles[jset,pole,c]
+#                   print('Update ch',c,'width',R.data[pole][c+c_start],'to',g_poles[jset,pole,c])
+                    R.data[pole][c+c_start] = g_poles[jset,pole,c]
 #                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", "\n".join(R.toXMLList()))
             jset += 1
                 
         print('\nR-matrix parameters:')
          
         if not Search:
-            fmt = '%4i %4i   S: %10.5f %10.3f   %15s     %s'
-            print('   P  Loc   Start:    V       grad    Parameter         new name')
+            fmt = '%4i %4i   S: %10.5f %12.3e   %15s     %s'
+            print('   P  Loc   Start:    V         grad    Parameter         new name')
             for p in range(n_pars):   
                 newRname = newname.get(searchnames[p],'')
                 if newRname == searchnames[p]: newRname = ''
@@ -913,8 +985,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             covarianceSuite = None
             
         else:
-            fmt = '%4i %4i   S: %10.5f %10.3f  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
-            print('   P  Loc   Start:    V       grad    Final:     V      grad        1sig   Percent error     Parameter        new name')
+            fmt = '%4i %4i   S: %10.5f %12.3e  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
+            print('   P  Loc   Start:    V         grad    Final:     V      grad        1sig   Percent error     Parameter        new name')
             if frontier[3]>0: print('Varying:')
             for p in range(n_pars):   
                 sig = inverse_hessian[p,p]**0.5
