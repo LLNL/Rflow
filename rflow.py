@@ -86,7 +86,7 @@ if __name__=='__main__':
     parser.add_argument("-T", "--TransitionMatrix",  type=int, default=1, help="Produce cross-section transition matrix functions in *tot_a and *fch_a-to-b")
 
     parser.add_argument("-s", "--single", action="store_true", help="Single precision: float32, complex64")
-    parser.add_argument("-M",  "--Multi", type=str, help="Which Mirrored Strategy in TF")
+    parser.add_argument("-M",  "--Multi", type=int, default=0, help="Which Mirrored Strategy in TF")
 
     parser.add_argument(      "--datasize", type=float,  metavar="size", default="0.2", help="Font size for experiment symbols. Default=0.2")
     parser.add_argument("-l", "--logs", type=str, default='', help="none, x, y or xy for plots")
@@ -369,7 +369,7 @@ if __name__=='__main__':
 # parameter input for computer method
     base = args.inFile
     if args.single: base += 's'
-    if args.Multi: base += 'm'
+    if args.Multi>0: base += 'm%s' % args.Multi
 # data input
     base += '+%s' % args.dataFile.replace('.data','')
     base += dataFilter

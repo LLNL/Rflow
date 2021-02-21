@@ -29,8 +29,14 @@ except:
 def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
                  Search_Control,Data_Control, searchpars0, data_val,tim):
                  
-    if Multi:
+    if Multi > 1:
         strategy = tf.distribute.MirroredStrategy()
+        npal = strategy.num_replicas_in_sync
+        print('Parallel with',npal)
+    elif Multi == 1:
+        strategy = tf.distribute.OneDeviceStrategy()
+        npal = strategy.num_replicas_in_sync
+        print('Parallel with',npal)    
     else:
         strategy = tf.distribute.get_strategy()
 
@@ -313,6 +319,82 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             snap = "file://%s/%s-bfgs_min.snap"  % (base,base) 
                         
         print("First FitStatusTF: ",tim.toString( ))
+        
+        
+        if Multi > 0:
+            dataset1a= tf.data.Dataset.from_tensor_slices ( (InterferenceAmpl,CSp_diag_in,CSp_diag_out))
+            dataset2a= tf.data.Dataset.from_tensor_slices ( (Rutherford, Gfacc))  
+            dataset3a = tf.data.Dataset.from_tensor_slices ( [ AA[jl] for jl in range(n_jsets) ] )
+            print('dataset1a:\n',dataset1a)
+            print('dataset2a:\n',dataset2a)
+            print('dataset3a:\n',dataset3a)
+    #         dataset_23a = dataset2a.concatenate(dataset3a)
+    #         print('dataset_23a:\n',dataset_23a)
+        
+            dataset1t= tf.data.Dataset.from_tensor_slices ( (data_val,effect_norm,gfac) )
+            dataset2t= tf.data.Dataset.from_tensor_slices ( (POm_diag,L_diag))
+            dataset3t= tf.data.Dataset.from_tensor_slices ( Om2_mat )
+            print('dataset1t:\n',dataset1t)
+            print('dataset2t:\n',dataset2t)
+            print('dataset3t:\n',dataset3t)
+    #         dataset_23t = dataset2t.concatenate(dataset3t)
+    #         print('dataset_23t:\n',dataset_23t)
+        
+                
+            dataset_t = dataset1t.concatenate(dataset2t)
+            print('dataset5:\n',dataset5)
+
+            print('dataset0:\n',dataset0)
+
+# dataset1a:
+#  <TensorSliceDataset shapes: ((10, 3), (10, 3), (10, 3)), types: (tf.complex128, tf.complex128, tf.complex128)>
+# dataset2a:
+#  <TensorSliceDataset shapes: ((), ()), types: (tf.float64, tf.float64)>
+# dataset3a:
+#  <TensorSliceDataset shapes: (1809, 3, 3, 10, 3, 3), types: tf.float64>
+# dataset1t:
+#  <TensorSliceDataset shapes: ((5,), (11,), (10,)), types: (tf.float64, tf.float64, tf.float64)>
+# dataset2t:
+#  <TensorSliceDataset shapes: ((10, 4), (10, 4)), types: (tf.complex128, tf.complex128)>
+# dataset3t:
+#  <TensorSliceDataset shapes: (10, 4, 4), types: tf.complex128>
+# 
+#     dataset_t = dataset1t.concatenate(dataset2t)
+# TypeError: Two datasets to concatenate have different types (tf.float64, tf.float64, tf.float64) and (tf.complex128, tf.complex128)
+        
+            def split_data_model(n):
+                AAn = [ AA[jl][n::npal,...]  for jl in range(n_jsets)]
+                datas = (data_val[n::npal,:],effect_norm[n::npal,:],gfac[n::npal,:],
+                        Rutherford[n::npal],InterferenceAmpl[n::npal,:,:],Gfacc[n::npal], AAn, 
+                        CSp_diag_in[n::npal,:,:],CSp_diag_out[n::npal,:,:],Om2_mat[n::npal,:,:,:],POm_diag[n::npal,:,:],
+                        L_diag[n::npal,:,:]  )
+                model = (n,npal, n_angles_n,n_angle_integrals_n,n_data_n, n_jsets,n_poles,n_chans,maxpc,npairs,nch,npl,
+                         LMatrix,brune,chargedElastic,
+                         searchloc,border,E_poles_fixed_v,g_poles_fixed_v,fixed_norms,norm_info,
+                         S_poles,dSdE_poles,EO_poles )
+                this_part = (datas,model)
+                return this_part
+    #         dist_dataset = my_strategy.experimental_distribute_dataset(dataset)   HOW FOR MY DATA??
+            
+            n_angles_n = stride_size(0,n_angles, npal)
+            n_angle_integrals_n = stride_size(n_angles,n_angles+n_angle_integrals ,npal)
+            n_data_n = stride_size(0,n_data, npal)
+        
+            tot_chisq, tot_Grads = 0.0, tf.zeros_like(searchpars)
+            for n in range(npal):
+                this_part = split_data_model(n)
+        
+                per_replica_chisq = strategy.run( FitMeasureTF, args=(searchpars,this_part[0],this_part[1]) )
+    #             tf.print('per_replica_chisq:',per_replica_chisq)
+    #             tf.print('per_replica_chisq[1]:',per_replica_chisq[1])
+                chisq_n = strategy.reduce( tf.distribute.ReduceOp.SUM,  per_replica_chisq[0], axis = None)
+                Grads_n = strategy.reduce( tf.distribute.ReduceOp.SUM,  per_replica_chisq[1], axis = None)
+    #             tf.print('Grads_n:',Grads_n)
+                tot_chisq += chisq_n
+                tot_Grads += Grads_n 
+            chisq0,Grads = tot_chisq, tot_Grads 
+    #         tf.print('Grads:',Grads)
+   
 
                 
         chisq0,Grads = FitMeasureTF(searchpars)  # returning values in global   A_tF,Grads,  Tp_mat, XSp_mat,XSp_tot              
@@ -430,8 +512,10 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     if Cross_Sections:
         strategy = tf.distribute.get_strategy()
     
+        Tind = None; Mind = None
         TAind = numpy.zeros([n_data,n_jsets,npairs,maxpc,npairs,maxpc,2], dtype=INT) 
         MAind = numpy.zeros([n_data,n_jsets,npairs,maxpc,npairs,maxpc], dtype=CMPLX)  # mask: 1 = physically valid
+        
     
         print('TAp_mat size',n_data*n_jsets*(npairs*maxpc)**2*16/1e9,'GB')
         for jset in range(n_jsets):

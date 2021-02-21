@@ -42,7 +42,7 @@ def evaluate_MSf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFuncti
 #     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches)
 #     Logicals = (LMatrix,brune,chargedElastic, debug,verbose)
 # 
-#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,restarts)
+#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts)
 # 
 #     Pleg     # batch n_angle_integrals,  n_totals  
 #
@@ -59,7 +59,7 @@ def evaluate_MSf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFuncti
     n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches = Dimensions
     LMatrix,brune,chargedElastic, debug,verbose = Logicals
 
-    searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,restarts = Search_Control
+    searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts = Search_Control
 
 #     AAL = numpy.zeros([npairs,npairs, n_jsets,maxpc,maxpc, n_jsets,maxpc,maxpc ,NL], dtype=REAL)
 
@@ -236,7 +236,7 @@ def evaluate_MSf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFuncti
             return(( A_t + Rutherford + tf.reduce_sum (tf.math.imag( InterferenceAmpl * tf.linalg.diag_part(TCp_mat_pdiag[:n_angles,:,:,:]) ) , [1,2])) * Gfacc )
 
         @tf.function
-        def ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm):
+        def ChiSqTF(A_t, widthWeight,searchWidths, data_val,norm_val,norm_info,effect_norm):
     
         # chi from cross-sections
             one = tf.constant(1.0, dtype=REAL)
@@ -249,6 +249,8 @@ def evaluate_MSf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFuncti
             chi = (norm_val - norm_info[:,0]) * norm_info[:,1]
             chisq += tf.reduce_sum(chi**2)
     
+            chisq += tf.reduce_sum(searchWidths**2) * widthweight
+
             return (chisq)
 
         @tf.function        
@@ -287,7 +289,7 @@ def evaluate_MSf(ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFuncti
             AxT = XSp_tot[n_totals0:n_data] 
         
             A_t = tf.concat([AxA, AxI, AxT], 0)
-            chisq = ChiSqTF(A_t, data_val,norm_val,norm_info,effect_norm)
+            chisq = ChiSqTF(A_t, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
         
             if Search:
                 tf.print(chisq/n_data,                              output_stream=trace)
