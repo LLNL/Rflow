@@ -14,6 +14,8 @@ rescale_e3 = ['20920']  # Scobel data should be label b, not mb
 
 excludeSE = ['F0005002','10547002','11182002','11164003','10755003']
 
+# excludeSE += ['F0397006']  # EN-MIN but no EN-MAX
+
 
 
 
@@ -354,7 +356,13 @@ if __name__ == "__main__":
                                 E_index = labels.index('EN-DUMMY')
                             elif 'EN-MIN' in labels and 'EN-MIN' in labels:
                                 E_index_min = labels.index('EN-MIN')
-                                E_index_max = labels.index('EN-MAX')
+                                try:
+                                    E_index_max = labels.index('EN-MAX')
+                                except:
+                                    already = subent in excuses.keys()
+                                    excuses[subent] = 'EN-MIN but no EN-MAX'
+                                    if not already: print(20*' ',excuses[subent])
+                                    continue
                             elif 'KT-DUMMY' in labels:
                                 E_index = labels.index('KT-DUMMY')
                             if E_index is not None:
