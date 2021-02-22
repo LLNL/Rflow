@@ -32,13 +32,13 @@ NAMELIST
 """
  
 def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Projectiles,EminCN,EmaxCN,emin,emax,
-        Rmatrix_radius,jdef,pidef,widef,Term0,gammas):
+        Rmatrix_radius,jdef,pidef,widef,Term0,gammas,ReichMoore):
 
 #     pops = databaseModule.database.readFile(popsicles[0])
 #     for p in popsicles[1:]:
 #         print('read further pops file',p)
 #         pops.addFile(p)
-    gs = '+g' if gammas else ''
+    gs = '+g' if (gammas or ReichMoore) else ''
 
     fresco = open('fresco%s.in' % gs,'w')
     pel = 1  # in the made fresco files. This sets zero of pole energies
@@ -174,6 +174,12 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
         Epole = Er - Qpel   # fresco convention for R-matrix poles
         print("\n&Variable kind=3 name='%s' term=%s jtot=%s par=%s energy=%s step=%s / obs width ~ %6s" % (name,term,jt,pt,Epole,step,width), file=frescoVars)
         nvars += 1
+        
+        if ReichMoore:
+            damping = 3.3e-7 # MeV
+            dname = 'D:' + name
+            print("&Variable kind=7 name='%s' term=%s damping=%s  step=%s / obs width ~ %6s" % (dname,term,damping,step,width), file=frescoVars)
+            nvars += 1
 
         JJ = jt
         pi = pt
@@ -312,8 +318,9 @@ parser.add_argument("-C", "--EmaxCN", type=float,  help="Maximum energy relative
 parser.add_argument("-J", "--Jmax", type=float, default=5.0, help="Maximum total J of partial wave set.")
 parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum incident lab energy in first partition.")
 parser.add_argument("-E", "--emaxp", type=float, default=25., help="Maximum incident lab energy in first partition.")
-parser.add_argument("-R", "--Rmatrix_radius", type=float, default=1.4, help="Reduced R-matrix radius: factor of (A1^1/3+A2^1/3).")
+parser.add_argument("-r", "--Rmatrix_radius", type=float, default=1.4, help="Reduced R-matrix radius: factor of (A1^1/3+A2^1/3).")
 parser.add_argument("-G", "--GammaChannel", action="store_true", help="Include discrete gamma channel")
+parser.add_argument("-R", "--ReichMoore", action="store_true", help="Inclusive capture channel")
 parser.add_argument("-j", "--jdef", type=float, default=2.0, help="Default spins for unknown RIPL states")
 parser.add_argument("-p", "--pidef", type=int, default=1, help="Default spins for unknown RIPL states")
 parser.add_argument("-w", "--widef", type=float, default=0.10, help="Default width (MeV) for unknown RIPL states")
@@ -479,7 +486,7 @@ for prop in csv.DictReader(csvf):
         masses[nucl] = pe.getMass('amu')
         if hasattr(pe, 'nucleus'): pe = pe.nucleus
         charges[nucl] = pe.charge[0].value
-        print('Nuclide ',nucl,'has mass,charge=',masses[nucl],charges[nucl])
+#         print('Nuclide ',nucl,'has mass,charge=',masses[nucl],charges[nucl])
 
 p_ref = args.Projectiles[0]
 t_ref = targs[projs.index(p_ref)]
@@ -576,13 +583,21 @@ for datFile in args.InFiles:
     projectile,ejectile,target,residual,level,integrated,syserror,staterror,expect,group,splitgroupnorms,lab,abserr,iscale,Aflip,Ein,rRuth,Sfactor,eshift,ecalib,splitgroupshifts,filedir = details
     print("\nRead ",datFile," write root:",dr,"   A,E-flip=",Aflip,Ein,', s/R:',rRuth,', p,e,r = %s %s %s%s' % (projectile,ejectile,residual,note) )
     
-    if (projectile=='photon' or ejectile=='photon') and not args.GammaChannel:
+    if (projectile=='photon' or ejectile=='photon') and not (args.GammaChannel or args.ReichMoore):
         continue
-
+        
+    if projectile=='photon' and not args.GammaChannel:
+        continue
+        
     leveltag = '_e%s' % level if level != '0' else ''
-    if level == '*': 
-        print('Unspecified non-elastic: SKIP')
-        continue
+    
+    if level == '*':
+        if ejectile == 'photon' and args.ReichMoore:
+            level = -1
+        else:
+            print('Unspecified  non-elastic apart from capture: SKIP')
+            continue
+                    
     level = int(level)
     p,e,x = projectile,ejectile,level
     try:
@@ -610,7 +625,12 @@ for datFile in args.InFiles:
         if ejectile!='TOT':
             print('Unwanted ejectile',ejectile,": SKIP")
             continue
-        
+        iti = 0
+    
+    if iti  >= len(args.LevelsMax):
+        print('Ejectile',ejectile,'for residual level',iti,'is too large')
+        continue
+    
     if args.LevelsMax is not None and int(level) > int(args.LevelsMax[iti]):
         print('Level',level,ia-1,'is above level limit',args.LevelsMax[iti],"for",iti," %s -> %s+%s" % (projectile,ejectile,residual),": SKIP")
         print('LevelsMax=',args.LevelsMax)
@@ -958,5 +978,5 @@ print("Excited states used:",levels)
 print('\nFresco input file:')
 make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,args.Jmax,Projectiles,
     args.EminCN,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,
-    args.jdef,args.pidef,args.widef,args.Term0,args.GammaChannel)
+    args.jdef,args.pidef,args.widef,args.Term0,args.GammaChannel,args.ReichMoore)
 
