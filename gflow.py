@@ -2,7 +2,7 @@
 import times
 tim = times.times()
 
-import os,math,numpy,cmath,pwd,sys,time,json
+import os,math,numpy,cmath,pwd,sys,time,json,re
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from wrapups import saveNorms2gnds
@@ -28,9 +28,9 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,Multi,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,
         norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
-        init,Search,Iterations,widthWeight,restarts,Distant,Background,ReichMoore, 
+        init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
@@ -231,6 +231,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         parity = '+' if pi_set[jset] > 0 else '-'
         R = Jpi.resonanceParameters.table
         cols = R.nColumns - 1  # ignore energy col
+        if ReichMoore: cols -= 1 # ignore damping width just now
         rows = R.nRows
         nch[jset] = cols
         npl[jset] = rows
@@ -441,9 +442,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             E = E_poles[jset,n]
             if E == 0: continue   # invalid energy: filler
             nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E)
-            varying = abs(E) < Distant  and n < npl[jset]
+            varying = abs(E) < Background  and n < npl[jset]
             if pmin is not None and pmax is not None and pmin > pmax: 
-                varying = E > pmin or E < pmax
+                varying = varying and (E > pmin or E < pmax)
             else:
                 if pmin is not None: varying = varying and E > pmin
                 if pmax is not None: varying = varying and E < pmax
@@ -462,7 +463,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 E_poles_fixed[jset,n] = E_poles[jset,n]
                 if Search:
                     print('    Fixed %5.1f%1s pole %2i at E = %7.3f MeV' % (J_set[jset],parity,n,E) )
-                if nam not in fixedlistex and Background:
+                if nam not in fixedlistex and BG:
                     nam='BG:%.1f%s' % (J_set[jset],parity)
                 # print('E[',jset,n,'] is fixed',ifixed,'at',E_poles[jset,n])
                 fixedpars[ifixed] = E_poles[jset,n]
@@ -481,7 +482,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if L_val[jset,c] < 0: continue   # invalid partial wave: blank filler
                 if E == 0: continue   # invalid energy: filler
                 i = (jset*n_poles+n)*n_chans+c
-                if abs(E) < Distant or not Background:
+                if abs(E) < Background or not BG:
                     nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E)
                 else:
                     nam='BG:%.1f%s' % (J_set[jset],parity)
@@ -489,7 +490,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #                 varying = abs(g_poles[jset,n,c])>1e-20 
                 varying = c < nch[jset] and n < npl[jset] 
                 if pmin is not None and pmax is not None and pmin > pmax:   # -p,-P fix both energies and widths
-                    varying = Ecm > pmin or Ecm < pmax
+                    varying = varying and (Ecm > pmin or Ecm < pmax)
                 else:
                     if pmin is not None: varying = varying and Ecm > pmin
                     if pmax is not None: varying = varying and Ecm < pmax
@@ -553,14 +554,14 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if D == 0: continue   # decided to vary only non-zero damping
                 nam='PJ%.1f%s:D%.3f' % (J_set[jset],parity, E)
                 varying =  n < npl[jset]
-                if pmin is not None and pmax is not None and pmin > pmax: 
-                    varying = E > pmin or E < pmax
+                if dmin is not None and dmax is not None and dmin > dmax: 
+                    varying = varying and (E > dmin or E < dmax)
                 else:
-                    if pmin is not None: varying = varying and E > pmin
-                    if pmax is not None: varying = varying and E < pmax
+                    if dmin is not None: varying = varying and E > dmin
+                    if dmax is not None: varying = varying and E < dmax
                 for pattern in patterns:
                      varying = varying and not pattern.match(nam) 
-    #             print('Pole',jset,n,'named',nam,'at',E, 'vary:',varying)
+#               print('Pole',jset,n,'named',nam,'at',E, 'D varies:',varying)
                 if varying: 
                     searchnames += [nam]
                     search_vars.append([sD,i])
@@ -881,9 +882,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             jset = i//n_poles;  n = i%n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
             E_poles[jset,n] = searchpars_n[ip]
-            varying = abs(E_poles[jset,n]) < Distant and searchnames[ip] not in fixedlistex
+            varying = abs(E_poles[jset,n]) < Background and searchnames[ip] not in fixedlistex
             nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
-            if not varying and  searchnames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
+            if not varying and  searchnames[ip] not in fixedlistex and BG: nam = 'BG:%.1f%s' % (J_set[jset],parity)
 #             print(ip,'j,n E',searchnames[ip],'renamed to',nam)
             newname[searchnames[ip]] = nam
 
@@ -892,9 +893,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             jset = i//n_poles;  n = i%n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
             E_poles[jset,n] = fixedpars[ip]
-            varying = abs(E_poles[jset,n]) < Distant and  fixednames[ip] not in fixedlistex
+            varying = abs(E_poles[jset,n]) < Background and  fixednames[ip] not in fixedlistex
             nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
-            if not varying and  fixednames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
+            if not varying and  fixednames[ip] not in fixedlistex and BG: nam = 'BG:%.1f%s' % (J_set[jset],parity)
 #             print(ip,'j,n fixed E',fixednames[ip],'renamed to',nam)
             newname[fixednames[ip]] = nam        
                     
@@ -904,7 +905,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             parity = '+' if pi_set[jset] > 0 else '-'
             g_poles[jset,n,c] = searchpars_n[ip]
             nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
-            if not varying and  searchnames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
+            if not varying and  searchnames[ip] not in fixedlistex and BG: nam = 'BG:%.1f%s' % (J_set[jset],parity)
             wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='P' else nam)
 #             print(ip,'j,n,c width',searchnames[ip],'renamed to',wnam)
             newname[searchnames[ip]] = wnam        
@@ -915,7 +916,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             parity = '+' if pi_set[jset] > 0 else '-'
             g_poles[jset,n,c] = fixedpars[ip]
             nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E_poles[jset,n])
-            if not varying and  fixednames[ip] not in fixedlistex and Background: nam = 'BG:%.1f%s' % (J_set[jset],parity)
+            if not varying and  fixednames[ip] not in fixedlistex and BG: nam = 'BG:%.1f%s' % (J_set[jset],parity)
             wnam = 'w'+str(c)+','+ (nam[1:] if nam[0]=='P' else nam)
 #             print(ip,'j,n,c fixed width',fixednames[ip],'renamed to',wnam)
             newname[fixednames[ip]] = wnam        
@@ -933,7 +934,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             jset = i//n_poles;  n = i%n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
             D_poles[jset,n] = searchpars_n[ip]**2
-            varying = abs(E_poles[jset,n]) < Distant and searchnames[ip] not in fixedlistex
+            varying = abs(E_poles[jset,n]) < Background and searchnames[ip] not in fixedlistex
             nam='PJ%.1f%s:D%.3f' % (J_set[jset],parity, D_poles[jset,n])
             newname[searchnames[ip]] = nam
 
@@ -942,7 +943,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             jset = i//n_poles;  n = i%n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
             D_poles[jset,n] = fixedpars[ip]**2
-            varying = abs(E_poles[jset,n]) < Distant and  fixednames[ip] not in fixedlistex
+            varying = abs(E_poles[jset,n]) < Background and  fixednames[ip] not in fixedlistex
             nam='PJ%.1f%s:D%.3f' % (J_set[jset],parity, D_poles[jset,n])
             newname[fixednames[ip]] = nam 
         

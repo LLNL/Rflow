@@ -63,17 +63,19 @@ if __name__=='__main__':
     parser.add_argument("-n", "--normsfixed", action="store_true",  help="Fix all physical experimental norms (but not free norms)")
 
     parser.add_argument("-r", "--restarts", type=int, default=0, help="max restarts for search")
-    parser.add_argument("-D", "--Distant", type=float, default="25",  help="Pole energy (lab) above which are all distant poles. Fixed in  searches.")
-    parser.add_argument("-B", "--Background", action="store_true",  help="Include BG in name of background poles")
+    parser.add_argument("-B", "--Background", type=float, default="25",  help="Pole energy (lab) above which are all distant poles. Fixed in  searches.")
+    parser.add_argument(      "--BG", action="store_true",  help="Include BG in name of background poles")
     parser.add_argument("-R", "--ReichMoore", action="store_true", help="Include Reich-Moore damping widths in search")
     parser.add_argument("-L", "--LMatrix", action="store_true", help="Use level matrix method if not already Brune basis")
-    parser.add_argument("-g", "--groupAngles", type=int, default="1",  help="Unused. Number of energy batches for T2B transforms, aka batches")
+    parser.add_argument(      "--groupAngles", type=int, default="1",  help="Unused. Number of energy batches for T2B transforms, aka batches")
     parser.add_argument("-a", "--anglesData", type=int, help="Max number of angular data points to use (to make smaller search). Pos: random selection. Neg: first block")
     parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to use (to make smaller search). Pos: random selection. Neg: first block")
     parser.add_argument("-e", "--emin", type=float, help="Min cm energy for gnds projectile.")
     parser.add_argument("-E", "--EMAX", type=float, help="Max cm energy for gnds projectile.")
     parser.add_argument("-p", "--pmin", type=float, help="Min energy of R-matrix pole to fit, in gnds cm energy frame. Overrides --Fixed.")
     parser.add_argument("-P", "--PMAX", type=float, help="Max energy of R-matrix pole to fit. If p>P, create gap.")
+    parser.add_argument("-d", "--dmin", type=float, help="Min energy of R-matrix pole to fit damping, in gnds cm energy frame.")
+    parser.add_argument("-D", "--DMAX", type=float, help="Max energy of R-matrix pole to fit damping. If d>D, create gap.")
 
     parser.add_argument("-S", "--Search", type=str, help="Search minimization method.")
     parser.add_argument("-I", "--Iterations", type=int, default=2000, help="max_iterations for search")
@@ -92,7 +94,7 @@ if __name__=='__main__':
     parser.add_argument("-l", "--logs", type=str, default='', help="none, x, y or xy for plots")
     parser.add_argument("-t", "--tag", type=str, default='', help="Tag identifier for this run")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
-    parser.add_argument("-d", "--debug", action="store_true", help="Debugging output (more than verbose)")
+    parser.add_argument("-g", "--debug", action="store_true", help="Debugging output (more than verbose)")
     args = parser.parse_args()
 
     if args.single:
@@ -374,10 +376,12 @@ if __name__=='__main__':
     base += '+%s' % args.dataFile.replace('.data','')
     base += dataFilter
 # searching
-    if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('*','@').replace('[',':').replace(']',':')
+    if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('.*','@').replace('[',':').replace(']',':')
     if args.normsfixed            : base += '+n' 
     if args.pmin       is not None: base += '-p%s' % args.pmin
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
+    if args.dmin       is not None: base += '-d%s' % args.dmin
+    if args.DMAX       is not None: base += '-D%s' % args.DMAX
     if args.init       is not None: base += '@i%s'  % args.init[0]
     if args.init       is not None: print('Re-initialize at line',args.init[0],'of snap file',args.init[1])
     if args.Search     is not None: base += '+S%s'  % args.Search +  '_I%s' % args.Iterations
@@ -394,9 +398,9 @@ if __name__=='__main__':
  
     chisqtot,xsc,norm_val,n_pars,XS_totals,ch_info,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.Multi,
+                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Multi,
                         norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
-                        args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Distant,args.Background,args.ReichMoore,  
+                        args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
                         args.Cross_Sections,args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large,ComputerPrecisions,tim)
 
 #     print("Finish rflow call: ",tim.toString( ))
