@@ -47,7 +47,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 #     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles,has_widths)                                                  # batch n_jsets
 # 
 #     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches)
-#     Logicals = (LMatrix,brune,chargedElastic, debug,verbose)
+#     Logicals = (LMatrix,brune,Lambda,chargedElastic, debug,verbose)
 # 
 #     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections)
 # 
@@ -64,7 +64,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     S_poles,dSdE_poles,EO_poles,has_widths = CoulombFunctions_poles                                                  # batch n_jsets
 
     n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches = Dimensions
-    LMatrix,brune,chargedElastic, debug,verbose = Logicals
+    LMatrix,brune,Lambda,chargedElastic, debug,verbose = Logicals
 
     searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections = Search_Control
 

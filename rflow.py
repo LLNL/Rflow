@@ -66,7 +66,7 @@ if __name__=='__main__':
     parser.add_argument("-B", "--Background", type=float, default="25",  help="Pole energy (lab) above which are all distant poles. Fixed in  searches.")
     parser.add_argument(      "--BG", action="store_true",  help="Include BG in name of background poles")
     parser.add_argument("-R", "--ReichMoore", action="store_true", help="Include Reich-Moore damping widths in search")
-    parser.add_argument("-L", "--LMatrix", action="store_true", help="Use level matrix method if not already Brune basis")
+    parser.add_argument(      "--LMatrix", action="store_true", help="Use level matrix method if not already Brune basis")
     parser.add_argument(      "--groupAngles", type=int, default="1",  help="Unused. Number of energy batches for T2B transforms, aka batches")
     parser.add_argument("-a", "--anglesData", type=int, help="Max number of angular data points to use (to make smaller search). Pos: random selection. Neg: first block")
     parser.add_argument("-m", "--maxData", type=int, help="Max number of data points to use (to make smaller search). Pos: random selection. Neg: first block")
@@ -76,6 +76,7 @@ if __name__=='__main__':
     parser.add_argument("-P", "--PMAX", type=float, help="Max energy of R-matrix pole to fit. If p>P, create gap.")
     parser.add_argument("-d", "--dmin", type=float, help="Min energy of R-matrix pole to fit damping, in gnds cm energy frame.")
     parser.add_argument("-D", "--DMAX", type=float, help="Max energy of R-matrix pole to fit damping. If d>D, create gap.")
+    parser.add_argument("-L", "--Lambda", type=float, help="Use (E-dmin)^Lambda to modulate all damping widths at gnds-scattering cm energy E.")
 
     parser.add_argument("-S", "--Search", type=str, help="Search minimization method.")
     parser.add_argument("-I", "--Iterations", type=int, default=2000, help="max_iterations for search")
@@ -399,7 +400,7 @@ if __name__=='__main__':
     chisqtot,xsc,norm_val,n_pars,XS_totals,ch_info,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
                         Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Multi,
-                        norm_val,norm_info,norm_refs,effect_norm, args.LMatrix,args.groupAngles,
+                        norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
                         args.Cross_Sections,args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large,ComputerPrecisions,tim)
 

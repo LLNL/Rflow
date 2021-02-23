@@ -29,7 +29,7 @@ rsqr4pi = 1.0/(4*pi)**0.5
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
         Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,
-        norm_val,norm_info,norm_refs,effect_norm, LMatrix,batches,
+        norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
         
@@ -827,7 +827,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles,has_widths]                                                  # batch n_jsets
 
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
-    Logicals = [LMatrix,brune,chargedElastic, debug,verbose]
+    Logicals = [LMatrix,brune,Lambda,chargedElastic, debug,verbose]
 
     Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts,Cross_Sections]
 
@@ -960,7 +960,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 R.data[pole][0] = E_poles[jset,pole]
                 c_start = 1
                 if ReichMoore:
-                    R.data[pole][1] = D_poles[jset,pole]
+                    if IFG:
+                        R.data[pole][1] = math.sqrt(D_poles[jset,pole]/2.)
+                    else:
+                        R.data[pole][1] = D_poles[jset,pole]
                     c_start = 2
                     cols -= 1
                 for c in range(cols):
