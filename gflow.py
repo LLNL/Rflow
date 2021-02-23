@@ -571,7 +571,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     fixedlistex.add(nam)
                     D_poles_fixed[jset,n] = sD
                     if Search:
-                        print('    Fixed %5.1f%1s pole %2i at E = %7.3f MeV with D = %.3e' % (J_set[jset],parity,n,E,D) )
+                        print('    Fixed %5.1f%1s pole %2i  D = %.3e MeV at E = %7.3f' % (J_set[jset],parity,n,D,E) )
                     # print('E[',jset,n,'] is fixed',ifixed,'at',E_poles[jset,n])
                     fixedpars[ifixed] = sD
                     fixedloc[ifixed,0] = i
@@ -955,6 +955,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             R = Jpi.resonanceParameters.table
             rows = R.nRows
             cols = R.nColumns - 1  # without energy col
+            if ReichMoore: cols -= 1
             for pole in range(rows):
 #               print('Update',pole,'pole',R.data[pole][0],'to',E_poles[jset,pole])
                 R.data[pole][0] = E_poles[jset,pole]
@@ -965,9 +966,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     else:
                         R.data[pole][1] = D_poles[jset,pole]
                     c_start = 2
-                    cols -= 1
                 for c in range(cols):
-#                   print('Update ch',c,'width',R.data[pole][c+c_start],'to',g_poles[jset,pole,c])
                     R.data[pole][c+c_start] = g_poles[jset,pole,c]
 #                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", "\n".join(R.toXMLList()))
             jset += 1
