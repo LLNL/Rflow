@@ -28,13 +28,12 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,ABES,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
-#     global L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, n_jsets,n_poles,n_chans,n_totals,brune,S_poles,dSdE_poles,EO_poles, searchloc,border, Pleg, AA, chargedElastic, Rutherford, InterferenceAmpl, Gfacc
 
     PoPs = gnd.PoPs
     projectile = gnd.PoPs[gnd.projectile]
@@ -472,6 +471,13 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 ifixed += 1
     border[1] = ip
     frontier[1] = ifixed
+    if border[1]>0 and brune:
+        if not ABES:
+            print('Stop. You request fitting of Brune energies, but method not accurate. ABES not set')
+            sys.exit()
+        else:
+            print('ABES set to Allow Brune Energy Shifts')
+    
     
     for jset in range(n_jsets):
         parity = '+' if pi_set[jset] > 0 else '-'
@@ -518,7 +524,6 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     ifixed += 1                    
     border[2] = ip
     frontier[2] = ifixed
-#     print('4n: Variable borders:',border,'and Fixed frontiers:',frontier)
     
     for ni in range(n_norms):
         nnam = norm_refs[ni][0]
@@ -593,7 +598,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Variable parameters - E,w,norms,D: ',border[1]-border[0],border[2]-border[1],border[3]-border[2],border[4]-border[3],' =',n_pars) 
     print('Fixed    parameters - E,w,norms,D: ',frontier[1]-frontier[0],frontier[2]-frontier[1],frontier[3]-frontier[2],frontier[4]-frontier[3],' =',n_fixed) 
     print('# zero widths  =',numpy.count_nonzero(g_poles == 0) ,'\n')
-    ndof = n_data - n_pars
+    n_dof = n_data - 4
     
     if debug:
         print('\n Variable parameters:',' '.join(searchnames)) 
@@ -771,8 +776,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
 
     searchpars0 = searchparms
-    npars = searchpars0.shape[0]
-    print('Number of search parameters:',npars)
+    n_pars = searchpars0.shape[0]
+    print('Number of search parameters:',n_pars)
     
     if init is not None:
         ifile = open(init[1],'r')
@@ -781,8 +786,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         vals = ifile.readline().replace('[','').replace(']','').split()
         print('Restart at chisq/pt',vals[0])
         searchpars0 = vals[1:]
-        if npars != searchpars0.shape[0]:
-            print('Number of reread search parameters',searchpars0.shape[0],' is not',npars,'now expected. STOP')
+        if n_pars != searchpars0.shape[0]:
+            print('Number of reread search parameters',searchpars0.shape[0],' is not',n_pars,'now expected. STOP')
             sys.exit()
 
     if Cross_Sections:
@@ -833,36 +838,14 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     
+
     from evaluate import evaluate
     searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0, A_tF_n, XS_totals = evaluate(Multi,ComputerPrecisions, Channels,
         CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
         Search_Control,Data_Control, searchpars0, data_val, tim)
 
-    
-    
-#     if Multi:
-#         print('\nUse TF MirroredStrategy')
-#         from evaluate_M import evaluate_M
-#         searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluate_MSf(ComputerPrecisions, Channels,
-#             CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
-#             Search_Control,Pleg, searchpars0, data_val, tim)
-#     else:
-#         from evaluate_f import evaluatef
-#         searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0 = evaluatef(ComputerPrecisions, Channels,
-#             CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
-#             Search_Control,Pleg, searchpars0, data_val, tim)
-# 
-#     if Cross_Sections:
-#         Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
-#     
-#         from evaluate_s import evaluate_s
-#         chisq_x, A_tF_n, XS_totals =  evaluate_s(ComputerPrecisions, Channels,
-#             CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
-#             Search_Control,Data_Control, searchpars_n, data_val, tim)
-#         
 
-    ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
-    ww = numpy.sum(searchpars_n[border[1]:border[2]]**2) * widthWeight
+    ww = numpy.sum(searchpars_n[border[1]:border[2]]**4) * widthWeight
     print("Finished tf: ",tim.toString( ))
     sys.stdout.flush()
 #  END OF TENSORFLOW CALL
@@ -874,7 +857,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
         norm_val =numpy.zeros([n_norms]) # searchpars_n[border[2]:border[3]] ** 2
         
-        chisqpdof = chisq_n*n_data/ndof
+        chisqpdof = chisq_n/n_dof
 
         newname = {}
         for ip in range(border[0],border[1]): #### Extract parameters after previous search:
@@ -944,7 +927,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             parity = '+' if pi_set[jset] > 0 else '-'
             D_poles[jset,n] = fixedpars[ip]**2
             varying = abs(E_poles[jset,n]) < Background and  fixednames[ip] not in fixedlistex
-            nam='PJ%.1f%s:D%.3f' % (J_set[jset],parity, D_poles[jset,n])
+            nam='PJ%.1f%s:D%.3f' % (J_set[jset],parity, E_poles[jset,n])
             newname[fixednames[ip]] = nam 
         
 # Copy parameters back into GNDS 
@@ -971,126 +954,122 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", "\n".join(R.toXMLList()))
             jset += 1
                 
-        print('\nR-matrix parameters:')
-         
-        if not Search:
-            fmt = '%4i %4i   S: %10.5f %14.2f   %15s     %s'
-            print('   P  Loc   Start:    V           grad    Parameter         new name')
-            for p in range(n_pars):   
-                newRname = newname.get(searchnames[p],'')
-                if newRname == searchnames[p]: newRname = ''
-                sp = searchpars0[p]; sg = grad0[p]
-                if p >= border[2]:  # norms and damping
-                    sg /= 2.*sp
-                    sp = sp**2
-                print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p],newRname) )
+    print('\nR-matrix parameters:')
+     
+    if not Search:
+        fmt = '%4i %4i   S: %10.5f %14.2f   %s'
+        print('   P  Loc   Start:    V           grad    Parameter')
+        for p in range(n_pars):   
+            sp = searchpars0[p]; sg = grad0[p]
+            if p >= border[2]:  # norms and damping
+                sg /= 2.*sp
+                sp = sp**2
+            print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p]) )
 #             fmt2 = '%4i %4i   S: %10.5f   %s') )
-            print('\n*** chisq/pt =',chisq_n,
-                  '\n    chisq/dof=',chisq_n*n_data/ndof)
-            covarianceSuite = None
+#         ww = numpy.sum(searchpars0[border[1]:border[2]]**4) * widthWeight
+        print('\n*** chisq/pt =',chisq_n/n_data, ' so chisq/dof=',chisq_n/n_dof,' with ww',ww/n_dof,' so data chisq/dof',(chisq_n-ww)/n_dof)
+        covarianceSuite = None
+        
+    else:
+        fmt = '%4i %4i   S: %10.5f %14.2f  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
+        print('   P  Loc   Start:    V           grad    Final:     V      grad        1sig   Percent error     Parameter        new name')
+        if frontier[4]>0: print('Varying:')
+        for p in range(n_pars):   
+            sig = inverse_hessian[p,p]**0.5
+            sp0 = searchpars0[p]; sg0 = grad0[p]
+            if p >= border[2]:  # norms and damping
+                sg0 /= 2.*sp0
+                sp0 = sp0**2
+            sp1 = searchpars_n[p]; sg1 = grad1[p]
+            if p >= border[2]:
+                sg1 /= 2.*sp1
+                sp1 = sp1**2
+            newnam = newname.get(searchnames[p],'')
+            if newnam == searchnames[p]: newnam = ''  # don't repeat unchanged old name
+            print(fmt % (p,searchloc[p,0],sp0,sg0,sp1,sg1,sig, 100* sig/(searchpars_n[p]+1e-10),searchnames[p],newnam ) )
+        fmt2 = '%4i %4i   S: %10.5f   %s     %s'
+        if frontier[4]>0: print('Fixed:')
+        for p in range(frontier[3]):   
+            print(fmt2 % (p,fixedloc[p,0],fixedpars[p],fixednames[p],newname.get(fixednames[p],'')) )
             
-        else:
-            fmt = '%4i %4i   S: %10.5f %14.2f  F:  %10.5f %10.3f  %10.5f   %8.1f %%   %15s     %s'
-            print('   P  Loc   Start:    V           grad    Final:     V      grad        1sig   Percent error     Parameter        new name')
-            if frontier[3]>0: print('Varying:')
-            for p in range(n_pars):   
-                sig = inverse_hessian[p,p]**0.5
-                sp0 = searchpars0[p]; sg0 = grad0[p]
-                if p >= border[2]:  # norms and damping
-                    sg0 /= 2.*sp0
-                    sp0 = sp0**2
-                sp1 = searchpars_n[p]; sg1 = grad1[p]
-                if p >= border[2]:
-                    sg1 /= 2.*sp1
-                    sp1 = sp1**2
-                print(fmt % (p,searchloc[p,0],sp0,sg0,sp1,sg1,sig, sig/(searchpars_n[p]+1e-10),searchnames[p],newname.get(searchnames[p],'') ) )
-            fmt2 = '%4i %4i   S: %10.5f   %s     %s'
-            if frontier[3]>0: print('Fixed:')
-            for p in range(frontier[3]):   
-                print(fmt2 % (p,fixedloc[p,0],fixedpars[p],fixednames[p],newname.get(fixednames[p],'')) )
-                
-            print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[3])]))
+        print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[3])]))
 
-            print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %11.3e' % (chisq_n,chisqpdof,ndof,chisq_n*n_data))
-                    
+        print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %11.3e' % (chisq_n/n_data,chisqpdof,n_dof,chisq_n*n_data))
+                
 
 # Copy covariance matrix back into GNDS 
-            covarianceSuite = write_gnds_covariances(gnd,inverse_hessian,GNDS_loc,border,  verbose,debug)
-                                
+        covarianceSuite = write_gnds_covariances(gnd,inverse_hessian,GNDS_loc,border,  verbose,debug)
+                            
 
-            trace = open('%s/%s-bfgs_min.trace'% (base,base),'r')
-            tracel = open('%s/%s-bfgs_min.tracel'% (base,base),'w')
-            traces = trace.readlines( )
-            trace.close( )
-            lowest_chisq = 1e8
-            for i,cs in enumerate(traces):
-                css = cs.split()
-                chis = float(css[0])
-                lowest_chisq = min(lowest_chisq, chis)
-                print(i+1,lowest_chisq,' '.join(css[1:3]),chis, file=tracel)
-            tracel.close()
-        
-            snap = open('%s/%s-bfgs_min.snap'% (base,base),'r')
-            snapl = open('%s/%s-bfgs_min.snapl'% (base,base),'w')
-            snaps = snap.readlines( )
-            snap.close( )
-            included = numpy.zeros(n_pars, dtype=INT)
-            lowest_chisq = 1e6
-            for vals in snaps:
-    #         for i,vals in enumerate(snaps):
-                val_list = vals.replace('[',' ').replace(']',' ').split()
-                chisqr = float(val_list[0])
-                if chisqr < lowest_chisq:
-                    for iv,v in enumerate(val_list[1:]):
-                        if abs(float(v)) > large: included[iv] = True
-    #                 print('Chisq at',i,'down to',lowest_chisq/n_data)
-                lowest_chisq = min(lowest_chisq,chisqr)
-            n_largest = numpy.count_nonzero(included)
-            p_largest = []
-            for i in range(n_pars):
-               if included[i]:  p_largest.append(i)
-            print('List the',n_largest,' parameters above',large,':\n',p_largest)
+        trace = open('%s/%s-bfgs_min.trace'% (base,base),'r')
+        tracel = open('%s/%s-bfgs_min.tracel'% (base,base),'w')
+        traces = trace.readlines( )
+        trace.close( )
+        lowest_chisq = 1e8
+        for i,cs in enumerate(traces):
+            css = cs.split()
+            chis = float(css[0])
+            lowest_chisq = min(lowest_chisq, chis)
+            print(i+1,lowest_chisq,' '.join(css[1:3]),chis, file=tracel)
+        tracel.close()
+    
+        snap = open('%s/%s-bfgs_min.snap'% (base,base),'r')
+        snapl = open('%s/%s-bfgs_min.snapl'% (base,base),'w')
+        snaps = snap.readlines( )
+        snap.close( )
+        included = numpy.zeros(n_pars, dtype=INT)
+        lowest_chisq = 1e6
+        for vals in snaps:
+#         for i,vals in enumerate(snaps):
+            val_list = vals.replace('[',' ').replace(']',' ').split()
+            chisqr = float(val_list[0])
+            if chisqr < lowest_chisq:
+                for iv,v in enumerate(val_list[1:]):
+                    if abs(float(v)) > large: included[iv] = True
+#                 print('Chisq at',i,'down to',lowest_chisq/n_data)
+            lowest_chisq = min(lowest_chisq,chisqr)
+        n_largest = numpy.count_nonzero(included)
+        p_largest = []
+        for i in range(n_pars):
+           if included[i]:  p_largest.append(i)
+        print('List the',n_largest,' parameters above',large,':\n',p_largest)
 
-            lowest_chisq = 1e6
-            for i,vals in enumerate(snaps):
-                val_list = vals.replace('[',' ').replace(']',' ').split()
-                chisqr = float(val_list[0])
-                if chisqr < lowest_chisq:
-                    out = ''
-                    for p in p_largest:
-                        out += ' ' + val_list[p+1]
-                    print(i,out, file=snapl)
-                lowest_chisq = min(lowest_chisq,chisqr)
-            snapl.close()                
-        
-            print('\n*** chisq/pt = %12.5f including ww %12.5f and chisq/dof= %12.5f  for dof = %s\n' % (chisq_n,ww/ndof,(chisq_n*n_data - ww)/ndof,ndof) )
-          
-            n_normsFitted = border[3]-border[2]
-            docLines = [' ','Fitted by Rflow','   '+inFile,time.ctime(),pwd.getpwuid(os.getuid())[4],' ',' ']
-            docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n)]
-            docLines += [' Final   chisq/pt: %12.5f' % (chisq_n),' /dof= %12.5f for %i' % (chisqpdof,ndof),' ']
-            docLines += ['  Fitted norm %12.5f for %s' % (searchpars_n[n+border[2]],searchnames[n+border[2]] ) for n in range(n_normsFitted)] 
-            docLines += [' '] 
-        
-            code = 'Fit quality'
-            codeLabels = [item.keyValue for item in RMatrix.documentation.computerCodes]
-            for i in range(2,100):
-                codeLabel = '%s %s' % (code,i)
-                if codeLabel not in codeLabels: break
-            print('\nNew computerCode is "%s" after' % codeLabel,codeLabels,'\n')
+        lowest_chisq = 1e6
+        for i,vals in enumerate(snaps):
+            val_list = vals.replace('[',' ').replace(']',' ').split()
+            chisqr = float(val_list[0])
+            if chisqr < lowest_chisq:
+                out = ''
+                for p in p_largest:
+                    out += ' ' + val_list[p+1]
+                print(i,out, file=snapl)
+            lowest_chisq = min(lowest_chisq,chisqr)
+        snapl.close()                
+    
+#         print('\n*** chisq/pt = %12.5f including ww %12.5f and chisq/dof= %12.5f  for dof = %s\n' % (chisq_n/n_dof,ww/n_dof,(chisq_n - ww)/n_dof,n_dof) )
+      
+        n_normsFitted = border[3]-border[2]
+        docLines = [' ','Fitted by Rflow','   '+inFile,time.ctime(),pwd.getpwuid(os.getuid())[4],' ',' ']
+        docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n/n_data)]
+        docLines += [' Final   chisq/pt: %12.5f including ww/dof %12.5f and Chisq/DOF = %12.5f  for dof = %s\n' % (chisq_n/n_dof,ww/n_dof,(chisq_n - ww)/n_dof,n_dof) ,' ']
+        docLines += [' Fitted norm %12.5f for %s' % (searchpars_n[n+border[2]],searchnames[n+border[2]] ) for n in range(n_normsFitted)] 
+        docLines += [' '] 
+    
+        code = 'Fit quality'
+        codeLabels = [item.keyValue for item in RMatrix.documentation.computerCodes]
+        for i in range(2,100):
+            codeLabel = '%s %s' % (code,i)
+            if codeLabel not in codeLabels: break
+        print('\nNew computerCode is "%s" after' % codeLabel,codeLabels,'\n')
 
-            computerCode = computerCodeModule.ComputerCode( label = codeLabel, name = 'Rflow', version = '', date = time.ctime() )
-            computerCode.note.body = '\n'.join( docLines )
-            RMatrix.documentation.computerCodes.add( computerCode )
-        if Cross_Sections:
-            return(chisq_n,A_tF_n,norm_val,n_pars,XS_totals,ch_info,None)
-        else:
-            return(chisq_n,None,  norm_val,n_pars,None,     ch_info,covarianceSuite)
+        computerCode = computerCodeModule.ComputerCode( label = codeLabel, name = 'Rflow', version = '', date = time.ctime() )
+        computerCode.note.body = '\n'.join( docLines )
+        RMatrix.documentation.computerCodes.add( computerCode )
 
+    print('\n*** chisq/pt = %12.5f including ww/dof = %12.5f and chisq/dof= %12.5f  for dof = %s\n' % (chisq_n/n_dof,ww/n_dof,(chisq_n - ww)/n_dof,n_dof) )
+    
+    ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
+    if Cross_Sections:
+        return(chisq_n,ww,A_tF_n,norm_val,n_pars,n_dof,XS_totals,ch_info,None)
     else:
-        print('\n*** chisq/pt = %12.5f including ww %12.5f and chisq/dof= %12.5f  for dof = %s\n' % (chisq_n,ww/ndof,(chisq_n*n_data - ww)/ndof,ndof) )
-        
-        if Cross_Sections:
-            return(chisq_n,A_tF_n,norm_val,n_pars,XS_totals,ch_info,None)
-        else:
-            return(chisq_n,None,  norm_val,n_pars,None,     ch_info,None)
+        return(chisq_n,ww,None,  norm_val,n_pars,n_dof,None,     ch_info,None)

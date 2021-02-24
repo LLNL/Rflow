@@ -110,8 +110,8 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     n_pars = border[4]
     n_norms = fixed_norms.shape[0]
     print('Search parameters :',n_pars)
-    ndof = n_data - n_pars
-    print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals. Dof=',ndof)
+    n_dof = n_data - n_pars
+    print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals. Dof=',n_dof)
     sys.stdout.flush()
 
 
@@ -259,7 +259,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         chi = (norm_val - norm_info[:,0]) * norm_info[:,1]
         chisq += tf.reduce_sum(chi**2)
 
-        chisq += tf.reduce_sum(searchWidths**2) * widthWeight
+        chisq += tf.reduce_sum(searchWidths**4) * widthWeight
 
         return (chisq)
 
@@ -300,7 +300,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     
         A_t = tf.concat([AxA, AxI, AxT], 0)
         chisq = ChiSqTF(A_t, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
-        ww = tf.reduce_sum(searchpars[border[1]:border[2]]**2) * widthWeight
+        ww = tf.reduce_sum(searchpars[border[1]:border[2]]**4) * widthWeight
         
         if Search:
             tf.print(chisq/n_data, ww/n_data, (chisq-ww)/n_data,                             output_stream=trace)
@@ -403,8 +403,8 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         chisq0_n = chisq0.numpy()
         grad0 = Grads.numpy()
         
-        ww = ( tf.reduce_sum(searchpars[border[1]:border[2]]**2) * widthWeight ).numpy()
-        print('\nFirst run:',chisq0_n/n_data,'including ww',ww/n_data,':',(chisq0_n-ww)/n_data ,'for data.\n') 
+        ww = ( tf.reduce_sum(searchpars[border[1]:border[2]]**4) * widthWeight ).numpy()
+        print('\nFirst run chisq/pt:',chisq0_n/n_data,'including ww/pt',ww/n_data,':',(chisq0_n-ww)/n_data ,'for data.\n') 
          
         if verbose: print('Grads:',grad0)
         sys.stdout.flush()
@@ -505,9 +505,10 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         
         chisqF,Grads = FitMeasureTF(searchpars)  # A_tF,Grads,  Tp_mat, XSp_mat,XSp_tot via globals
         grad1 = Grads.numpy()
-        chisqF_n = chisqF.numpy()/n_data
-        chisqFpdof_n = chisqF.numpy()/ndof
-        print(  'chisq from FitStatusTF:',chisqF_n)
+        chisqF_n = chisqF.numpy()
+        chisqpptF_n = chisqF_n/n_data
+        chisqpdofF_n = chisqF_n/n_dof
+        print(  'chisq from FitStatusTF/pt:',chisqpptF_n,' chisq/dof =',chisqpdofF_n)
         if verbose: print('Grads:',grad1)
 #  END OF STRATEGY
 
@@ -611,7 +612,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             A_tF = tf.concat([AxA,AxI,AxT], 0)
             chisq = ChiSqTF(A_tF, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
 
-            print("First FitStatusTF: ",tim.toString( ),'giving',chisq.numpy()/n_data)
+            print("First FitStatusTF: ",tim.toString( ),'giving chisq/pt',chisq.numpy()/n_data)
     
             A_tF_n = A_tF.numpy()
             XS_totals = [XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy()]

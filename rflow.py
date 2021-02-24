@@ -77,14 +77,16 @@ if __name__=='__main__':
     parser.add_argument("-d", "--dmin", type=float, help="Min energy of R-matrix pole to fit damping, in gnds cm energy frame.")
     parser.add_argument("-D", "--DMAX", type=float, help="Max energy of R-matrix pole to fit damping. If d>D, create gap.")
     parser.add_argument("-L", "--Lambda", type=float, help="Use (E-dmin)^Lambda to modulate all damping widths at gnds-scattering cm energy E.")
+    parser.add_argument(      "--ABES", action="store_true", help="Allow Brune Energy Shifts.  Use inexact method")
 
-    parser.add_argument("-S", "--Search", type=str, help="Search minimization method.")
+    parser.add_argument("-S", "--Search", type=str, help="Search minimization target.")
     parser.add_argument("-I", "--Iterations", type=int, default=2000, help="max_iterations for search")
     parser.add_argument("-i", "--init",type=str, nargs="*", help="iterations and snap file name for starting parameters")
     parser.add_argument("-w", "--widthWeight", type=float, default=0.0, help="Add widthWeight*vary_widths**2 to chisq during searches")
+    parser.add_argument("-X", "--XCLUDE", type=float,  help="Make dataset*3 with data chi < X (e.g. X=3). Needs -C data.")
     
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
-    parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files for grace")
+    parser.add_argument("-C", "--Cross_Sections", action="store_true", help="Output fit and data files, for json and grace")
     parser.add_argument("-c", "--compound", action="store_true", help="Plot -M and -C energies on scale of E* of compound system")
     parser.add_argument("-T", "--TransitionMatrix",  type=int, default=1, help="Produce cross-section transition matrix functions in *tot_a and *fch_a-to-b")
 
@@ -397,9 +399,9 @@ if __name__=='__main__':
     if args.Search or args.Cross_Sections : os.system('mkdir '+dataDir)
     print("Finish setup: ",tim.toString( ))
  
-    chisqtot,xsc,norm_val,n_pars,XS_totals,ch_info,cov  = Gflow(
+    chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Multi,
+                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Multi,args.ABES,
                         norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
                         args.Cross_Sections,args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large,ComputerPrecisions,tim)
@@ -437,12 +439,12 @@ if __name__=='__main__':
             totals = None
             pnin = ''
 
-        dof = n_data + n_cnorms - n_norms - n_pars
-        plotOut(n_data,n_norms,dof,args, base,info,dataDir, 
-            chisqtot,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
+        plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, 
+            chisq,ww,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
             groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, args.TransitionMatrix,
+            args.XCLUDE,projectile4LabEnergies,data_lines,args.dataFile,
             EIndex,totals,pname,tname,args.datasize,ipair,cm2lab, emin,emax,pnin,gnd,cmd )
     
-        
+    print('\n*** chisq/pt = %12.5f, chisq/dof = %12.5f with ww = %12.5f so data Chisq/DOF = %12.5f from dof = %i\n' % (chisq/n_data,chisq/n_dof,ww/n_dof,(chisq-ww)/n_dof, n_dof) )   
     print("Final rflow: ",tim.toString( ))
     print("Target stdout:",dataDir + '.out')
