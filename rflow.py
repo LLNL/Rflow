@@ -385,6 +385,7 @@ if __name__=='__main__':
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
     if args.dmin       is not None: base += '-d%s' % args.dmin
     if args.DMAX       is not None: base += '-D%s' % args.DMAX
+    if args.Lambda     is not None: base += '-L%s' % args.Lambda
     if args.init       is not None: base += '@i%s'  % args.init[0]
     if args.init       is not None: print('Re-initialize at line',args.init[0],'of snap file',args.init[1])
     if args.Search     is not None: base += '+S%s'  % args.Search +  '_I%s' % args.Iterations

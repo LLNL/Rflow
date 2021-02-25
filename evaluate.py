@@ -47,7 +47,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 #     CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles,has_widths)                                                  # batch n_jsets
 # 
 #     Dimensions = (n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches)
-#     Logicals = (LMatrix,brune,Lambda,chargedElastic, debug,verbose)
+#     Logicals = (LMatrix,brune,Lambda,EBU,chargedElastic, debug,verbose)
 # 
 #     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections)
 # 
@@ -64,7 +64,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     S_poles,dSdE_poles,EO_poles,has_widths = CoulombFunctions_poles                                                  # batch n_jsets
 
     n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches = Dimensions
-    LMatrix,brune,Lambda,chargedElastic, debug,verbose = Logicals
+    LMatrix,brune,Lambda,EBU,chargedElastic, debug,verbose = Logicals
 
     searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections = Search_Control
 
@@ -120,15 +120,21 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
 
     @tf.function
-    def R2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans):
+    def R2T_transformsTF(g_poles,E_rpoles,E_ipoles,E_scat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans):
     # Now do TF:
         GL = tf.expand_dims(g_poles,2)
         GR = tf.expand_dims(g_poles,3)
 
         GG  = GL * GR
         GGe = tf.expand_dims(GG,0)  
-
-        POLES = tf.reshape(E_poles, [1,n_jsets,n_poles,1,1])  # same for all energies and channel matrix
+        if Lambda is None:
+            POLES = tf.reshape(tf.complex(E_rpoles,E_ipoles), [1,n_jsets,n_poles,1,1])  # same for all energies and channel matrix
+        else:
+            zero = tf.constant(0.0, dtype = REAL)
+            Dmod = tf.maximum(tf.math.real(E_scat) - EBU ,zero) ** Lambda   # size [n_data]
+            POLES = tf.reshape(tf.complex(E_rpoles, zero), [1,n_jsets,n_poles,1,1])  # real part same for all energies and channel matrix
+            POLES +=tf.complex(zero, tf.reshape(Dmod,[-1,1,1,1,1]) * tf.reshape(E_ipoles, [1,n_jsets,n_poles,1,1]) )  # imag part NOT same for all energies
+            
         SCAT  = tf.reshape(E_scat,  [-1,1,1,1,1])             # vary only for scattering energies
 
         RPARTS = GGe / (POLES - SCAT);    # print('RPARTS',RPARTS.dtype,RPARTS.get_shape())
@@ -145,22 +151,40 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         return(T_mat)
 
     @tf.function
-    def LM2T_transformsTF(g_poles,E_poles,E_scat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles):
+    def LM2T_transformsTF(g_poles,E_rpoles,E_ipoles,E_scat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles):
     # Use Level Matrix A to get T=1-S:
     #     print('g_poles',g_poles.dtype,g_poles.get_shape())
 
         T_matList = []
+        zero = tf.constant(0.0, dtype = REAL)
+        
         for js in range(n_jsets):
             m = nch[js]  # number of partial-wave channels
             p = npl[js]  # number of poles
         
             W = tf.reshape(L_diag[:,js,:m],[-1,1,1,m]) #; print('LDIAG',LDIAG.dtype,LDIAG.get_shape())
 
+            if Lambda is None:
+#                 POLES = tf.reshape(E_poles[js,:p], [1,p,1])  # same for all energies and channel matrices
+                POLES = tf.reshape(tf.complex(E_rpoles[js,:p],E_ipoles[js,:p]), [1,p,1])  # same for all energies and channel matrix
+                if brune:
+                    POLES_L = tf.reshape(E_poles[js,:p], [1,p,1,1])  # same for all energies and channel matrix
+                    POLES_R = tf.reshape(E_poles[js,:p], [1,1,p,1])  # same for all energies and channel matrix                
+            else:
+                zero = tf.constant(0.0, dtype = REAL)
+                Dmod = tf.maximum(tf.math.real(E_scat) - EBU ,zero) ** Lambda   # size [n_data]
+                POLES = tf.reshape(tf.complex(E_rpoles[js,:p], zero), [1,p,1])  # real part same for all energies and channel matrix
+                POLES +=tf.complex(zero, tf.reshape(Dmod,[-1,1,1]) * tf.reshape(E_ipoles[js,:p], [1,p,1]) )  # imag part NOT same for all energies
+                # print(js,p,'POLES',POLES.dtype,POLES.get_shape()) # gives shape [n_data,p,1]
+                if brune:
+                    POLES_L = tf.reshape(POLES,[-1,p,1,1])
+                    POLES_R = tf.reshape(POLES,[-1,1,p,1])
+            
             if brune:   # add extra terms to GLG
                 Z = tf.constant(0.0, dtype=REAL)
-                SE_poles = S_poles[js,:p,:m] + tf.expand_dims(tf.math.real(E_poles[js,:p])-EO_poles[js,:p],1) * dSdE_poles[js,:p,:m]
-                POLES_L = tf.reshape(E_poles[js,:p], [1,p,1,1])  # same for all energies and channel matrix
-                POLES_R = tf.reshape(E_poles[js,:p], [1,1,p,1])  # same for all energies and channel matrix
+                SE_poles = S_poles[js,:p,:m] + tf.expand_dims(tf.math.real(E_rpoles[js,:p])-EO_poles[js,:p],1) * dSdE_poles[js,:p,:m]
+#                 POLES_L = tf.reshape(E_poles[js,:p], [1,p,1,1])  # same for all energies and channel matrix
+#                 POLES_R = tf.reshape(E_poles[js,:p], [1,1,p,1])  # same for all energies and channel matrix
                 SHIFT_L = tf.reshape(SE_poles[:p,:m], [1,p,1,m] ) # [J,n,c] >  [1,n,1,c]
                 SHIFT_R = tf.reshape(SE_poles[:p,:m], [1,1,p,m] ) # [J,n,c] >  [1,1,n,c]
                 SCATL  = tf.reshape(E_scat,  [-1,1,1,1])             # vary only for scattering energies
@@ -175,7 +199,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             GR = tf.reshape(g_poles[js,:p,:m],[1,1,p,m]) #; print('GR',GR.dtype,GR.get_shape())
 
             GLG = tf.reduce_sum( GL * W * GR , 3)    # giving [ie,n',n]
-            POLES = tf.reshape(E_poles[js,:p], [1,p,1])  # same for all energies and channel matrix
+#             POLES = tf.reshape(E_poles[js,:p], [1,p,1])  # same for all energies and channel matrices
             SCAT  = tf.reshape(E_scat,  [-1,1,1])             # vary only for scattering energies
             Ainv_mat = tf.eye(p, dtype=CMPLX) * (POLES - SCAT) - GLG    # print('Ainv_mat',Ainv_mat.dtype,Ainv_mat.get_shape())
 
@@ -271,15 +295,16 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
         D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
 
-        E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]), -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2) 
+        E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
+        E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2 
         g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
         E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
         norm_val =                       (norm_valv+ fixed_norms)**2
 
         if not LMatrix:
-             T_mat =  R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
+             T_mat =  R2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
         else:
-             T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
+             T_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
         Tp_mat = T_convertTF(T_mat) #, Tind, Mind)
 
@@ -432,7 +457,8 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
                     norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
                     D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
 
-                    E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]), -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2) 
+                    E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
+                    E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2
                     g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
                     E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
                     norm_val =                       (norm_valv+ fixed_norms)**2
@@ -455,7 +481,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
                                      print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],S_poles[jset,n,c],
                                              100*dSdE_poles[jset,n,c]*(EO_poles[jset,n]-EOO_poles[jset,n])/ (S_poles[jset,n,c] - SOO_poles[jset,n,c])))
                     
-                    Tp_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
+                    Tp_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles ) 
 
                     XSp_mat,XSp_tot  = T2X_transformsTF(Tp_mat,gfac, n_jsets,n_chans,npairs,maxpc)
         
@@ -585,15 +611,16 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
             D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
 
-            E_cpoles = tf.complex(tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles]), -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2) 
+            E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
+            E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2
             g_cpoles = tf.complex(tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
             E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
             norm_val =                       (norm_valv+ fixed_norms)**2
 
             if not LMatrix:
-                 T_mat =  R2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
+                 T_mat =  R2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
             else:
-                 T_mat = LM2T_transformsTF(g_cpoles,E_cpoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles) 
+                 T_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,S_poles,dSdE_poles,EO_poles) 
                  
             TAp_mat,TCp_mat = T_convert_s(T_mat)
     

@@ -439,14 +439,15 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         for n in range(n_poles):
             i = jset*n_poles+n
             E = E_poles[jset,n]
+            Ecm = E/cm2lab[ipair]
             if E == 0: continue   # invalid energy: filler
             nam='PJ%.1f%s:E%.3f' % (J_set[jset],parity, E)
-            varying = abs(E) < Background  and n < npl[jset]
+            varying = abs(Ecm) < Background  and n < npl[jset]
             if pmin is not None and pmax is not None and pmin > pmax: 
                 varying = varying and (E > pmin or E < pmax)
             else:
-                if pmin is not None: varying = varying and E > pmin
-                if pmax is not None: varying = varying and E < pmax
+                if pmin is not None: varying = varying and Ecm > pmin
+                if pmax is not None: varying = varying and Ecm < pmax
             for pattern in patterns:
                  varying = varying and not pattern.match(nam) 
 #             print('Pole',jset,n,'named',nam,'at',E, 'vary:',varying)
@@ -553,6 +554,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             for n in range(n_poles):
                 i = jset*n_poles+n
                 E = E_poles[jset,n]
+                Ecm = E/cm2lab[ipair]
                 if E == 0: continue   # invalid energy: filler
                 D = D_poles[jset,n]
                 sD = math.sqrt(D)
@@ -562,8 +564,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if dmin is not None and dmax is not None and dmin > dmax: 
                     varying = varying and (E > dmin or E < dmax)
                 else:
-                    if dmin is not None: varying = varying and E > dmin
-                    if dmax is not None: varying = varying and E < dmax
+                    if dmin is not None: varying = varying and Ecm > dmin
+                    if dmax is not None: varying = varying and Ecm < dmax
                 for pattern in patterns:
                      varying = varying and not pattern.match(nam) 
 #               print('Pole',jset,n,'named',nam,'at',E, 'D varies:',varying)
@@ -820,6 +822,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         ExptAint,ExptTot,CS_diag,p_mask,gfac_s = None, None, None, None, None
             
     print("To start tf: ",tim.toString( ))
+    
+    EBU = dmin*cm2lab[ipair] if dmin is not None else 0.
+    if Lambda is not None:
+         print('\nModulate damping widths by factor (E - %7.3f)^%5.3f  (lab energies)\n' % (EBU,Lambda))
     sys.stdout.flush()
 
 ################################################################    
@@ -832,7 +838,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles,has_widths]                                                  # batch n_jsets
 
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
-    Logicals = [LMatrix,brune,Lambda,chargedElastic, debug,verbose]
+    Logicals = [LMatrix,brune,Lambda,EBU,chargedElastic, debug,verbose]
 
     Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts,Cross_Sections]
 
@@ -1024,7 +1030,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             val_list = vals.replace('[',' ').replace(']',' ').split()
             chisqr = float(val_list[0])
             if chisqr < lowest_chisq:
-                for iv,v in enumerate(val_list[1:]):
+                for iv,v in enumerate(val_list[3:]):
                     if abs(float(v)) > large: included[iv] = True
 #                 print('Chisq at',i,'down to',lowest_chisq/n_data)
             lowest_chisq = min(lowest_chisq,chisqr)
