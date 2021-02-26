@@ -131,7 +131,12 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             POLES = tf.reshape(tf.complex(E_rpoles,E_ipoles), [1,n_jsets,n_poles,1,1])  # same for all energies and channel matrix
         else:
             zero = tf.constant(0.0, dtype = REAL)
-            Dmod = tf.maximum(tf.math.real(E_scat) - EBU ,zero) ** Lambda   # size [n_data]
+            if Lambda > 1e-10:
+                Dmod = tf.maximum(tf.math.real(E_scat) - EBU ,zero) ** Lambda   # size [n_data]
+            elif Lambda < -1e-10:
+                Dmod = tf.maximum(tf.sign(tf.math.real(E_scat) - EBU ) - tf.exp( Lambda * (tf.math.real(E_scat) - EBU ) ), zero )
+            else:
+                Dmod = tf.maximum(tf.sign(tf.math.real(E_scat) - EBU ), zero )  # size [n_data]
             POLES = tf.reshape(tf.complex(E_rpoles, zero), [1,n_jsets,n_poles,1,1])  # real part same for all energies and channel matrix
             POLES +=tf.complex(zero, tf.reshape(Dmod,[-1,1,1,1,1]) * tf.reshape(E_ipoles, [1,n_jsets,n_poles,1,1]) )  # imag part NOT same for all energies
             
@@ -171,8 +176,13 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
                     POLES_L = tf.reshape(E_poles[js,:p], [1,p,1,1])  # same for all energies and channel matrix
                     POLES_R = tf.reshape(E_poles[js,:p], [1,1,p,1])  # same for all energies and channel matrix                
             else:
-                zero = tf.constant(0.0, dtype = REAL)
-                Dmod = tf.maximum(tf.math.real(E_scat) - EBU ,zero) ** Lambda   # size [n_data]
+                if Lambda > 1e-10:
+                    Dmod = tf.maximum(tf.math.real(E_scat) - EBU ,zero) ** Lambda   # size [n_data]
+                elif Lambda < -1e-10:
+                    Dmod = tf.maximum(tf.sign(tf.math.real(E_scat) - EBU ) - tf.exp( Lambda * (tf.math.real(E_scat) - EBU ) ), zero )
+                else:
+                    Dmod = tf.maximum(tf.sign(tf.math.real(E_scat) - EBU ), zero )
+                
                 POLES = tf.reshape(tf.complex(E_rpoles[js,:p], zero), [1,p,1])  # real part same for all energies and channel matrix
                 POLES +=tf.complex(zero, tf.reshape(Dmod,[-1,1,1]) * tf.reshape(E_ipoles[js,:p], [1,p,1]) )  # imag part NOT same for all energies
                 # print(js,p,'POLES',POLES.dtype,POLES.get_shape()) # gives shape [n_data,p,1]

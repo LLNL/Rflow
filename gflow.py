@@ -607,7 +607,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         print('Fixed    parameterlist:',' '.join(fixedlistex))
     print('Searching on pole energies:',searchparms[border[0]:border[1]])
     print('Keep fixed   pole energies:',fixednames[frontier[0]:frontier[1]])
-    print('Searching on damping widths: [',' '.join(['%.2e' % d**2 for d in searchparms[border[3]:border[4]]]) ) 
+    print('Searching on damping widths: [',' '.join(['%.2e' % d**2 for d in searchparms[border[3]:border[4]]]),']') 
     
     if brune and False:
         for jset in range(n_jsets):
@@ -825,7 +825,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     
     EBU = dmin*cm2lab[ipair] if dmin is not None else 0.
     if Lambda is not None:
-         print('\nModulate damping widths by factor (E - %7.3f)^%5.3f  (lab energies)\n' % (EBU,Lambda))
+         rule = '(E - %.3f)^%5.3f' % (EBU,Lambda,EBU) if Lambda > 0 else '1 - exp(-%f*(E-%.3f))' % (-Lambda,EBU)
+         print('\nModulate damping widths by factor %s, or 0.0 for E < %.3f (lab energies)\n' % (rule,EBU) )
     sys.stdout.flush()
 
 ################################################################    
