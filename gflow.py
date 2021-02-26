@@ -14,7 +14,7 @@ from xData.series1d  import Legendre
 
 from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
-
+# from scipy import interpolate
 
 # CONSTANTS: 
 hbc =   197.3269788e0             # hcross * c (MeV.fm)
@@ -28,7 +28,7 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,ABES,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,ABES,Grid,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
@@ -400,11 +400,55 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         jset += 1   
 
     if brune:  # S_poles: Shift functions at pole positions for Brune basis   
-        S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
-        dSdE_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
-#         EO_poles =  numpy.zeros([n_jsets,n_poles], dtype=REAL) 
-        EO_poles = E_poles.copy()
-        Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+        if Grid == 0.0:
+            S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
+            dSdE_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
+    #         EO_poles =  numpy.zeros([n_jsets,n_poles], dtype=REAL) 
+            EO_poles = E_poles.copy()
+            Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+            S_poles1 = S_poles.copy()
+            
+        else : # make a linear grid of Shift functions for use for each pole
+            Lowest_pole_energy = numpy.amin(E_poles) - 10.
+            Highest_pole_energy = numpy.amax(E_poles) + 20.
+            N_gridE = int( (Highest_pole_energy - Lowest_pole_energy) / Grid ) + 1
+            print('Make Shift grid for Brune level matrix with %i points from Elab from %.3f to %.3f' % (N_gridE,Lowest_pole_energy,Highest_pole_energy))
+            S_poles = numpy.zeros([N_gridE,n_jsets,n_chans], dtype=REAL)                
+            CF2_L = numpy.zeros(Lmax+1, dtype=CMPLX)
+            Egrid = numpy.zeros(N_gridE)
+            
+            for ie in range(N_gridE):
+                Egrid[ie] = Lowest_pole_energy + ie*Grid   # ELab on the GNDS projectile frame (ipair) 
+            for pair in range(npairs):
+                for ie in range(N_gridE):
+                    Escat = Egrid[ie]
+                    E = Escat/cm2lab[ipair] - QI[ipair] + QI[pair]  # Ecm in this partition 'pair'
+                    if rmass[pair]!=0:
+                        k = cmath.sqrt(fmscal * rmass[pair] * E)
+                    else: # photon!
+                        k = E/hbc
+                    if debug: print('ie,E,k = ',ie,E,k)
+                    rho = k * prmax[pair]
+                    if debug and abs(rho) <1e-10: 
+                        print('rho =',rho,'from E,k,r =',E,k,prmax[pair],'from Elab=',E_scat[ie],'at',ie)
+                    if abs(E) <1e-5 or abs(Escat)<1e-5: continue
+                    eta  =  etacns * za[pair]*zb[pair] * cmath.sqrt(rmass[pair]/E)
+                    if E < 0: eta = -eta  #  negative imaginary part for bound states
+                    PM   = complex(0.,1.); 
+                    EPS=1e-10; LIMIT = 2000000; ACC8 = 1e-12
+                    ZL = 0.0
+                    DL,ERR = cf2(rho,eta,ZL,PM,EPS,LIMIT,ACC8)
+                    CF2_L[0] = DL
+                    for L in range(1,Lmax+1):
+                        RLsq = 1 + (eta/L)**2
+                        SL   = L/rho + eta/L
+                        CF2_L[L] = RLsq/( SL - CF2_L[L-1]) - SL
+                    for jset in range(n_jsets):
+                        for c in range(nch[jset]):
+                            if seg_val[jset,c] != pair: continue
+                            L = L_val[jset,c]
+                            S_poles[ie,jset,c] = (CF2_L[L]*rho).real
+                            
     else:
         S_poles = None
         dSdE_poles = None
@@ -472,7 +516,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 ifixed += 1
     border[1] = ip
     frontier[1] = ifixed
-    if border[1]>0 and brune:
+    if border[1]>0 and brune and Grid == 0.0:
         if not ABES:
             print('Stop. You request fitting of Brune energies, but method not accurate. ABES not set')
             sys.exit()
@@ -836,10 +880,14 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
     CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
-    CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles,has_widths]                                                  # batch n_jsets
-
+    
+    if Grid == 0.0:
+        CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles,has_widths]                  # batch n_jsets
+    else:
+        CoulombFunctions_poles = [S_poles,Lowest_pole_energy,Highest_pole_energy]                  # S on a regular grid
+    
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
-    Logicals = [LMatrix,brune,Lambda,EBU,chargedElastic, debug,verbose]
+    Logicals = [LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose]
 
     Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts,Cross_Sections]
 

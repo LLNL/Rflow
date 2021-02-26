@@ -78,6 +78,7 @@ if __name__=='__main__':
     parser.add_argument("-D", "--DMAX", type=float, help="Max energy of R-matrix pole to fit damping. If d>D, create gap.")
     parser.add_argument("-L", "--Lambda", type=float, help="Use (E-dmin)^Lambda to modulate all damping widths at gnds-scattering cm energy E.")
     parser.add_argument(      "--ABES", action="store_true", help="Allow Brune Energy Shifts.  Use inexact method")
+    parser.add_argument("-G", "--Grid", type=float, default=1e-3, help="Make energy grid with this energy spacing (MeV) for 1d interpolation, avoiding the ABES inexactness.")
 
     parser.add_argument("-S", "--Search", type=str, help="Search minimization target.")
     parser.add_argument("-I", "--Iterations", type=int, default=2000, help="max_iterations for search")
@@ -375,6 +376,7 @@ if __name__=='__main__':
     base = args.inFile
     if args.single: base += 's'
     if args.Multi>0: base += 'm%s' % args.Multi
+    if args.Grid >0: base += '+G%s' % args.Grid
 # data input
     base += '+%s' % args.dataFile.replace('.data','')
     base += dataFilter
@@ -402,7 +404,7 @@ if __name__=='__main__':
  
     chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Multi,args.ABES,
+                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Multi,args.ABES,args.Grid,
                         norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
                         args.Cross_Sections,args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large,ComputerPrecisions,tim)
