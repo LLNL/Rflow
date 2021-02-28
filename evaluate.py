@@ -46,11 +46,11 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 # 
 #     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
 #     CoulombFunctions_data = (L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac)    # batch n_data
-#     Grid=0:    CoulombFunctions_poles = (S_poles,dSdE_poles,EO_poles,has_widths)                                                  # batch n_jsets
+#     Grid=0:    CoulombFunctions_poles = (L_poles,dLdE_poles,EO_poles,has_widths)                                                  # batch n_jsets
 #     Grid>0:    CoulombFunctions_poles = [Lowest_pole_energy,Highest_pole_energy,ShiftE]                  # S on a regular grid
 
 # 
-#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections)
+#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Junk,Iterations,widthWeight,restarts,Cross_Sections)
 # 
 #     Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
 #
@@ -65,13 +65,13 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val = Channels
     L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac = CoulombFunctions_data   # batch n_data
     if Grid == 0.:
-        S_poles,dSdE_poles,EO_poles,has_widths = CoulombFunctions_poles
+        L_poles,dLdE_poles,EO_poles,has_widths = CoulombFunctions_poles
     else:                                               # batch n_jsets
-        S_poles,dSdE_poles,EO_poles = CoulombFunctions_poles  # dSdE_poles,EO_pole = Elow,Ehigh (float scalars!)
+        L_poles,dLdE_poles,EO_poles = CoulombFunctions_poles  # dSdE_poles,EO_pole = Elow,Ehigh (float scalars!)
 
     LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose = Logicals
 
-    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections = Search_Control
+    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Junk,Iterations,widthWeight,restarts,Cross_Sections = Search_Control
 
     Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s = Data_Control
 
@@ -162,7 +162,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         return(T_mat)
 
     @tf.function
-    def LM2T_transformsTF(g_poles,E_rpoles,E_ipoles,E_scat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,Grid,S_poles,dSdE_poles,EO_poles):
+    def LM2T_transformsTF(g_poles,E_rpoles,E_ipoles,E_scat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,Grid,L_poles,dLdE_poles,EO_poles):
     # Use Level Matrix A to get T=1-S:
     #     print('g_poles',g_poles.dtype,g_poles.get_shape())
 
@@ -199,16 +199,16 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             if brune:   # add extra terms to GLG
 
                 if Grid == 0.0:  # first-order Taylor series
-                    SE_poles = S_poles[js,:p,:m] + tf.expand_dims(tf.math.real(E_rpoles[js,:p])-EO_poles[js,:p],1) * dSdE_poles[js,:p,:m]
-                else:  # interpolate on regular grid S_poles
-                    Elow, Ehigh = dSdE_poles,EO_poles
-                    SE_poles = tfp.math.interp_regular_1d_grid(E_rpoles[js,:p], Elow, Ehigh, S_poles[:,js,:m], axis=0)  # want final dimensions SE_poles[:p,:m]
+                    LE_poles = L_poles[js,:p,:m,:] + tf.reshape(tf.math.real(E_rpoles[js,:p])-EO_poles[js,:p],[-1,1,1]) * dLdE_poles[js,:p,:m,:]
+                else:  # interpolate on regular grid L_poles
+                    Elow, Ehigh = dLdE_poles,EO_poles
+                    LE_poles = tfp.math.interp_regular_1d_grid(E_rpoles[js,:p], Elow, Ehigh, L_poles[:,js,:m,:], axis=0)  # want final dimensions SE_poles[:p,:m]
 #                     print('\nSE_poles',SE_poles.dtype,SE_poles.get_shape(),'for p,m=',p,m,'\n')
                     
 #                 POLES_L = tf.reshape(E_poles[js,:p], [1,p,1,1])  # same for all energies and channel matrix
 #                 POLES_R = tf.reshape(E_poles[js,:p], [1,1,p,1])  # same for all energies and channel matrix
-                SHIFT_L = tf.reshape(SE_poles[:p,:m], [1,p,1,m] ) # [J,n,c] >  [1,n,1,c]
-                SHIFT_R = tf.reshape(SE_poles[:p,:m], [1,1,p,m] ) # [J,n,c] >  [1,1,n,c]
+                SHIFT_L = tf.reshape(LE_poles[:p,:m,0], [1,p,1,m] ) # [J,n,c] >  [1,n,1,c]
+                SHIFT_R = tf.reshape(LE_poles[:p,:m,0], [1,1,p,m] ) # [J,n,c] >  [1,1,n,c]
                 SCATL  = tf.reshape(E_scat,  [-1,1,1,1])             # vary only for scattering energies
 
                 NUM = tf.complex(SHIFT_L,zero) * (SCATL - POLES_R) - tf.complex(SHIFT_R,zero) * (SCATL - POLES_L)  # expect [ie,n',n,c]
@@ -326,7 +326,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         if not LMatrix:
              T_mat =  R2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
         else:
-             T_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,Grid,S_poles,dSdE_poles,EO_poles ) 
+             T_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,Grid,L_poles,dLdE_poles,EO_poles ) 
 
         Tp_mat = T_convertTF(T_mat) #, Tind, Mind)
 
@@ -419,7 +419,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
                 model = (n,npal, n_angles_n,n_angle_integrals_n,n_data_n, n_jsets,n_poles,n_chans,maxpc,npairs,nch,npl,
                          LMatrix,brune,chargedElastic,
                          searchloc,border,E_poles_fixed_v,g_poles_fixed_v,fixed_norms,norm_info,
-                         S_poles,dSdE_poles,EO_poles )
+                         L_poles,dLdE_poles,EO_poles )
                 this_part = (datas,model)
                 return this_part
     #         dist_dataset = my_strategy.experimental_distribute_dataset(dataset)   HOW FOR MY DATA??
@@ -486,24 +486,24 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
                     norm_val =                       (norm_valv+ fixed_norms)**2
 
                     EOO_poles = EO_poles.copy()
-                    SOO_poles = S_poles.copy()
+                    SOO_poles = L_poles.copy()
                     for ip in range(border[0],border[1]): #### Extract parameters after previous search:
                         i = searchloc[ip,0]
                         jset = i//n_poles;  n = i%n_poles
                         EO_poles[jset,n] = searchpars_n[ip]
                         
                     # Re-evaluate pole shifts
-                    Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+                    Pole_Shifts(L_poles,dLdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
                 
                     if debug:                         # Print out differences in shifts:
                         for jset in range(n_jsets):
                             for n in range(n_poles):
                                 print('j/n=',jset,n,' E old,new:',EOO_poles[jset,n],EO_poles[jset,n])
                                 for c in range(n_chans):
-                                     print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],S_poles[jset,n,c],
-                                             100*dSdE_poles[jset,n,c]*(EO_poles[jset,n]-EOO_poles[jset,n])/ (S_poles[jset,n,c] - SOO_poles[jset,n,c])))
+                                     print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],L_poles[jset,n,c],
+                                             100*dLdE_poles[jset,n,c].real*(EO_poles[jset,n]-EOO_poles[jset,n])/ (L_poles[jset,n,c] - SOO_poles[jset,n,c])))
                     
-                    Tp_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,0.0,S_poles,dSdE_poles,EO_poles ) 
+                    Tp_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,0.0,L_poles,dLdE_poles,EO_poles ) 
 
                     XSp_mat,XSp_tot  = T2X_transformsTF(Tp_mat,gfac, n_jsets,n_chans,npairs,maxpc)
         
@@ -642,7 +642,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             if not LMatrix:
                  T_mat =  R2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
             else:
-                 T_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,Grid,S_poles,dSdE_poles,EO_poles) 
+                 T_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,Grid,L_poles,dLdE_poles,EO_poles) 
                  
             TAp_mat,TCp_mat = T_convert_s(T_mat)
     

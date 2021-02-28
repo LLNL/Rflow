@@ -28,7 +28,7 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,ABES,Grid,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,ABES,Grid,Junk,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
@@ -400,21 +400,20 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             print('g_poles \n',g_poles[jset,:,:])
         jset += 1   
 
-    if brune:  # S_poles: Shift functions at pole positions for Brune basis   
+    if brune or Junk > 0.0:  # L_poles: Shift+iP functions at pole positions for Brune basis   
         if Grid == 0.0:
-            S_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
-            dSdE_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
+            L_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
+            dLdE_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
     #         EO_poles =  numpy.zeros([n_jsets,n_poles], dtype=REAL) 
             EO_poles = E_poles.copy()
-            Pole_Shifts(S_poles,dSdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
-            S_poles1 = S_poles.copy()
+            Pole_Shifts(L_poles,dLdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
             
         else : # make a linear grid of Shift functions for use for each pole
             Lowest_pole_energy = numpy.amin(E_poles) - 10.
             Highest_pole_energy = numpy.amax(E_poles) + 20.
             N_gridE = int( (Highest_pole_energy - Lowest_pole_energy) / Grid ) + 1
-            print('Make Shift grid for Brune level matrix with %i points from Elab from %.3f to %.3f' % (N_gridE,Lowest_pole_energy,Highest_pole_energy))
-            S_poles = numpy.zeros([N_gridE,n_jsets,n_chans], dtype=REAL)                
+            print('Make grid of S+iP for e.g. Brune level matrix with %i points from Elab from %.3f to %.3f' % (N_gridE,Lowest_pole_energy,Highest_pole_energy))
+            L_poles = numpy.zeros([N_gridE,n_jsets,n_chans,2], dtype=REAL)                
             CF2_L = numpy.zeros(Lmax+1, dtype=CMPLX)
             Egrid = numpy.zeros(N_gridE)
             
@@ -447,12 +446,12 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     for jset in range(n_jsets):
                         for c in range(nch[jset]):
                             if seg_val[jset,c] != pair: continue
-                            L = L_val[jset,c]
-                            S_poles[ie,jset,c] = (CF2_L[L]*rho).real
+                            Lp = CF2_L[L_val[jset,c]]*rho
+                            L_poles[ie,jset,c,:] = (Lp.real,Lp.imag)
                             
     else:
-        S_poles = None
-        dSdE_poles = None
+        L_poles = None
+        dLdE_poles = None
         EO_poles = None
 
 #     print('E_poles \n',E_poles[:,:])
@@ -659,7 +658,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             for n in range(npl[jset]):
                 print('j/n=',jset,n,' E_pole: %10.6f' % EO_poles[jset,n])
                 for c in range(nch[jset]):
-                     print("      S, S' %10.6f, %10.6f" % (S_poles[jset,n,c],dSdE_poles[jset,n,c]))
+                     print("      S, S' %10.6f, %10.6f" % (L_poles[jset,n,c].real,dLdE_poles[jset,n,c].real))
                                  
               
 ## ANGULAR-MOMENTUM ARRAYS:
@@ -881,16 +880,21 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
     CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
-    
-    if Grid == 0.0:
-        CoulombFunctions_poles = [S_poles,dSdE_poles,EO_poles,has_widths]                  # batch n_jsets
+   
+    if brune or Junk > 0.0: 
+        if Grid == 0.0 :
+            print("Ship L and L'")
+            CoulombFunctions_poles = [L_poles,dLdE_poles,EO_poles,has_widths]                  # batch n_jsets
+        else:
+            print("Ship L grid on E as Grid,Junk=",Grid,Junk)
+            CoulombFunctions_poles = [L_poles,Lowest_pole_energy,Highest_pole_energy]      # L = S+iP on a regular grid
     else:
-        CoulombFunctions_poles = [S_poles,Lowest_pole_energy,Highest_pole_energy]                  # S on a regular grid
+        CoulombFunctions_poles = [None,None,None] 
     
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts,Cross_Sections]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Junk,Iterations,widthWeight,restarts,Cross_Sections]
 
     Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     

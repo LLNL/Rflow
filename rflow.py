@@ -86,6 +86,7 @@ if __name__=='__main__':
     parser.add_argument("-I", "--Iterations", type=int, default=2000, help="max_iterations for search")
     parser.add_argument("-i", "--init",type=str, nargs="*", help="iterations and snap file name for starting parameters")
     parser.add_argument("-w", "--widthWeight", type=float, default=0.0, help="Add widthWeight*vary_widths**2 to chisq during searches")
+    parser.add_argument("-J", "--Junk", type=float, default=0.0,  help="Junk poles during search if formal width below this value, by setting all widths=0")
     parser.add_argument("-X", "--XCLUDE", type=float,  help="Make dataset*3 with data chi < X (e.g. X=3). Needs -C data.")
     
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")
@@ -393,6 +394,7 @@ if __name__=='__main__':
     if args.init       is not None: base += '@i%s'  % args.init[0]
     if args.init       is not None: print('Re-initialize at line',args.init[0],'of snap file',args.init[1])
     if args.Search     is not None: base += '+S%s'  % args.Search +  '_I%s' % args.Iterations
+    if args.Junk       != 0.0     : base += '-J%s'  % args.Junk
     if args.widthWeight is not None and args.widthWeight != 0.0: 
         base += ('_w%s' % args.widthWeight).replace('.0','')
     if args.Cross_Sections: base += '+C'
@@ -406,7 +408,7 @@ if __name__=='__main__':
  
     chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Multi,args.ABES,args.Grid,
+                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Multi,args.ABES,args.Grid,args.Junk,
                         norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
                         args.Cross_Sections,args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large,ComputerPrecisions,tim)

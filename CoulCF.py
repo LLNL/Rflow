@@ -157,7 +157,7 @@ def dlde_steed(rho,eta,l,zi, acc,max_iter,acc8):
     return(hh,hhp)
 
     
-def Pole_Shifts(S_poles,dSdE_poles, E_poles,has_widths, seg_val,lab2cm,QI,fmscal,rmass,prmax, etacns,za,zb,L_val):  # return new values in S_poles and dSdE_poles
+def Pole_Shifts(L_poles,dLdE_poles, E_poles,has_widths, seg_val,lab2cm,QI,fmscal,rmass,prmax, etacns,za,zb,L_val):  # return new values in S_poles and dSdE_poles
     n_jsets,n_poles = E_poles.shape
     n_chans = seg_val.shape[1]
     for jset in range(n_jsets):
@@ -178,15 +178,15 @@ def Pole_Shifts(S_poles,dSdE_poles, E_poles,has_widths, seg_val,lab2cm,QI,fmscal
 #                 if E < 0: eta = -eta  #  negative imaginary part for bound states
                 
                 if abs(rho) <1e-10: 
-                    S_poles[jset,n,c] = 0.0
+                    L_poles[jset,n,c] = 0.0
                     continue
                 EPS=1e-10; LIMIT = 2000000; ACC8 = 1e-12; L = 0; PM = complex(0.,1.)
 
                 L = L_val[jset,c]
                 zL,zLp = dlde_steed(rho,eta,L,PM, EPS,LIMIT,ACC8)
-                S_poles[jset,n,c] = zL.real
-                dSdE_poles[jset,n,c] = zLp.real * lab2cm * c_E**2
-
+                L_poles[jset,n,c,:] = (zL.real,zL.imag)
+                dLdE = zLp * lab2cm * c_E**2
+                dLdE_poles[jset,n,c,:] = (dLdE.real,dLdE.imag)
     return()
     
     
