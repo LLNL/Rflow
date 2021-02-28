@@ -51,6 +51,8 @@ if __name__=='__main__':
     cmd = ' '.join([t if '*' not in t else ("'%s'" % t) for t in sys.argv[:]])
     print('Command:',cmd ,'\n')
 
+    Gdefault = 0.001
+
     # Process command line options
     parser = argparse.ArgumentParser(description='Compare R-matrix Cross sections with Data')
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
@@ -78,7 +80,7 @@ if __name__=='__main__':
     parser.add_argument("-D", "--DMAX", type=float, help="Max energy of R-matrix pole to fit damping. If d>D, create gap.")
     parser.add_argument("-L", "--Lambda", type=float, help="Use (E-dmin)^Lambda to modulate all damping widths at gnds-scattering cm energy E.")
     parser.add_argument(      "--ABES", action="store_true", help="Allow Brune Energy Shifts.  Use inexact method")
-    parser.add_argument("-G", "--Grid", type=float, default=1e-3, help="Make energy grid with this energy spacing (MeV) for 1d interpolation, avoiding the ABES inexactness.")
+    parser.add_argument("-G", "--Grid", type=float, default=Gdefault, help="Make energy grid with this energy spacing (MeV) for 1d interpolation, default %s" % Gdefault)
 
     parser.add_argument("-S", "--Search", type=str, help="Search minimization target.")
     parser.add_argument("-I", "--Iterations", type=int, default=2000, help="max_iterations for search")
@@ -342,7 +344,7 @@ if __name__=='__main__':
     n_totals = n_data - n_angles - n_angle_integrals
     print('\nData points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals',
           '\nData groups:',len(groups),'\nX4 groups:',len(X4groups),
-          '\nVariable norms:',n_norms,' of which ',n_cnorms,',constrained,',n_free,'free, and',n_fixed,' fixed (',tempfixes,'temporarily)\n')
+          '\nVariable norms:',n_norms,' of which ',n_cnorms,'constrained,',n_free,'free, and',n_fixed,' fixed (',tempfixes,'temporarily)\n')
 
     if dataFilter != '':
         with open(args.normFile.replace('.norms',dataFilter+'.norms')+'2','w') as fout: fout.writelines(norm_lines)
@@ -366,7 +368,7 @@ if __name__=='__main__':
         print('Fixed variables:',args.Fixed)
     else:
         args.Fixed = []
-    print('Energy limits.   Data min,max:',args.emin,args.EMAX,'.  Poles min,max:',args.pmin,args.PMAX)
+    print('Energy limits:   Data min,max:',args.emin,args.EMAX,'.  Poles min,max:',args.pmin,args.PMAX)
 
     finalStyleName = 'fitted'
     fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
@@ -374,9 +376,9 @@ if __name__=='__main__':
 
 # parameter input for computer method
     base = args.inFile
-    if args.single: base += 's'
-    if args.Multi>0: base += 'm%s' % args.Multi
-    if args.Grid >0: base += '+G%s' % args.Grid
+    if args.single:           base += 's'
+    if args.Multi>0:          base += 'm%s' % args.Multi
+    if args.Grid != Gdefault: base += '+G%s' % args.Grid
 # data input
     base += '+%s' % args.dataFile.replace('.data','')
     base += dataFilter

@@ -97,6 +97,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     pair = 0
     inpair = None
     chargedElastic = False
+    print('\nChannels:')
     for partition in RMatrix.resonanceReactions:
         kp = partition.label
         if partition.eliminated: # no two-body kinematics
@@ -431,7 +432,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     rho = k * prmax[pair]
                     if debug and abs(rho) <1e-10: 
                         print('rho =',rho,'from E,k,r =',E,k,prmax[pair],'from Elab=',E_scat[ie],'at',ie)
-                    if abs(E) <1e-5 or abs(Escat)<1e-5: continue
+                    if abs(E) <1e-5: continue
                     eta  =  etacns * za[pair]*zb[pair] * cmath.sqrt(rmass[pair]/E)
                     if E < 0: eta = -eta  #  negative imaginary part for bound states
                     PM   = complex(0.,1.); 

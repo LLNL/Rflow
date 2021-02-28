@@ -332,7 +332,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
         
         ncurve += 1
         ope = op if '/' not in op else op.split('/')[1]
-        print('\nModel %2i %2i curves (%4i pts)  %-50s:   chisq/gp =%9.3f  %8.3f %%' % (ncurve,ng,io,ope,chisq/max(1,io),chisq/chisqTOT*100.) )
+        print('Model %2i %2i curves (%4i pts)  %-50s:   chisq/gp =%9.3f  %8.3f %%' % (ncurve,ng,io,ope,chisq/max(1,io),chisq/chisqTOT*100.) )
         chisqAll += chisq
         ngraphAll += 1
         
