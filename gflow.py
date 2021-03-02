@@ -28,7 +28,7 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,ABES,Grid,Junk,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,ABES,Grid,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
@@ -72,6 +72,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     np = len(RMatrix.resonanceReactions)
     ReichMoore = False
     for pair in range(np):
+        print('Partition',pair,'elim,label',RMatrix.resonanceReactions[pair].eliminated,RMatrix.resonanceReactions[pair].label)
         if RMatrix.resonanceReactions[pair].eliminated: 
             ReichMoore = True
             damping_pair = pair
@@ -197,6 +198,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     pi_set = numpy.zeros(n_jsets, dtype=INT)
     L_val  =  numpy.zeros([n_jsets,n_chans], dtype=INT)
     S_val  =  numpy.zeros([n_jsets,n_chans], dtype=REAL)
+    B_val  =  numpy.zeros([npairs,n_jsets,n_chans], dtype=REAL)
     p_mask =  numpy.zeros([npairs,n_jsets,n_chans], dtype=REAL)
     seg_val=  numpy.zeros([n_jsets,n_chans], dtype=INT) - 1 
     seg_col=  numpy.zeros([n_jsets], dtype=INT) 
@@ -373,6 +375,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                         B = float(bndx)
                     if ch.boundaryConditionOverride is not None:
                         B = float(ch.boundaryConditionOverride)
+                    
+                    if not( bndx is None or bndx == 'Brune'): B_val[pair,jset,c] = B
 
                     DL = CF2_val[ie,pair,ch.L]
                     S = DL.real
@@ -400,7 +404,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             print('g_poles \n',g_poles[jset,:,:])
         jset += 1   
 
-    if brune or Junk > 0.0:  # L_poles: Shift+iP functions at pole positions for Brune basis   
+    if brune:  # L_poles: Shift+iP functions at pole positions for Brune basis   
         if Grid == 0.0:
             L_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
             dLdE_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
@@ -412,13 +416,16 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             Lowest_pole_energy = numpy.amin(E_poles) - 10.
             Highest_pole_energy = numpy.amax(E_poles) + 20.
             N_gridE = int( (Highest_pole_energy - Lowest_pole_energy) / Grid ) + 1
-            print('Make grid of S+iP for e.g. Brune level matrix with %i points from Elab from %.3f to %.3f' % (N_gridE,Lowest_pole_energy,Highest_pole_energy))
-            L_poles = numpy.zeros([N_gridE,n_jsets,n_chans,2], dtype=REAL)                
+            print('Make grid of S+iP at %s MeV spacings for e.g. Brune level matrix with %i points from Elab from %.3f to %.3f' % (Grid,N_gridE,Lowest_pole_energy,Highest_pole_energy))
+            L_poles = numpy.zeros([N_gridE,n_jsets,n_chans,2], dtype=REAL)
+            dLdE_poles = None
+            EO_poles = None
             CF2_L = numpy.zeros(Lmax+1, dtype=CMPLX)
-            Egrid = numpy.zeros(N_gridE)
             
+            Egrid = numpy.zeros(N_gridE)
             for ie in range(N_gridE):
                 Egrid[ie] = Lowest_pole_energy + ie*Grid   # ELab on the GNDS projectile frame (ipair) 
+
             for pair in range(npairs):
                 for ie in range(N_gridE):
                     Escat = Egrid[ie]
@@ -434,11 +441,12 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     if abs(E) <1e-5: continue
                     eta  =  etacns * za[pair]*zb[pair] * cmath.sqrt(rmass[pair]/E)
                     if E < 0: eta = -eta  #  negative imaginary part for bound states
+                    c_E = prmax[pair] * math.sqrt(fmscal*rmass[pair]) 
                     PM   = complex(0.,1.); 
-                    EPS=1e-10; LIMIT = 2000000; ACC8 = 1e-12
+                    EPS=1e-8; LIMIT = 2000000; ACC8 = 1e-12
                     ZL = 0.0
-                    DL,ERR = cf2(rho,eta,ZL,PM,EPS,LIMIT,ACC8)
-                    CF2_L[0] = DL
+                    CF,ERR = cf2(rho,eta,ZL,PM,EPS,LIMIT,ACC8) 
+                    CF2_L[0] = CF 
                     for L in range(1,Lmax+1):
                         RLsq = 1 + (eta/L)**2
                         SL   = L/rho + eta/L
@@ -446,9 +454,20 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     for jset in range(n_jsets):
                         for c in range(nch[jset]):
                             if seg_val[jset,c] != pair: continue
-                            Lp = CF2_L[L_val[jset,c]]*rho
-                            L_poles[ie,jset,c,:] = (Lp.real,Lp.imag)
-                            
+                            DL = CF2_L[ L_val[jset,c] ] * rho
+                            if bndx is None:
+                                DL       = complex(0.,DL.imag) # * rho
+                            elif bndx == 'Brune':
+                                pass
+                            else:
+                                DL       = DL - B_val[pair,jset,c]
+                            L_poles[ie,jset,c,:] = (DL.real,DL.imag)
+
+#             for jset in range(n_jsets):
+#                 for c in range(nch[jset]):
+#                     for ie in range(N_gridE):
+#                         if ie % 1000 == 1: print(jset,c,Egrid[ie],'L_poles[ie,jset,c,:]:',L_poles[ie,jset,c,:],(L_poles[ie,jset,c,0]-L_poles[ie-1,jset,c,0])/Grid )
+#
     else:
         L_poles = None
         dLdE_poles = None
@@ -458,25 +477,25 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #     print('D_poles \n',D_poles[:,:])
 #     print('g_poles \n',g_poles[:,:,:])
 #     print('norm_val \n',norm_val[:])
-    
+
     n_norms = norm_val.shape[0]
     fixed_norms= numpy.zeros([n_norms], dtype=REAL) # fixed in search
     t_vars = n_poles* n_jsets + n_poles*n_jsets*n_chans + n_norms   # max possible # variables
     fixedpars = numpy.zeros(t_vars, dtype=REAL)
     fixedloc  = numpy.zeros([t_vars,1], dtype=INT)  
     GNDS_loc  = numpy.zeros([t_vars,1], dtype=INT)  
-    
+
     searchnames = []
     fixednames = []
     search_vars = []
-    
+
     ip = 0
     ifixed = 0
     border = numpy.zeros(5, dtype=INT)     # variable parameters
     frontier = numpy.zeros(5, dtype=INT)   # fixed parameters
     patterns = [ re.compile(fix_regex) for fix_regex in fixedlist] 
     fixedlistex = set()
-    
+
     border[0] = 0;  frontier[0] = 0
     for jset in range(n_jsets):
         parity = '+' if pi_set[jset] > 0 else '-'
@@ -522,8 +541,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             sys.exit()
         else:
             print('ABES set to Allow Brune Energy Shifts')
-    
-    
+
+
     for jset in range(n_jsets):
         parity = '+' if pi_set[jset] > 0 else '-'
         for n in range(n_poles):
@@ -881,12 +900,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Channels = [ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val]
     CoulombFunctions_data = [L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac]    # batch n_data
    
-    if brune or Junk > 0.0: 
+    if brune: 
         if Grid == 0.0 :
-            print("Ship L and L'")
             CoulombFunctions_poles = [L_poles,dLdE_poles,EO_poles,has_widths]                  # batch n_jsets
         else:
-            print("Ship L grid on E as Grid,Junk=",Grid,Junk)
             CoulombFunctions_poles = [L_poles,Lowest_pole_energy,Highest_pole_energy]      # L = S+iP on a regular grid
     else:
         CoulombFunctions_poles = [None,None,None] 
@@ -894,7 +911,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Junk,Iterations,widthWeight,restarts,Cross_Sections]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts,Cross_Sections]
 
     Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     
@@ -910,7 +927,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     sys.stdout.flush()
 #  END OF TENSORFLOW CALL
 ################################################################
-        
+                    
     if Search:     
 #  Write back fitted parameters into evaluation:
         E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) 
@@ -989,7 +1006,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             varying = abs(E_poles[jset,n]) < Background and  fixednames[ip] not in fixedlistex
             nam='PJ%.1f%s:D%.3f' % (J_set[jset],parity, E_poles[jset,n])
             newname[fixednames[ip]] = nam 
-        
+
 # Copy parameters back into GNDS 
         jset = 0
         for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
@@ -1014,18 +1031,45 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", "\n".join(R.toXMLList()))
             jset += 1
                 
-    print('\nR-matrix parameters:')
-     
+    print('\nR-matrix parameters:\n')
+    
+    print("Formal and 'Observed' properties by first-order (Thomas) corrections:")
+    L_poles    = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
+    dLdE_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
+    Pole_Shifts(L_poles,dLdE_poles, E_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+    if brune:
+        O_poles  = E_poles 
+    else: # recalculate P and S' at the 'observed' energies
+        O_poles  = E_poles - numpy.sum( g_poles**2 * L_poles[:,:,:,0], 2 ) * cm2lab[ipair]  # both terms lab
+        Pole_Shifts(L_poles,dLdE_poles, O_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+
+    F_widths = 2.* numpy.sum( g_poles**2 * L_poles[:,:,:,1], 2 )
+    O_widths = F_widths / (1. + numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2 )) # cm
+        
+    for jset in range(n_jsets):
+        print("  For J/pi = %.1f%s: %i"  % (J_set[jset],'+' if pi_set[jset] > 0 else '-',npl[jset]) )
+        for p in range(npl[jset]):
+            print('   Pole %3i at Elab = %10.6f (cm %10.6f, obs %10.6f) MeV widths: formal %10.5f, obs %10.5f, damping %10.5f' \
+                  % (p,E_poles[jset,p],E_poles[jset,p]/cm2lab[ipair],O_poles[jset,p]/cm2lab[ipair],F_widths[jset,p],O_widths[jset,p],D_poles[jset,p]) )
+            if 0.0 < abs(F_widths[jset,p]) < 1e-3: print(68*' ','widths: formal %10.3e, obs %10.3e' % (F_widths[jset,p],O_widths[jset,p]) )
+    print()
+        
     if not Search:
         fmt = '%4i %4i   S: %10.5f %14.2f   %s'
         print('   P  Loc   Start:    V           grad    Parameter')
-        for p in range(n_pars):   
+        for p in range(border[4]):   
             sp = searchpars0[p]; sg = grad0[p]
             if p >= border[2]:  # norms and damping
                 sg /= 2.*sp
                 sp = sp**2
             print(fmt % (p,searchloc[p,0],sp,sg,searchnames[p]) )
-#             fmt2 = '%4i %4i   S: %10.5f   %s') )
+
+        fmt = '%4i %4i   S: %10.5f                  %s'
+        print('\n   P  Loc   Fixed:    V                   Parameter')
+        for ifixed in range(frontier[4]):
+            sp = fixedpars[ifixed]
+            print(fmt % (p,fixedloc[ifixed,0],sp, fixednames[ifixed]) )
+
 #         ww = numpy.sum(searchpars0[border[1]:border[2]]**4) * widthWeight
         print('\n*** chisq/pt =',chisq_n/n_data, ' so chisq/dof=',chisq_n/n_dof,' with ww',ww/n_dof,' so data chisq/dof',(chisq_n-ww)/n_dof)
         covarianceSuite = None
@@ -1049,7 +1093,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             print(fmt % (p,searchloc[p,0],sp0,sg0,sp1,sg1,sig, 100* sig/(searchpars_n[p]+1e-10),searchnames[p],newnam ) )
         fmt2 = '%4i %4i   S: %10.5f   %s     %s'
         if frontier[4]>0: print('Fixed:')
-        for p in range(frontier[3]):   
+        for p in range(frontier[4]):
             print(fmt2 % (p,fixedloc[p,0],fixedpars[p],fixednames[p],newname.get(fixednames[p],'')) )
             
         print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[3])]))

@@ -50,7 +50,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 #     Grid>0:    CoulombFunctions_poles = [Lowest_pole_energy,Highest_pole_energy,ShiftE]                  # S on a regular grid
 
 # 
-#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Junk,Iterations,widthWeight,restarts,Cross_Sections)
+#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections)
 # 
 #     Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
 #
@@ -71,7 +71,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
     LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose = Logicals
 
-    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Junk,Iterations,widthWeight,restarts,Cross_Sections = Search_Control
+    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections = Search_Control
 
     Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s = Data_Control
 
@@ -117,6 +117,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     print('Search parameters :',n_pars)
     n_dof = n_data - n_pars
     print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals. Dof=',n_dof)
+    
     sys.stdout.flush()
 
 
@@ -199,16 +200,16 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             if brune:   # add extra terms to GLG
 
                 if Grid == 0.0:  # first-order Taylor series
-                    LE_poles = L_poles[js,:p,:m,:] + tf.reshape(tf.math.real(E_rpoles[js,:p])-EO_poles[js,:p],[-1,1,1]) * dLdE_poles[js,:p,:m,:]
+                    S_poles = L_poles[js,:p,:m,0] + tf.reshape(E_rpoles[js,:p]-EO_poles[js,:p],[-1,1]) * dLdE_poles[js,:p,:m,0]
                 else:  # interpolate on regular grid L_poles
                     Elow, Ehigh = dLdE_poles,EO_poles
-                    LE_poles = tfp.math.interp_regular_1d_grid(E_rpoles[js,:p], Elow, Ehigh, L_poles[:,js,:m,:], axis=0)  # want final dimensions SE_poles[:p,:m]
+                    S_poles = tfp.math.interp_regular_1d_grid(E_rpoles[js,:p], Elow, Ehigh, L_poles[:,js,:m,0], axis=0)  # want final dimensions SE_poles[:p,:m]
 #                     print('\nSE_poles',SE_poles.dtype,SE_poles.get_shape(),'for p,m=',p,m,'\n')
                     
 #                 POLES_L = tf.reshape(E_poles[js,:p], [1,p,1,1])  # same for all energies and channel matrix
 #                 POLES_R = tf.reshape(E_poles[js,:p], [1,1,p,1])  # same for all energies and channel matrix
-                SHIFT_L = tf.reshape(LE_poles[:p,:m,0], [1,p,1,m] ) # [J,n,c] >  [1,n,1,c]
-                SHIFT_R = tf.reshape(LE_poles[:p,:m,0], [1,1,p,m] ) # [J,n,c] >  [1,1,n,c]
+                SHIFT_L = tf.reshape(S_poles[:p,:m], [1,p,1,m] ) # [J,n,c] >  [1,n,1,c]
+                SHIFT_R = tf.reshape(S_poles[:p,:m], [1,1,p,m] ) # [J,n,c] >  [1,1,n,c]
                 SCATL  = tf.reshape(E_scat,  [-1,1,1,1])             # vary only for scattering energies
 
                 NUM = tf.complex(SHIFT_L,zero) * (SCATL - POLES_R) - tf.complex(SHIFT_R,zero) * (SCATL - POLES_L)  # expect [ie,n',n,c]
@@ -311,6 +312,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
     @tf.function
     def FitMeasureTF(searchpars):
+        zero = tf.constant(0.0, dtype = REAL)
 
         E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,   searchpars[border[0]:border[1]], [n_jsets*n_poles] )
         g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,   searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
@@ -319,9 +321,11 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
         E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
         E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2 
-        g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
-        E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
-        norm_val =                       (norm_valv+ fixed_norms)**2
+        g_poles  = tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]) 
+        g_cpoles = tf.complex(g_poles      ,zero)
+        norm_val = (norm_valv+ fixed_norms)**2
+
+        E_cscat  = tf.complex(data_val[:,0],zero) 
 
         if not LMatrix:
              T_mat =  R2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
@@ -443,7 +447,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             chisq0,Grads = tot_chisq, tot_Grads 
     #         tf.print('Grads:',Grads)
    
-
+        zero = tf.constant(0.0, dtype = REAL)
                 
         chisq0,Grads = FitMeasureTF(searchpars)  # returning values in global   A_tF,Grads,  Tp_mat, XSp_mat,XSp_tot              
 
@@ -458,7 +462,6 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
         if Search:
     
-            import tensorflow_probability as tfp
             print('Start search'); sys.stdout.flush()
             optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
                                 max_iterations=Iterations, tolerance=float(Search))
@@ -606,7 +609,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
                 TCp_mat = tf.zeros_like(MCind)
                 
             return( TAp_mat,TCp_mat )
-            
+
         @tf.function
         def T2X_transforms_s(TAp_mat,CS_diag,gfac_s,p_mask, n_jsets,n_chans,npairs,maxpc):
     
@@ -635,9 +638,10 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
             E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
             E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2
-            g_cpoles = tf.complex(tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
-            E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
+            g_poles  = tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]) 
+            g_cpoles = tf.complex(g_poles,tf.constant(0., dtype=REAL))
             norm_val =                       (norm_valv+ fixed_norms)**2
+            E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
 
             if not LMatrix:
                  T_mat =  R2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 

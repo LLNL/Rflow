@@ -57,8 +57,15 @@ def cf1(x,eta,zl,eps,limit):
 #     return(f,nfp,err)
     return(f)
 
-
-
+def csigma(Lmax,eta):
+    import cmath,numpy,math
+    from scipy.special import loggamma
+    csig = numpy.zeros(Lmax+1)
+    s = loggamma(complex(1,eta.real))
+    csig[0] = s.imag
+    for L in range(1,Lmax+1):
+        csig[L] = csig[L-1] + math.atan2(eta.real,float(L))
+    return(csig)
 
 def cf2(x,eta,zl,pm,eps,limit,acc8):
 #
@@ -101,20 +108,9 @@ def cf2(x,eta,zl,pm,eps,limit,acc8):
         err = abs(dl)/abs(pq)
 
     pq = pq + dl
-    if rk//2 > limit-1: 
-        print('cf2(%i) not converged fully in %i iterations, so error in irregular solution = %10.2s  at zl = (%8.3f,%8.3f)' % (int(pm.imag),rk//2,err,zl.real,zl.imag))
+#     if rk//2 > limit-1: 
+#         print('cf2(%i) not converged fully in %i iterations, so error in irregular solution = %10.2s  at zl = (%8.3f,%8.3f)' % (int(pm.imag),rk//2,err,zl.real,zl.imag))
     return (pq, err)
-
-
-def csigma(Lmax,eta):
-    import cmath,numpy,math
-    from scipy.special import loggamma
-    csig = numpy.zeros(Lmax+1)
-    s = loggamma(complex(1,eta.real))
-    csig[0] = s.imag
-    for L in range(1,Lmax+1):
-        csig[L] = csig[L-1] + math.atan2(eta.real,float(L))
-    return(csig)
 
 def dlde_steed(rho,eta,l,zi, acc,max_iter,acc8):
 
