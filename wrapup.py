@@ -70,7 +70,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
     XCLUDE,projectile4LabEnergies,data_lines,dataFile,
     EIndex,totals,pname,tname,datasize, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
 
-    print('\npname:',pname,'\n')
+    print('\nExperimental data groups, by energy or angle groups if simpler:\n')
     Matplot = True
     
     ngraphAll = 0
@@ -116,7 +116,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
                         unadjustedShape  = unadjustedShape or (effect_norm[id,ni] > 0. and norm_info[ni,1] == 0.0 and norm_val[ni] == 1.0)  # fitted norm still original 1.0
 #                             print('effect_norm[',id,ni,']',effect_norm[id,ni],norm_info[ni,0],norm_info[ni,1] )
                 if unadjustedShape:
-                    if not unadjustedShapes.get(gr,False): print('\n    *** Unadjusted shape datsa:',gr,' -   exclude from chi^2 sum\n')
+                    if not unadjustedShapes.get(gr,False): print('\n    *** Unadjusted shape data:',gr,' -   exclude from chi^2 sum\n')
                     unadjustedShapes[gr] = True
                     continue
                 Data = data_val[id,2]*fac
@@ -253,6 +253,14 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
         if args.debug: print('\nGroup',group,'has curves:',curves)
         ncurve = 0
         for curve,fac,lfac,pin,pout,reaction in curves:
+            pn = quickName(pname[pin],tname[pin])
+            if pout == -1:
+                po = 'tot'
+            elif pout == pin:
+                po = 'el'
+            else:
+                po = quickName(pname[pout],tname[pout])
+                    
             tag = groupB + ( ('@' + curve) if curve!='Aint' else '')
             if ptsInCurve[curve]==0: continue
 #             print('\nCurve for ',tag)
@@ -347,7 +355,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
             kind     = 'R-matrix fit of '+group.split('@')[0]+' for '+reaction+' (units mb and MeV)'
             GraphList.append([DataLines+ModelLines,subtitle,args.logs,kind])
 
-            j_out = group+info+'.json'
+            j_out = group+info+'_%s-%s.json' % (pn,po)
             if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
             j_out = dataDir + '/' + j_out
             with open(j_out,'w') as ofile:

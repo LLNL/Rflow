@@ -28,7 +28,7 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Multi,ABES,Grid,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ABES,Grid,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
@@ -850,9 +850,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             vals = ifile.readline()
         vals = ifile.readline().replace('[','').replace(']','').split()
         print('Restart at chisq/pt',vals[0])
-        searchpars0 = vals[1:]
-        if n_pars != searchpars0.shape[0]:
-            print('Number of reread search parameters',searchpars0.shape[0],' is not',n_pars,'now expected. STOP')
+        searchpars0 = numpy.asarray([float(v) for v in vals[3:]], dtype=REAL)
+        if n_pars != len(searchpars0):
+            print('Number of reread search parameters',len(searchpars0),' is not',n_pars,'now expected. STOP')
             sys.exit()
 
     if Cross_Sections:
@@ -911,7 +911,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose]
 
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,widthWeight,restarts,Cross_Sections]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections]
 
     Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     

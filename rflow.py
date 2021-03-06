@@ -85,6 +85,7 @@ if __name__=='__main__':
     parser.add_argument("-S", "--Search", type=str, help="Search minimization target.")
     parser.add_argument("-I", "--Iterations", type=int, default=2000, help="max_iterations for search")
     parser.add_argument("-i", "--init",type=str, nargs="*", help="iterations and snap file name for starting parameters")
+    parser.add_argument("-A", "--Averaging", type=float, default=0.0, help="Averaging width to all scattering: imaginary = Average/2.")
     parser.add_argument("-w", "--widthWeight", type=float, default=0.0, help="Add widthWeight*vary_widths**2 to chisq during searches")
     parser.add_argument("-X", "--XCLUDE", type=float,  help="Make dataset*3 with data chi < X (e.g. X=3). Needs -C data.")
     
@@ -373,7 +374,8 @@ if __name__=='__main__':
     finalStyleName = 'fitted'
     fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
             derivedFrom=gnd.styles.getEvaluatedStyle().label )
-
+    if args.Averaging  > 0.0: print('Energy-averaged scattering with width %s MeV' % args.Averaging)
+    
 # parameter input for computer method
     base = args.inFile
     if args.single:           base += 's'
@@ -395,6 +397,7 @@ if __name__=='__main__':
     if args.Search     is not None: base += '+S%s'  % args.Search +  '_I%s' % args.Iterations
     if args.widthWeight is not None and args.widthWeight != 0.0: 
         base += ('_w%s' % args.widthWeight).replace('.0','')
+    if args.Averaging  > 0.0      : base += '+A%s' % args.Averaging
     if args.Cross_Sections: base += '+C'
     if args.tag != '': base = base + '_'+args.tag
 
@@ -406,7 +409,7 @@ if __name__=='__main__':
  
     chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Multi,args.ABES,args.Grid,
+                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Averaging, args.Multi,args.ABES,args.Grid,
                         norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
                         args.Cross_Sections,args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large,ComputerPrecisions,tim)

@@ -19,7 +19,8 @@ tf.enable_v2_behavior()
 try:
   physical_devices = tf.config.list_physical_devices('GPU')
   print("GPUs:",physical_devices)
-  tf.config.experimental.set_memory_growth(physical_devices[0], True)
+  for device in physical_devices:
+      tf.config.experimental.set_memory_growth(device, True)
 except:
 # print('TF: cannot read and/or modify virtual devices')
   pass
@@ -50,7 +51,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 #     Grid>0:    CoulombFunctions_poles = [Lowest_pole_energy,Highest_pole_energy,ShiftE]                  # S on a regular grid
 
 # 
-#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections)
+#     Search_Control = (searchloc,border,E_poles_fixed_v,g_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections)
 # 
 #     Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
 #
@@ -71,7 +72,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
     LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose = Logicals
 
-    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,widthWeight,restarts,Cross_Sections = Search_Control
+    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections = Search_Control
 
     Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s = Data_Control
 
@@ -485,7 +486,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
                     E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
                     E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2
                     g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
-                    E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
+                    E_cscat  = tf.complex(data_val[:,0],tf.constant(Averaging*0.5, dtype=REAL)) 
                     norm_val =                       (norm_valv+ fixed_norms)**2
 
                     EOO_poles = EO_poles.copy()
@@ -553,6 +554,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             searchpars_n = searchpars0
         
         print("Second FitStatusTF start: ",tim.toString( ))
+        sys.stdout.flush()
         
         chisqF,Grads = FitMeasureTF(searchpars)  # A_tF,Grads,  Tp_mat, XSp_mat,XSp_tot via globals
         grad1 = Grads.numpy()
@@ -564,7 +566,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 #  END OF STRATEGY
 
     if Cross_Sections:
-        strategy = tf.distribute.get_strategy()
+        strategy = tf.distribute.get_strategy()   # default and simplest
     
         Tind = None; Mind = None
         TAind = numpy.zeros([n_data,n_jsets,npairs,maxpc,npairs,maxpc,2], dtype=INT) 
@@ -641,7 +643,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
             g_poles  = tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]) 
             g_cpoles = tf.complex(g_poles,tf.constant(0., dtype=REAL))
             norm_val =                       (norm_valv+ fixed_norms)**2
-            E_cscat  = tf.complex(data_val[:,0],tf.constant(0., dtype=REAL)) 
+            E_cscat  = tf.complex(data_val[:,0],tf.constant(Averaging*0.5, dtype=REAL)) 
 
             if not LMatrix:
                  T_mat =  R2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
