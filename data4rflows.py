@@ -213,6 +213,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
                     lmin = int(abs(sch-JJ) +0.5)
                     lmax = int(sch+JJ +0.5)
                     if Lvals is not None: lmax = min(lmax,lMax[icch-1])
+                    first = 1
                     for lch in range(lmin,lmax+1):
                         if pi != pp*pt*(-1)**lch: continue
                         if Epole < 0 and lch > abs(pz) : continue                   # only allow s-wave neutrons, s,p-wave protons, etc in closed channels
@@ -223,11 +224,13 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
                             dSoPc = dSoP(Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch)
 #                             print('dSoP(',Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch, ') = ',dSoPc)
                             w *= ( 1 - width * dSoPc/2.)
+                            w *= first   # more weight on lowest L !!!!
                             print('For ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.)
                             weight += w
                         else:
                             dSoPc = 0.
                             print('Closed ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.)
+                        first *= 1e-3
                              
                         
         nChans = len(channels)
@@ -473,16 +476,22 @@ for prop in csv.DictReader(csvf):
     
     try:
         iei = args.Projectiles.index(ejectile)
+        projs[iei] = ejectile
+        targs[iei] = residual    
     except:
-        print('Unwanted ejectile',ejectile,": SKIP")
-        continue
-    projs[iei] = ejectile
-    targs[iei] = residual    
+        if ejectile != 'TOT':
+            print('Unwanted ejectile',ejectile,": SKIP")
+            continue
+
     
     for nucl in [projectile,ejectile,target,residual]:
         if nucl in ['TOT','.']: continue
         n = nucl if nucl != '2n' else 'n'
-        pe = pops[n]
+        try:
+            pe = pops[n]
+        except:
+            print('Nuclide',n,'not in database!!  SKIP')
+            continue
         masses[nucl] = pe.getMass('amu')
         if hasattr(pe, 'nucleus'): pe = pe.nucleus
         charges[nucl] = pe.charge[0].value

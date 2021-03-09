@@ -68,6 +68,7 @@ def printExcitationFunctions(XSp_tot_n,XSp_cap_n,XSp_mat_n, pname,tname, za,zb, 
             if pin==pout and not neut: continue
             po = quickName(pname[pout],tname[pout])
             fname = base + '-%sch_%s-to-%s' % (sym,pn,po)
+            fname_e = fname if '/' not in fname else fname.split('/')[1]
             print('        Partition',pin,'to',pout,': angle-integrated cross-sections to file',fname_e)
             fout = open(fname,'w')
 #             Gnames.append(fname)

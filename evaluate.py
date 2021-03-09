@@ -450,7 +450,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
    
         zero = tf.constant(0.0, dtype = REAL)
                 
-        chisq0,Grads = FitMeasureTF(searchpars)  # returning values in global   A_tF,Grads,  Tp_mat, XSp_mat,XSp_tot              
+        chisq0,Grads = FitMeasureTF(searchpars)
 
         chisq0_n = chisq0.numpy()
         grad0 = Grads.numpy()
@@ -556,7 +556,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         print("Second FitStatusTF start: ",tim.toString( ))
         sys.stdout.flush()
         
-        chisqF,Grads = FitMeasureTF(searchpars)  # A_tF,Grads,  Tp_mat, XSp_mat,XSp_tot via globals
+        chisqF,Grads = FitMeasureTF(searchpars)
         grad1 = Grads.numpy()
         chisqF_n = chisqF.numpy()
         chisqpptF_n = chisqF_n/n_data

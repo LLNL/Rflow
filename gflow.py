@@ -417,7 +417,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             Highest_pole_energy = numpy.amax(E_poles) + 20.
             N_gridE = int( (Highest_pole_energy - Lowest_pole_energy) / Grid ) + 1
             print('Make grid of S+iP at %s MeV spacings for e.g. Brune level matrix with %i points from Elab from %.3f to %.3f' % (Grid,N_gridE,Lowest_pole_energy,Highest_pole_energy))
+            GRsize = N_gridE*n_jsets*n_chans*2*realSize / 1e9
+            if GRsize > 0.01: print('    Grid storage size = %6.3f GB' % GRsize)
             L_poles = numpy.zeros([N_gridE,n_jsets,n_chans,2], dtype=REAL)
+            LGB = N_gridE*n_jsets*n_chans*2 * realSize / 1e9
+            if LGB>0.01: print(' Grid storage size = %.3f GB' % LGB)
             dLdE_poles = None
             EO_poles = None
             CF2_L = numpy.zeros(Lmax+1, dtype=CMPLX)
@@ -477,6 +481,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #     print('D_poles \n',D_poles[:,:])
 #     print('g_poles \n',g_poles[:,:,:])
 #     print('norm_val \n',norm_val[:])
+    print('\n Search:',Search,'to',Iterations,'iterations')
 
     n_norms = norm_val.shape[0]
     fixed_norms= numpy.zeros([n_norms], dtype=REAL) # fixed in search
@@ -525,7 +530,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 fixedlistex.add(nam)
                 E_poles_fixed[jset,n] = E_poles[jset,n]
                 if Search:
-                    print('    Fixed %5.1f%1s pole %2i at E = %7.3f MeV' % (J_set[jset],parity,n,E) )
+                    print('    Fixed %5.1f%1s pole %2i at E = %7.3f MeV(lab), %7.3f MeV(cm)' % (J_set[jset],parity,n,E,E/cm2lab[ipair]) )
                 if nam not in fixedlistex and BG:
                     nam='BG:%.1f%s' % (J_set[jset],parity)
                 # print('E[',jset,n,'] is fixed',ifixed,'at',E_poles[jset,n])
@@ -535,7 +540,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 ifixed += 1
     border[1] = ip
     frontier[1] = ifixed
-    if border[1]>0 and brune and Grid == 0.0:
+    if border[1]>0 and brune and Grid == 0.0 and Search:
         if not ABES:
             print('Stop. You request fitting of Brune energies, but method not accurate. ABES not set')
             sys.exit()
@@ -671,6 +676,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Searching on pole energies:',searchparms[border[0]:border[1]])
     print('Keep fixed   pole energies:',fixednames[frontier[0]:frontier[1]])
     print('Searching on damping widths: [',' '.join(['%.2e' % d**2 for d in searchparms[border[3]:border[4]]]),']') 
+#   print('Searching on widths:',searchparms[border[1]:border[2]])
+    print('L4 norm of widths:',numpy.sum(searchparms[border[1]:border[2]]**4))
     
     if brune and False:
         for jset in range(n_jsets):
@@ -849,7 +856,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         for i in range(1,int(init[0])):
             vals = ifile.readline()
         vals = ifile.readline().replace('[','').replace(']','').split()
-        print('Restart at chisq/pt',vals[0])
+        print('\nRestart at chisq/pt',vals[0],'and data chisq/pt',vals[2],'\n')
         searchpars0 = numpy.asarray([float(v) for v in vals[3:]], dtype=REAL)
         if n_pars != len(searchpars0):
             print('Number of reread search parameters',len(searchpars0),' is not',n_pars,'now expected. STOP')
@@ -883,6 +890,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     gfac_s[ie,jset,pair,0:nic] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom * 10.  # mb
     else:
         ExptAint,ExptTot,CS_diag,p_mask,gfac_s = None, None, None, None, None
+
+
             
     print("To start tf: ",tim.toString( ))
     
