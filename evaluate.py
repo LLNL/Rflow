@@ -366,10 +366,10 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         searchpars = tf.Variable(searchpars0)
             
         if Search:
-            os.system("rm -f %s/%s-bfgs_min.trace" % (base,base) ) 
-            os.system("rm -f %s/%s-bfgs_min.snap" % (base,base) )
-            trace = "file://%s/%s-bfgs_min.trace" % (base,base)
-            snap = "file://%s/%s-bfgs_min.snap"  % (base,base) 
+            os.system("rm -f %s/bfgs_min.trace" % (base) ) 
+            os.system("rm -f %s/bfgs_min.snap" % (base) )
+            trace = "file://%s/bfgs_min.trace" % (base)
+            snap = "file://%s/bfgs_min.snap"  % (base) 
                         
         print("First FitStatusTF: ",tim.toString( ))
         

@@ -9,9 +9,27 @@ import xData.xDataArray as arrayModule
 
 
 # Copy covariance matrix back into GNDS 
-def write_gnds_covariances(gnds,inverse_hessian,GNDS_loc,border,  verbose,debug):
+def write_gnds_covariances(gnds,searchpars,inverse_hessian,GNDS_loc,POLE_details,searchnames,border, base, verbose,debug):
                                    
     nVaried = border[2]  # number of varied parameters (energies, widths, but not norms)
+
+    if True:  # print out covariance matrix for E and widths (not yet norms and D!)
+        cov_file =  open ("%s/bfgs_min.cov"  % base,'w')
+        print(nVaried,'square covariance matrix for GNDS variables in run',base, file=cov_file)
+        for i in range(nVaried):
+            det = POLE_details[i]
+
+#   ('E',jset,n,ip,float(J_set[jset]),int(pi_set[jset]))   i=ip, so not printed again
+            if det[0] == 'E':
+                print(i,'E',det[1],det[2],det[4],det[5],'=','j,n,ip, J,pi:',searchpars[i],searchnames[i], file=cov_file)
+
+#   ('W',jset,n,ip,seg_val[jset,c],L_val[jset,c],S_val[jset,c])   i=ip, so not printed again
+            if det[0] == 'W':
+                print(i,'W',det[1],det[2],det[4],det[5],det[6],'j,n,ip, RLS:',searchpars[i],searchnames[i], file=cov_file)
+        for i in range(nVaried):
+            print(i, ' '.join(['%10s' % inverse_hessian[i,j] for j in range(nVaried)]), file=cov_file)
+        print('Covariance metadata and matrix written in file',"%s/bfgs_min.cov"  % base,'\n')
+
 
  # store into GNDS (need links to each spinGroup)
     parameters = covarianceModelParametersModule.parameters()
@@ -29,7 +47,7 @@ def write_gnds_covariances(gnds,inverse_hessian,GNDS_loc,border,  verbose,debug)
     matrix = numpy.zeros([nRvariables,nRvariables])
     for i in range(nVaried):
         for j in range(nVaried):
-            matrix[GNDS_loc[i],GNDS_loc[j]] = inverse_hessian[i,j]
+            matrix[GNDS_loc[i,0],GNDS_loc[j,0]] = inverse_hessian[i,j]
     
     if debug: 
         print(type(matrix))

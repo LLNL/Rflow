@@ -493,6 +493,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     searchnames = []
     fixednames = []
     search_vars = []
+    POLE_details = {}
 
     ip = 0
     ifixed = 0
@@ -525,6 +526,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 searchnames += [nam]
                 search_vars.append([E,i])
                 GNDS_loc[ip] = GNDS_order[jset,n,0]
+                det = ('E',jset,n,ip,float(J_set[jset]),int(pi_set[jset]))
+#                 print('det:',det,type(det))
+                POLE_details[ip] =  det
                 ip += 1
             else:
                 fixedlistex.add(nam)
@@ -582,6 +586,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     searchnames += [wnam]
                     search_vars.append([g_poles[jset,n,c],i])
                     GNDS_loc[ip] = GNDS_order[jset,n,c+1]
+                    det = ('W',jset,n,ip,seg_val[jset,c],L_val[jset,c],S_val[jset,c])
+                    POLE_details[ip] = det
                     ip += 1
                 else:   # fixed
                     fixedlistex.add(wnam)
@@ -676,7 +682,6 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Searching on pole energies:',searchparms[border[0]:border[1]])
     print('Keep fixed   pole energies:',fixednames[frontier[0]:frontier[1]])
     print('Searching on damping widths: [',' '.join(['%.2e' % d**2 for d in searchparms[border[3]:border[4]]]),']') 
-#   print('Searching on widths:',searchparms[border[1]:border[2]])
     print('L4 norm of widths:',numpy.sum(searchparms[border[1]:border[2]]**4))
     
     if brune and False:
@@ -1111,11 +1116,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 
 
 # Copy covariance matrix back into GNDS 
-        covarianceSuite = write_gnds_covariances(gnd,inverse_hessian,GNDS_loc,border,  verbose,debug)
+        covarianceSuite = write_gnds_covariances(gnd,searchpars_n,inverse_hessian,GNDS_loc,POLE_details,searchnames,border,  base,verbose,debug)
                             
-
-        trace = open('%s/%s-bfgs_min.trace'% (base,base),'r')
-        tracel = open('%s/%s-bfgs_min.tracel'% (base,base),'w')
+        trace = open('%s/bfgs_min.trace'% (base),'r')
+        tracel = open('%s/bfgs_min.tracel'% (base),'w')
         traces = trace.readlines( )
         trace.close( )
         lowest_chisq = 1e8
@@ -1126,8 +1130,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             print(i+1,lowest_chisq,' '.join(css[1:3]),chis, file=tracel)
         tracel.close()
     
-        snap = open('%s/%s-bfgs_min.snap'% (base,base),'r')
-        snapl = open('%s/%s-bfgs_min.snapl'% (base,base),'w')
+        snap = open('%s/bfgs_min.snap'% (base),'r')
+        snapl = open('%s/bfgs_min.snapl'% (base),'w')
         snaps = snap.readlines( )
         snap.close( )
         included = numpy.zeros(n_pars, dtype=INT)
