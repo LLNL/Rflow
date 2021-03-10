@@ -12,24 +12,29 @@ etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
-# import tensorflow as tf
-import tensorflow.compat.v2 as tf
-tf.enable_v2_behavior()
 
-try:
-  physical_devices = tf.config.list_physical_devices('GPU')
-  print("GPUs:",physical_devices)
-  for device in physical_devices:
-      tf.config.experimental.set_memory_growth(device, True)
-except:
-# print('TF: cannot read and/or modify virtual devices')
-  pass
-# tf.logging.set_verbosity(tf.logging.ERROR)
-
-
-def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
                  Search_Control,Data_Control, searchpars0, data_val,tim):
                  
+    # import tensorflow as tf
+    import tensorflow.compat.v2 as tf
+    tf.enable_v2_behavior()
+
+    if ML is not None:
+        from tensorflow.python.compiler.mlcompute import mlcompute
+        mlcompute.set_mlc_device(device_name=ML)
+        print('mlcompute set to',ML)
+        
+    try:
+      physical_devices = tf.config.list_physical_devices('GPU')
+      print("GPUs:",physical_devices)
+      for device in physical_devices:
+          tf.config.experimental.set_memory_growth(device, True)
+    except:
+    # print('TF: cannot read and/or modify virtual devices')
+      pass
+    # tf.logging.set_verbosity(tf.logging.ERROR)
+
     if Multi > 1:
         strategy = tf.distribute.MirroredStrategy()
         npal = strategy.num_replicas_in_sync

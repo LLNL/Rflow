@@ -28,7 +28,7 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ABES,Grid,
+        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ML,ABES,Grid,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
@@ -931,7 +931,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     
 
     from evaluate import evaluate
-    searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0, A_tF_n, XS_totals = evaluate(Multi,ComputerPrecisions, Channels,
+    searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0, A_tF_n, XS_totals = evaluate(Multi,ML,ComputerPrecisions, Channels,
         CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
         Search_Control,Data_Control, searchpars0, data_val, tim)
 
