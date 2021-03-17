@@ -481,7 +481,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #     print('D_poles \n',D_poles[:,:])
 #     print('g_poles \n',g_poles[:,:,:])
 #     print('norm_val \n',norm_val[:])
-    print('\n Search:',Search,'to',Iterations,'iterations')
+    if Search:
+        print('\n Search:',Search,'to',Iterations,'iterations')
 
     n_norms = norm_val.shape[0]
     fixed_norms= numpy.zeros([n_norms], dtype=REAL) # fixed in search

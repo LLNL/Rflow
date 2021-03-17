@@ -338,12 +338,14 @@ if __name__ == "__main__":
                             emin = 1e3
                             emax = 0
                             energy = True
+                            Ein = 'lab' 
                             E_index = E_index_min =  E_index_max = None
                             if 'Energy' in labels:
                                 E_index = labels.index('Energy')
                             elif 'EN-CM' in labels:
                                 E_index = labels.index('EN-CM')
                                 E_scale = 1. # (pMass+tMass)/tMass  # convert to projectile lab energy for comparisons
+                                Ein = 'cm' 
                             elif 'EN' in labels:
                                 E_index = labels.index('EN')
                             elif 'EN-APRX' in labels:
@@ -844,7 +846,6 @@ if __name__ == "__main__":
         #                             print('     Aflip =',Out in channels,'and',po,emass,'>',to,rmass*1.1,'::',Aflip)
                                 else:
                                     Aflip = False
-                                Ein = 'lab' 
                                 eshift = str(0)
                                 ecalib = str(0)
                                 splitshifts = 'FALSE'

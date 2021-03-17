@@ -220,16 +220,20 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
                         channels.append((icnew+1,ia,lch,sch,ic))
                         # print(' Partial wave channels IC,IA,L,S:',ic,ia,lch,sch)
                         w = 1./(2*lch+1)**2
-                        if Epole+Q > 0. and rmass>0:    # don't bother for sub-threshold states or photons
+                        if Epole+Q > 0. and rmass>0:    # don't bother for sub-threshold states 
                             dSoPc = dSoP(Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch)
 #                             print('dSoP(',Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch, ') = ',dSoPc)
                             w *= ( 1 - width * dSoPc/2.)
                             w *= first   # more weight on lowest L !!!!
-                            print('For ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.)
+                            print('For ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.,'w =',w)
                             weight += w
+                        elif rmass == 0.0:  # photons
+                            w = 1e-4
+                            weight += w
+                            print('For photon ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'w =',w)
                         else:
                             dSoPc = 0.
-                            print('Closed ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.)
+                            print('Closed ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.,'w =',w)
                         first *= 1e-3
                              
                         
