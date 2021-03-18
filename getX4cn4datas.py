@@ -33,7 +33,7 @@ parser = argparse.ArgumentParser(description='Prepare data for Rflow')
 
 parser.add_argument('CN', type=str, help='compound-nucleus   e.g. N-15 or N15.')
 parser.add_argument("-E", "--EnergyMax", type=float,  default="19.9", help="Maximum lab incident energy to allow. Default=19.9")
-parser.add_argument("-e", "--EnergyMin", type=float,  default="0.1", help="Minimum lab incident energy to allow. Default=0.001")
+parser.add_argument("-e", "--EnergyMin", type=float,  default="0.001", help="Minimum lab incident energy to allow. Default=0.001")
 parser.add_argument("-p", "--projectiles", type=str, default='any', help="Specific projectile only or default 'any'")
 parser.add_argument("-n", "--nat", type=str,  help="CN which can be replaced by element as being isotopically dominant (e.g. N-14).")
 parser.add_argument("-d", "--dir", type=str, default="Data_X4s", help="Output directory.")
