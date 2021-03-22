@@ -25,14 +25,19 @@ pi = 3.1415926536
 
 
 # TO DO:
-#   Reich-Moore widths to imag part of E_pole like reconstructxs_TF.py
 #   Multiple GPU strategies
 #   Estimate initial Hessian by 1+delta parameter shift. Try various delta to make BFGS search smoother
 #   Options to set parameter and search again.
-#   Reread snap file (eg if crash) for re-initializing same search 
+#   Polarization expts
+#   Secondary emission expts
+#   Relativistic kinematics
+#   Give full covariance matrix (add missing blocks to GNDS somehow)
+#   Adding new poles
+#   Removing old poles
+#   Add new J/pi set (empty initially)
+#   Try fits for values in lists of alternate J/pi 
 
 # Search options:
-#   Fix or search on Reich-Moore widths
 #   Command input, e.g. as with Sfresco?
 
 # Maybe:

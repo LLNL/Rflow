@@ -675,7 +675,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Variable parameters - E,w,norms,D: ',border[1]-border[0],border[2]-border[1],border[3]-border[2],border[4]-border[3],' =',n_pars) 
     print('Fixed    parameters - E,w,norms,D: ',frontier[1]-frontier[0],frontier[2]-frontier[1],frontier[3]-frontier[2],frontier[4]-frontier[3],' =',n_fixed) 
     print('# zero widths  =',numpy.count_nonzero(g_poles == 0) ,'\n')
-    n_dof = n_data - 4
+    n_dof = n_data - border[4]
     
     if debug:
         print('\n Variable parameters:',' '.join(searchnames)) 
