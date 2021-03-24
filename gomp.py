@@ -32,7 +32,7 @@ rsqr4pi = 1.0/(4*pi)**0.5
 
 
 
-def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,hcm,   verbose,debug,inFile,ComputerPrecisions,tim):
+def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,hcm,offset,   verbose,debug,inFile,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
 
@@ -273,7 +273,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,hcm,   verbos
             if IFG==1:     D_poles[jset,:] = 2*D_poles[jset,:]**2
         if jmin <= Jpi.spin <= jmax: 
             for ie in range(N_opts):
-                e = emin + ie * D
+                e = emin + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )
                 n = npli[jset]+ie
                 E_poles[jset,n] = e
                 has_widths[jset,n] = 1
@@ -342,16 +342,19 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,hcm,   verbos
 
                 print( jset,c,ie,  'j,c,e Scatter',pname[pair],'on',tname[pair],'at E=',E,'LS=',L,S,'with',OpticalPot[pair], file=omfile)
     
-    Smat = get_optical_S(sc_info,ncm)
+    Smat = get_optical_S(sc_info,ncm, omfile)
     SmatMSQ = (Smat * numpy.conjugate(Smat)).real
 
     AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
     for isc,sc in  enumerate(sc_info):
         jset,c,n = sc[:3]
+        E = sc[7]
+        if E < 1e-3: continue    # sub-threshold 
         g_poles[jset,n,c] = AvFormalWidths[isc]
         if IFG==1:  # get rwa
             P =  L_poles[jset,n,c,1]
-            g_poles[jset,n,c] = (AvFormalWidths[isc]/(2*P)) ** 0.5
+            g_poles[jset,n,c] = abs(AvFormalWidths[isc]/(2*P)) ** 0.5
+            print(isc,jset,c,n,E,'fw=',AvFormalWidths[isc],'P=',P,'rwa=', g_poles[jset,n,c], file=omfile)
                 
 # Copy parameters back into GNDS 
     jset = 0
@@ -382,7 +385,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,hcm,   verbos
             row = [ E_poles[jset,n] ]
             if ReichMoore: row.append(0.0)   # ReichMoore damping on new optical poles
             for c in range(cols): 
-#               print('Add optical width at j,n,c=',jset,n,c,':',g_poles[jset,n,c])
+                print('Add optical width at j,n,c=',jset,n,c,':',g_poles[jset,n,c], file=omfile)
                 row.append(g_poles[jset,n,c])
             R.data.append(row)
         jset += 1
