@@ -30,6 +30,82 @@ def potl(r, zz, OpticalParameters):
         
     return(Vopt)
 
+def KoningDelaRoche(proj,xZ,xA,E):  # for n and H1
+    xN=xA-xZ
+    diff = (xN - xZ)/xA
+    energy = E
+    if proj=='H1':
+        v1 = 59.30e0 + 21.0e0*diff - 2.4e-2*xA
+        v2 = 7.067e-3 + 4.23e-6*xA
+        v3 = 1.729e-5 - 1.136e-8*xA
+        v4 = 7.1e-9
+        w1 = 14.667e0 + 9.629e-3*xA
+        w2 = 73.55e0 + 7.95e-2*xA
+        d1 = 16.0e0 + 16.0e0*diff
+        d2 = 1.80e-2 + 3.802e-3/(1.0e0 + math.exp((xA - 156.0e0)/8.0e0))
+        d3 = 11.5e0
+        vso_1 = 5.922e0 + 3.0e-3*xA
+        vso_2 = 4.0e-3
+        wso_1 = -3.1e0
+        wso_2 = 160.0e0
+        eFermi = -8.4075e0 + 1.378e-2*xA
+        rc = 1.198e0 + 0.697e0/(xA**(0.6666666666e0)) + 12.994e0/(xA**(1.6666666666e0))
+        vc = 1.73e0*xZ/(rc*(xA**0.333333333e0))
+    elif proj=='n':
+        v1 = 59.30e0 - 21.0e0*diff - 2.4e-2*xA
+        v2 = 7.228e-3 - 1.48e-6*xA
+        v3 = 1.994e-5 - 2.0e-8*xA
+        v4 = 7.1e-9
+        w1 = 12.195e0 + 1.67e-2*xA
+        w2 = 73.55e0 + 7.95e-2*xA
+        d1 = 16.0e0 - 16.0e0*diff
+        d2 = 1.80e-2 + 3.802e-3/(1.0e0 + math.exp((xA - 156.0e0)/8.0e0))
+        d3 = 11.5
+        vso_1 = 5.922e0 + 3.0e-3*xA
+        vso_2 = 4.0e-3
+        wso_1 = -3.1e0
+        wso_2 = 160.0e0
+        eFermi = -11.2814e0 + 2.646e-2*xA
+        rc = 0.0e0
+        rc = 1.198e0 + 0.697e0/(xA**(0.6666666666e0)) + 12.994e0/(xA**(1.6666666666e0))
+        vc = 0.0e0
+    else:
+        print("KoningDelaRoche potential not suitable for ",proj,' only H1 or n')
+        sys.exit()
+        
+    del_vc = vc*v1*(v2 - 2.0e0*v3*(energy - eFermi) + 3.0e0*v4*(energy - eFermi)**2)
+
+    V = v1*(1.0e0 - v2*(energy - eFermi) + v3*(energy - eFermi)**2 - v4*(energy - eFermi)**3) + del_vc
+    RZZ = 1.3039e0 - 0.4054e0/(xA**0.333333333e0)
+    AZ = 0.6778e0 - 1.487e-4*xA
+
+    W = w1*(energy - eFermi)**2/((energy - eFermi)**2 + w2**2)
+    RWZ = RZZ
+    AW = AZ
+
+    WD = d1*(energy - eFermi)**2*math.exp(-d2*(energy - eFermi))/((energy - eFermi)**2 + d3**2)
+    RDZ = 1.3424e0 - 1.585e-2*(xA**0.333333333e0)
+    if proj=='n': AD = 0.5446e0 - 1.656e-4*xA     
+    if proj=='H1':  AD = 0.5187e0 - 5.206e-4*xA
+
+    WV = 0.0e0
+    RWV = 1.3424e0 - 1.585e-2*(xA**0.333333333e0)
+    AWV = AD
+
+    VSO = vso_1*math.exp(-vso_2*(energy - eFermi))
+    RSOZ = 1.1854e0 - 0.647e0/(xA**0.333333333e0)      
+    ASO = 0.59e0
+
+    WSOI = wso_1*(energy - eFermi)**2/((energy - eFermi)**2 + wso_2**2)
+    RSOI = RSOZ
+    ASOI = ASO
+    return( (V,RZZ,AZ, W,RWZ,AW, WD,RDZ,AD, VSO,RSOZ,ASO, rc) )
+
+def Soukhovitskii(proj,xZ,xA,E):  # for n and H1
+    print('Soukhovitskii not implemented yet')
+    sys.exit()
+    return
+
 def becchetti(proj,Z,A,E):  # for n and H1
     AOV=A**0.333333333
     RC = 1.3 * AOV
@@ -147,11 +223,11 @@ def Li_t(proj,Z,A,E):    # for H3
     R = 1.12010-0.1504/a13
     AV = 0.68330+0.01910*a13
     
-    W = 7.383+0.5025*ed-0.0097*ed*ed
+    W = 7.383+0.5025*ee-0.0097*ed*ed
     RW =1.32020-0.1776/a13
     AW = 1.11900+0.01913*a13
 
-    WD = 37.06-0.6451*ed-47.19*an
+    WD = 37.06-0.6451*ee-47.19*an
     RD = 1.25100-0.4622/a13
     AD = 0.81140+0.01159*a13
         
@@ -228,6 +304,7 @@ def get_optical_S(sc_info,n, ompout):
     ar  = numpy.zeros([nsc], dtype=REAL)
     
     isc = 0
+    optopt = {}
     for jset,c,p,h,L,Spin,pair,E,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
         coef =  -1.0 / (fmscal * rmass)
         k[isc] = math.sqrt( fmscal * rmass * E)
@@ -237,22 +314,49 @@ def get_optical_S(sc_info,n, ompout):
         phis[isc] = phi 
         
         if pname=='n':
-            OpticalParameters = becchetti(pname,ZT,AT,E)
+            if OpticalPot[0] <= 1: 
+                OpticalParameters = KoningDelaRoche(pname,ZT,AT,E)
+                opt = 'n: KoningDelaRoche'
+            if OpticalPot[0] == 2: 
+                OpticalParameters = Soukhovitskii(pname,ZT,AT,E)
+                opt = 'n: Soukhovitskii'
+            if OpticalPot[0] >= 3: 
+                OpticalParameters = becchetti(pname,ZT,AT,E)
+                opt = 'n: Becchetti'
         elif pname=='H1':
-            OpticalParameters = becchetti(pname,ZT,AT,E)
+            if OpticalPot[0] <= 1: 
+                OpticalParameters = KoningDelaRoche(pname,ZT,AT,E)
+                opt = 'p: KoningDelaRoche'
+            if OpticalPot[0] == 2: 
+                OpticalParameters = Soukhovitskii(pname,ZT,AT,E)
+                opt = 'p: Soukhovitskii'
+            if OpticalPot[0] >= 3: 
+                OpticalParameters = becchetti(pname,ZT,AT,E)
+                opt = 'p: Becchetti'
         elif pname=='H2':
             OpticalParameters = perey_d(pname,ZT,AT,E)
+            opt = 'd: Perey'
         elif pname=='H3':
-            if OpticalPot <= 1: OpticalParameters = perey_t(pname,ZT,AT,E)
-            if OpticalPot >= 2: OpticalParameters = Li_t(pname,ZT,AT,E)
+            if OpticalPot[0] <= 1: 
+                OpticalParameters = perey_t(pname,ZT,AT,E)
+                opt = 't: Perey'
+            if OpticalPot[0] >= 2: 
+                OpticalParameters = Li_t(pname,ZT,AT,E)
+                opt = 't: Li'
         elif pname=='He3':
             OpticalParameters = perey_h(pname,ZT,AT,E)
+            opt = 'h: Perey'
         elif pname=='He4':
             OpticalParameters = Avrigeanu(pname,ZT,AT,E)        
+            opt = 'a: Avrigeanu'
         else:
             print('Unrecognized projectile',pname)
             sys.exit()
-                    
+        
+        opop = optopt.get(pname,None)
+        if opop is None: print('Optical potential for',pname,'is',opt)
+        optopt[pname] = opt
+        
         for i in range(1,n+1):
             r = i*h
             potls = potl(r,ZP*ZT,OpticalParameters) - coef * L*(L+1)/(r*r)
@@ -289,26 +393,52 @@ if __name__=="__main__":
     print('Arguments projevtile name (GNDS form), target Z,A, energy:')
     pname,ZT,AT,E,Version = sys.argv[1:6]
     ZT,AT,E,Version = int(ZT),int(AT),float(E),int(Version)
+    
     if pname=='n':
-        OpticalParameters = becchetti(pname,ZT,AT,E)
+        if Version <= 1: 
+            OpticalParameters = KoningDelaRoche(pname,ZT,AT,E)
+            opt = 'n: KoningDelaRoche'
+        if Version == 2: 
+            OpticalParameters = Soukhovitskii(pname,ZT,AT,E)
+            opt = 'n: Soukhovitskii'
+        if Version >= 3: 
+            OpticalParameters = becchetti(pname,ZT,AT,E)
+            opt = 'n: Becchetti'
+
     elif pname=='H1':
-        OpticalParameters = becchetti(pname,ZT,AT,E)
+        if Version <= 1: 
+            OpticalParameters = KoningDelaRoche(pname,ZT,AT,E)
+            opt = 'p: KoningDelaRoche'
+        if Version == 2: 
+            OpticalParameters = Soukhovitskii(pname,ZT,AT,E)
+            opt = 'p: Soukhovitskii'
+        if Version >= 3: 
+            OpticalParameters = becchetti(pname,ZT,AT,E)
+            opt = 'p: Becchetti'
+
     elif pname=='H2':
         OpticalParameters = perey_d(pname,ZT,AT,E)
+        opt = 'd: Perey'
     elif pname=='H3':
-        if Version <= 1: OpticalParameters = perey_t(pname,ZT,AT,E)
-        if Version >= 2: OpticalParameters = Li_t(pname,ZT,AT,E)
+        if Version <= 1: 
+            OpticalParameters = perey_t(pname,ZT,AT,E)
+        opt = 't: Perey'
+        if Version >= 2: 
+            OpticalParameters = Li_t(pname,ZT,AT,E)
+        opt = 't: Li'
     elif pname=='He3':
         OpticalParameters = perey_h(pname,ZT,AT,E)
+        opt = 'h: Perey'
     elif pname=='He4':
         OpticalParameters = Avrigeanu(pname,ZT,AT,E)
+        opt = 'a: Avrigeanu'
     else:
         print('Unrecognized projectile',pname)
 
     V,RZZ,AZ, W,RWZ,AW, WD,RDZ,AD, VSO,RSOZ,ASO, RC = OpticalParameters
     ZA = ZT*1000+AT
     AC = 0.0
-    print('Optical potential for %s on ZA = %s at %7.3f MeV, version:' % (pname,ZA,V))
+    print('Optical potential for %s on ZA = %s at %7.3f MeV, version: %s' % (pname,ZA,V,opt))
     
     print('\nFresco line mode:')
     kpp = {'n':1, 'H1':1, 'H2':2, 'H3':3, 'He3':3, 'He4':4}
