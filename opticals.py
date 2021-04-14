@@ -20,7 +20,7 @@ rsqr4pi = 1.0/(4*pi)**0.5
 
 def potl(r, zz, OpticalParameters):
     V,RZZ,AZ, W,RWZ,AW, WD,RDZ,AD, VSO,RSOZ,ASO, RC = OpticalParameters
-    Cshape = (1.5 - 0.5 * (r/RC)**2) if r < RC else 1./r 
+    Cshape = (1.5 - 0.5 * (r/RC)**2)/RC if r < RC else 1./r 
     VC = Cshape * coulcn * zz
     Vvol = - V / (1 + math.exp( (r - RZZ)/AZ ) )
     Wvol = - W / (1 + math.exp( (r - RWZ)/AW ) )
@@ -34,6 +34,7 @@ def KoningDelaRoche(proj,xZ,xA,E):  # for n and H1
     xN=xA-xZ
     diff = (xN - xZ)/xA
     energy = E
+    AOV = xA**0.333333333e0
     if proj=='H1':
         v1 = 59.30e0 + 21.0e0*diff - 2.4e-2*xA
         v2 = 7.067e-3 + 4.23e-6*xA
@@ -99,7 +100,7 @@ def KoningDelaRoche(proj,xZ,xA,E):  # for n and H1
     WSOI = wso_1*(energy - eFermi)**2/((energy - eFermi)**2 + wso_2**2)
     RSOI = RSOZ
     ASOI = ASO
-    return( (V,RZZ,AZ, W,RWZ,AW, WD,RDZ,AD, VSO,RSOZ,ASO, rc) )
+    return( (V,RZZ*AOV,AZ, W,RWZ*AOV,AW, WD,RDZ*AOV,AD, VSO,RSOZ*AOV,ASO, rc) )
 
 def Soukhovitskii(proj,xZ,xA,E):  # for n and H1
     print('Soukhovitskii not implemented yet')
@@ -384,13 +385,13 @@ def get_optical_S(sc_info,n, ompout):
     for jset,c,p,h,L,Spin,pair,E,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
         exd = k[isc] * a * math.cos( a* k[isc])
         rmd = math.sin( a * k[isc]) / exd
-        print(isc,'is p%i, L=%i, E %8.3f, delta %9.2f, TC = %9.5f' % (pair,L,E,delta[isc], TC[isc] ) ) #,phis[isc]*180/pi),-phis[isc]/(a* k[isc]) ) #, Smat[isc], TC[isc] , file=ompout)
+        print(isc,'is p%i, LS=%i,%s, E %8.3f, delta %9.2f, TC = %9.5f' % (pair,L,Spin,E,delta[isc], TC[isc] ) ) #,phis[isc]*180/pi),-phis[isc]/(a* k[isc]) ) #, Smat[isc], TC[isc] , file=ompout)
         isc += 1
     return(Smat)
     
 if __name__=="__main__":
     import sys
-    print('Arguments projevtile name (GNDS form), target Z,A, energy:')
+    print('Arguments projectile name (GNDS form), target Z,A, energy:')
     pname,ZT,AT,E,Version = sys.argv[1:6]
     ZT,AT,E,Version = int(ZT),int(AT),float(E),int(Version)
     
@@ -438,7 +439,7 @@ if __name__=="__main__":
     V,RZZ,AZ, W,RWZ,AW, WD,RDZ,AD, VSO,RSOZ,ASO, RC = OpticalParameters
     ZA = ZT*1000+AT
     AC = 0.0
-    print('Optical potential for %s on ZA = %s at %7.3f MeV, version: %s' % (pname,ZA,V,opt))
+    print('Optical potential for %s on ZA = %s at %7.3f MeV, version: %s' % (pname,ZA,E,opt))
     
     print('\nFresco line mode:')
     kpp = {'n':1, 'H1':1, 'H2':2, 'H3':3, 'He3':3, 'He4':4}
