@@ -69,6 +69,7 @@ if __name__=='__main__':
     emin = args.emin
     emax = emaxG
     print(' Make optical poles in range [',emin,',',emax,'] in lab MeV for projectile',p)
+    rrr.domainMax = args.EMAX
     
     
     f = open( args.ompFile )

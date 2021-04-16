@@ -372,8 +372,6 @@ def get_optical_S(sc_info,n, ompout):
     for i in range(1,n):
         wf[:,i+1] = ( ( 12.-10.*f[:,i] ) * wf[:,i] - f[:,i-1] * wf[:,i-1] ) / f[:,i+1]
     
-    firstL0 = True
-
     deriv = (147.0*wf[:,n]-360.0*wf[:,n-1]+450.0*wf[:,n-2]  -400.0*wf[:,n-3]+225.0*wf[:,n-4]-72.*wf[:,n-5]+10.*wf[:,n-6] ) /(60.*hcm[:,0])
     Rmat = wf[:,n] / (ar*deriv)
     Smat   = (1. - Rmat * numpy.conjugate(Lc[:]) )/ (1. - Rmat * Lc[:])  * numpy.exp(complex(0.,2.)*phis[:])
@@ -383,8 +381,6 @@ def get_optical_S(sc_info,n, ompout):
     
     isc = 0
     for jset,c,p,h,L,Spin,pair,E,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
-        exd = k[isc] * a * math.cos( a* k[isc])
-        rmd = math.sin( a * k[isc]) / exd
         print(isc,'is p%i, LS=%i,%s, E %8.3f, delta %9.2f, TC = %9.5f' % (pair,L,Spin,E,delta[isc], TC[isc] ) ) #,phis[isc]*180/pi),-phis[isc]/(a* k[isc]) ) #, Smat[isc], TC[isc] , file=ompout)
         isc += 1
     return(Smat)
