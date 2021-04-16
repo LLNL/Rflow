@@ -32,7 +32,7 @@ rsqr4pi = 1.0/(4*pi)**0.5
 
 
 
-def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,hcm,offset,   verbose,debug,inFile,ComputerPrecisions,tim):
+def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,offset,   verbose,debug,inFile,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
 
@@ -311,7 +311,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,hcm,offset,  
         
 # CALCULATE OPTICAL-MODEL SCATTERING TO GET PARTIAL WIDTHS
 
-    omfile = open('omp.txt','w')
+    omfile = open(base + '-omp.txt','w')
     sc_info = []
     ncm = int( prmax[ipair] / hcm + 0.5)
     hcm = prmax[ipair]/ncm
@@ -344,8 +344,16 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,hcm,offset,  
     
     Smat = get_optical_S(sc_info,ncm, omfile)
     SmatMSQ = (Smat * numpy.conjugate(Smat)).real
+    TC = 1.0 - SmatMSQ
 
-    AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
+    if   Model=='A':
+        AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
+    elif Model=='B':
+        AvFormalWidths = Dspacing * TC / (2.*pi)
+    else:
+        print('Model',Model,'unrecognized')
+        sys.exit()
+            
     for isc,sc in  enumerate(sc_info):
         jset,c,n = sc[:3]
         E = sc[7]

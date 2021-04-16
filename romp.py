@@ -33,10 +33,9 @@ if __name__=='__main__':
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
     parser.add_argument('ompFile', type=str, help='Optical model parameters to use' )
 
-    parser.add_argument("-B", "--Background", type=float, default="25",  help="Pole energy (lab) above which are all distant poles. Fixed in  searches.")
-    parser.add_argument(      "--BG", action="store_true",  help="Include BG in name of background poles")
-
+    parser.add_argument("-M", "--Model", type=str, default='', help="Model to link |S|^2 and widths. A: log; B: lin")
     parser.add_argument("-D", "--Dspacing", type=float,default = 1,   help="Energy spacing of optical poles")
+    
     parser.add_argument("-e", "--emin", type=float, default = 11,  help="Min cm energy for optical poles.")
     parser.add_argument("-E", "--EMAX", type=float, default = 20, help="Max cm energy for optical poles")
     parser.add_argument("-j", "--jmin", type=float, default = 0, help="Max CN spin for optical poles")
@@ -68,7 +67,8 @@ if __name__=='__main__':
     emaxG = args.EMAX # max(emaxG, args.EMAX)
     emin = args.emin
     emax = emaxG
-    print(' Make optical poles in range [',emin,',',emax,'] in lab MeV for projectile',p)
+    print(' Make optical poles spaced by',args.Dspacing,'in range [',emin,',',emax,'] in lab MeV for projectile',p)
+    print(' using optical potentials from',args.ompFile,' and model ',args.Model,'to map |S|^2 to widths.\n\n')
     rrr.domainMax = args.EMAX
     
     
@@ -91,6 +91,7 @@ if __name__=='__main__':
 # data input
     base += '+%s' % args.ompFile.replace('.omp','')
 
+    if args.Model      is not None: base += '-%s' % args.Model
     if args.emin       is not None: base += '-e%s' % args.emin
     if args.EMAX       is not None: base += '-E%s' % args.EMAX
     if args.jmin    > 0.0: base += '-j%s' % args.jmin
@@ -101,9 +102,9 @@ if __name__=='__main__':
 
     if args.tag != '': base = base + '_'+args.tag
 
-    print("        finish setup: ",tim.toString( ))
+#     print("        finish setup: ",tim.toString( ))
  
-    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,optical_potentials,args.Hcm,args.offset,  
+    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,optical_potentials,args.Model,args.Hcm,args.offset,  
          args.verbose,args.debug,args.inFile,ComputerPrecisions,tim)
     
     newFitFile = base  + '-opt.xml'
@@ -111,5 +112,5 @@ if __name__=='__main__':
     print('Written new fit file:',newFitFile)
     
 
-    print("Final Romp: ",tim.toString( ))
+#     print("Final Romp: ",tim.toString( ))
     print("Target stdout:",base + '.out')
