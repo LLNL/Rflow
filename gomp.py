@@ -10,6 +10,8 @@ from opticals import get_optical_S
 from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
 from xData.series1d  import Legendre
+from xData import XYs
+from PoPs.groups.misc import *
 
 from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
@@ -30,9 +32,84 @@ etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 pi = 4.*math.atan(1.0)
 rsqr4pi = 1.0/(4*pi)**0.5
 
+def nuclIDs (nucl):
+    datas = chemicalElementALevelIDsAndAnti(nucl)
+    if datas[1] is not None:
+        return datas[1]+str(datas[2]),datas[3]
+    else:
+        return datas[0],0
 
+lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
-def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,offset,   verbose,debug,inFile,ComputerPrecisions,tim):
+def quickName(p,t):     #   (He4,Be11_e3) -> a3
+    ln = lightnuclei.get(p,p)
+    tnucl,tlevel = nuclIDs(t)
+    qn = ln + str(tlevel) if tlevel>0 else ln
+    return(qn,tlevel)
+
+def generateEnergyGrid(energies,widths, lowBound, highBound, stride=1):
+    """ Create an initial energy grid by merging a rough mesh for the entire region (~10 points / decade)
+    with a denser grid around each resonance. For the denser grid, multiply the total resonance width by
+    the 'resonancePos' array defined below. """
+    thresholds = []
+    # ignore negative resonances
+    for lidx in range(len(energies)):
+        if energies[lidx] > 0: break
+    energies = energies[lidx:]
+    widths = widths[lidx:]
+    # generate grid for a single peak, should be good to 1% using linear interpolation using default stride
+    resonancePos = numpy.array([
+        5.000e-04, 1.000e-03, 2.000e-03, 3.000e-03, 4.000e-03, 5.000e-03, 6.000e-03, 7.000e-03, 8.000e-03, 9.000e-03, 1.000e-02, 2.000e-02,
+        3.000e-02, 4.000e-02, 5.000e-02, 6.000e-02, 7.000e-02, 8.000e-02, 9.000e-02, 1.000e-01, 1.100e-01, 1.200e-01, 1.300e-01, 1.400e-01,
+        1.500e-01, 1.600e-01, 1.700e-01, 1.800e-01, 1.900e-01, 2.000e-01, 2.100e-01, 2.200e-01, 2.300e-01, 2.400e-01, 2.500e-01, 2.600e-01,
+        2.800e-01, 3.000e-01, 3.200e-01, 3.400e-01, 3.600e-01, 3.800e-01, 4.000e-01, 4.200e-01, 4.400e-01, 4.600e-01, 4.800e-01, 5.000e-01,
+        5.500e-01, 6.000e-01, 6.500e-01, 7.000e-01, 7.500e-01, 8.000e-01, 8.500e-01, 9.000e-01, 9.500e-01, 1.000e+00, 1.050e+00, 1.100e+00,
+        1.150e+00, 1.200e+00, 1.250e+00, 1.300e+00, 1.350e+00, 1.400e+00, 1.450e+00, 1.500e+00, 1.550e+00, 1.600e+00, 1.650e+00, 1.700e+00,
+        1.750e+00, 1.800e+00, 1.850e+00, 1.900e+00, 1.950e+00, 2.000e+00, 2.050e+00, 2.100e+00, 2.150e+00, 2.200e+00, 2.250e+00, 2.300e+00,
+        2.350e+00, 2.400e+00, 2.450e+00, 2.500e+00, 2.600e+00, 2.700e+00, 2.800e+00, 2.900e+00, 3.000e+00, 3.100e+00, 3.200e+00, 3.300e+00,
+        3.400e+00, 3.600e+00, 3.800e+00, 4.000e+00, 4.200e+00, 4.400e+00, 4.600e+00, 4.800e+00, 5.000e+00, 5.200e+00, 5.400e+00, 5.600e+00,
+        5.800e+00, 6.000e+00, 6.200e+00, 6.400e+00, 6.500e+00, 6.800e+00, 7.000e+00, 7.500e+00, 8.000e+00, 8.500e+00, 9.000e+00, 9.500e+00,
+        1.000e+01, 1.050e+01, 1.100e+01, 1.150e+01, 1.200e+01, 1.250e+01, 1.300e+01, 1.350e+01, 1.400e+01, 1.450e+01, 1.500e+01, 1.550e+01,
+        1.600e+01, 1.700e+01, 1.800e+01, 1.900e+01, 2.000e+01, 2.100e+01, 2.200e+01, 2.300e+01, 2.400e+01, 2.500e+01, 2.600e+01, 2.700e+01,
+        2.800e+01, 2.900e+01, 3.000e+01, 3.100e+01, 3.200e+01, 3.300e+01, 3.400e+01, 3.600e+01, 3.800e+01, 4.000e+01, 4.200e+01, 4.400e+01,
+        4.600e+01, 4.800e+01, 5.000e+01, 5.300e+01, 5.600e+01, 5.900e+01, 6.200e+01, 6.600e+01, 7.000e+01, 7.400e+01, 7.800e+01, 8.200e+01,
+        8.600e+01, 9.000e+01, 9.400e+01, 9.800e+01, 1.020e+02, 1.060e+02, 1.098e+02, 1.140e+02, 1.180e+02, 1.232e+02, 1.260e+02, 1.300e+02,
+        1.382e+02, 1.550e+02, 1.600e+02, 1.739e+02, 1.800e+02, 1.951e+02, 2.000e+02, 2.100e+02, 2.189e+02, 2.300e+02, 2.456e+02, 2.500e+02,
+        2.600e+02, 2.756e+02, 3.092e+02, 3.200e+02, 3.469e+02, 3.600e+02, 3.892e+02, 4.000e+02, 4.200e+02, 4.367e+02, 4.600e+02, 4.800e+02,
+        5.000e+02, 6.000e+02, 7.000e+02, 8.000e+02, 9.000e+02, 1.000e+03, 1.020e+03, 1.098e+03, 1.140e+03, 1.232e+03, 1.260e+03, 1.300e+03,
+        1.382e+03, 1.550e+03, 1.600e+03, 1.739e+03, 1.800e+03, 1.951e+03, 2.000e+03, 2.100e+03, 2.189e+03, 2.300e+03, 2.456e+03, 2.500e+03,
+        2.600e+03, 2.756e+03, 3.092e+03, 3.200e+03, 3.469e+03, 3.600e+03, 3.892e+03, 4.000e+03, 4.200e+03, 4.367e+03, 4.600e+03, 4.800e+03,
+        5.000e+03, 6.000e+03, 7.000e+03, 8.000e+03, 9.000e+03, 1.000e+04
+         ][::stride])
+
+    grid = []
+    # get the midpoints (on log10 scale) between each resonance:
+    # emid = [lowBound] + list(10**( ( numpy.log10(energies[1:])+numpy.log10(energies[:-1]) ) / 2.0)) + [highBound]
+    # or get midpoints on linear scale:
+    emid = [lowBound] + [(e1+e2)/2.0 for e1, e2 in zip(energies[1:], energies[:-1])] + [highBound]
+    for e, w, lowedge, highedge in zip(energies, widths, emid[:-1], emid[1:]):
+        points = e-w*resonancePos
+        grid += [lowedge] + list(points[points>lowedge])
+#         print('Around e,w=',e,w,': below:',list(points[points>lowedge]))
+        points = e+w*resonancePos[1:]
+        grid += list(points[points < highedge])
+#         print('Around e,w=',e,w,': aboveG:',list(points[points < highedge]))
+    # also add rough grid, to cover any big gaps between resonances, should give at least 10 points per decade:
+    npoints = int(numpy.ceil(numpy.log10(highBound)-numpy.log10(lowBound)) * 10)
+    grid += list(numpy.logspace(numpy.log10(lowBound), numpy.log10(highBound), npoints))[1:-1]
+    grid += [lowBound, highBound, 0.0253]   # region boundaries + thermal
+    # if threshold reactions present, add dense grid at and above threshold
+    for threshold in thresholds:
+        grid += [threshold]
+        grid += list(threshold + resonancePos * 1e-2)
+    grid = sorted(set(grid))
+    # toss any points outside of energy bounds:
+    grid = grid[grid.index(lowBound) : grid.index(highBound)+1]
+    return numpy.asarray(grid, dtype=REAL)
+                       
+
+def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,offset,Convolute,stride,
+       verbose,debug,inFile,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
 
@@ -110,11 +187,12 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
         projectile = PoPs[p];
         target     = PoPs[t];
         A_B = '%s + %s' % (p,t)
-        if A_B not in optical_potentials.keys():
-            print('\nChannel',A_B,'optical potential not specified. Stop')
-            sys.exit()
-        else:
-            OpticalPot.append(optical_potentials[A_B])
+        if Dspacing is not None:
+            if A_B not in optical_potentials.keys():
+                print('\nChannel',A_B,'optical potential not specified. Stop')
+                sys.exit()
+            else:
+                OpticalPot.append(optical_potentials[A_B])
 
         pMass = projectile.getMass('amu');   
         AT[pair] = target.A
@@ -169,7 +247,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
             Lmax = max(Lmax,ch.L)
     print('Initially %i Jpi sets with %i poles max, and %i channels max. Lmax=%i' % (n_jsets,n_poles,n_chans,Lmax))
     
-    N_opts = max(int( (emax - emin)/Dspacing + 1.5), 0)
+    N_opts = max(int( (emax - emin)/Dspacing + 1.5), 0) if Dspacing is not None else 0
     D = (emax-emin)/(N_opts-1) if N_opts > 1 else 0.0
     print("Increase max poles from",n_poles,"to",n_poles + N_opts)
     n_poles += N_opts
@@ -310,107 +388,110 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
     Pole_Shifts(L_poles,dLdE_poles, E_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
     print()
         
-# CALCULATE OPTICAL-MODEL SCATTERING TO GET PARTIAL WIDTHS
+        
+    if Dspacing is not None:
+    # CALCULATE OPTICAL-MODEL SCATTERING TO GET PARTIAL WIDTHS
 
-    omfile = open(base + '-omp.txt','w')
-    sc_info = []
-    ncm = int( prmax[ipair] / hcm + 0.5)
-    hcm = prmax[ipair]/ncm
-    isc = 0
-    for jset,Jpi in enumerate(RMatrix.spinGroups):
-        parity = '+' if pi_set[jset] > 0 else '-'
-        R = Jpi.resonanceParameters.table
-        cols = R.nColumns - 1  # ignore energy col
-        isc_i = isc
-        for c,ch in enumerate(Jpi.channels):
-            L =  L_val[jset,c]
-            S =  S_val[jset,c]
+        omfile = open(base + '-omp.txt','w')
+        sc_info = []
+        ncm = int( prmax[ipair] / hcm + 0.5)
+        hcm = prmax[ipair]/ncm
+        isc = 0
+        for jset,Jpi in enumerate(RMatrix.spinGroups):
+            parity = '+' if pi_set[jset] > 0 else '-'
+            R = Jpi.resonanceParameters.table
+            cols = R.nColumns - 1  # ignore energy col
+            isc_i = isc
+            for c,ch in enumerate(Jpi.channels):
+                L =  L_val[jset,c]
+                S =  S_val[jset,c]
+                for ie in range(N_opts):
+                    n = npli[jset]+ie
+                    e = E_poles[jset,n]
+
+                    pair = seg_val[jset,c] 
+                    if pair < 0: continue
+                    E = e*lab2cm + QI[pair]
+                    if E <= 1e-3: continue
+                
+                    sqE = math.sqrt(E)
+                    a = prmax[pair]
+                    h = a / ncm
+                    rho = a * math.sqrt(fmscal*rmass[pair]) * sqE
+                    eta = etacns * za[pair]*zb[pair] * math.sqrt(rmass[pair]) / sqE 
+                    EPS=1e-10; LIMIT = 2000000; ACC8 = 1e-12
+                    F = cf1(rho,eta,L,EPS,LIMIT) * rho
+                    Shift = L_poles[jset,n,c,0]
+                    P     = L_poles[jset,n,c,1]
+                    phi = - math.atan2(P, F - Shift)
+                    sc_info.append([jset,c,n,h,L,S,pair,E,a,rmass[pair],pname[pair],za[pair],zb[pair],AT[pair],L_poles[jset,n,c,:],phi, OpticalPot[pair]])
+
+                    print( jset,c,ie,  'j,c,e Scatter',pname[pair],'on',tname[pair],'at E=',E,'LS=',L,S,'with',OpticalPot[pair], file=omfile)
+                    isc += 1
+            print('J,pi =%5.1f %s, channels %3i, widths %5i -> %5i (incl)' % (J_set[jset],parity,cols,isc_i,isc-1))
+    
+        Smat = get_optical_S(sc_info,ncm, omfile)
+        SmatMSQ = (Smat * numpy.conjugate(Smat)).real
+        TC = 1.0 - SmatMSQ
+
+        Dcm = Dspacing*lab2cm
+        if   Model[0]=='A':
+            AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
+        elif Model[0]=='B':
+            AvFormalWidths = Dspacing * TC / (2.*pi)
+        else:
+            print('Model',Model,'unrecognized')
+            sys.exit()
+        mparts = Model.split(',')
+        if len(mparts)>1:
+            scale = float(mparts[1])
+            AvFormalWidths *= scale
+            
+        for isc,sc in  enumerate(sc_info):
+            jset,c,n = sc[:3]
+            E = sc[7]
+            if E < 1e-3: continue    # sub-threshold 
+            g_poles[jset,n,c] = AvFormalWidths[isc]
+            if IFG==1:  # get rwa
+                P =  L_poles[jset,n,c,1]
+                g_poles[jset,n,c] = abs(AvFormalWidths[isc]/(2*P)) ** 0.5
+                print(isc,jset,c,n,E,'fw=',AvFormalWidths[isc],'P=',P,'rwa=', g_poles[jset,n,c], file=omfile)
+                
+    # Copy parameters back into GNDS 
+        jset = 0
+        for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
+            parity = '+' if pi_set[jset] > 0 else '-'
+    #           if True: print('J,pi =',J_set[jset],parity)
+            R = Jpi.resonanceParameters.table
+            rows = R.nRows
+            cols = R.nColumns - 1  # without energy col
+            c_start = 1
+            if ReichMoore: 
+                cols -= 1
+                c_start = 2
+            for pole in range(rows):
+    #               print('Update',pole,'pole',R.data[pole][0],'to',E_poles[jset,pole])
+                R.data[pole][0] = E_poles[jset,pole]
+                if ReichMoore:
+                    if IFG:
+                        R.data[pole][1] = math.sqrt(D_poles[jset,pole]/2.)
+                    else:
+                        R.data[pole][1] = D_poles[jset,pole]
+                for c in range(cols):
+                    R.data[pole][c+c_start] = g_poles[jset,pole,c]
+    #                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", "\n".join(R.toXMLList()))
+
             for ie in range(N_opts):
                 n = npli[jset]+ie
-                e = E_poles[jset,n]
-
-                pair = seg_val[jset,c] 
-                if pair < 0: continue
-                E = e*lab2cm + QI[pair]
-                if E <= 1e-3: continue
+                row = [ E_poles[jset,n] ]
+                if ReichMoore: row.append(0.0)   # ReichMoore damping on new optical poles
+                for c in range(cols): 
+                    print('Add optical width at j,n,c=',jset,n,c,':',g_poles[jset,n,c], file=omfile)
+                    row.append(g_poles[jset,n,c])
+                R.data.append(row)
+            jset += 1
                 
-                sqE = math.sqrt(E)
-                a = prmax[pair]
-                h = a / ncm
-                rho = a * math.sqrt(fmscal*rmass[pair]) * sqE
-                eta = etacns * za[pair]*zb[pair] * math.sqrt(rmass[pair]) / sqE 
-                EPS=1e-10; LIMIT = 2000000; ACC8 = 1e-12
-                F = cf1(rho,eta,L,EPS,LIMIT) * rho
-                Shift = L_poles[jset,n,c,0]
-                P     = L_poles[jset,n,c,1]
-                phi = - math.atan2(P, F - Shift)
-                sc_info.append([jset,c,n,h,L,S,pair,E,a,rmass[pair],pname[pair],za[pair],zb[pair],AT[pair],L_poles[jset,n,c,:],phi, OpticalPot[pair]])
-
-                print( jset,c,ie,  'j,c,e Scatter',pname[pair],'on',tname[pair],'at E=',E,'LS=',L,S,'with',OpticalPot[pair], file=omfile)
-                isc += 1
-        print('J,pi =%5.1f %s, channels %3i, widths %5i -> %5i (incl)' % (J_set[jset],parity,cols,isc_i,isc-1))
-    
-    Smat = get_optical_S(sc_info,ncm, omfile)
-    SmatMSQ = (Smat * numpy.conjugate(Smat)).real
-    TC = 1.0 - SmatMSQ
-
-    if   Model[0]=='A':
-        AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
-    elif Model[0]=='B':
-        AvFormalWidths = Dspacing * TC / (2.*pi)
-    else:
-        print('Model',Model,'unrecognized')
-        sys.exit()
-    mparts = Model.split(',')
-    if len(mparts)>1:
-        scale = float(mparts[1])
-        AvFormalWidths *= scale
-            
-    for isc,sc in  enumerate(sc_info):
-        jset,c,n = sc[:3]
-        E = sc[7]
-        if E < 1e-3: continue    # sub-threshold 
-        g_poles[jset,n,c] = AvFormalWidths[isc]
-        if IFG==1:  # get rwa
-            P =  L_poles[jset,n,c,1]
-            g_poles[jset,n,c] = abs(AvFormalWidths[isc]/(2*P)) ** 0.5
-            print(isc,jset,c,n,E,'fw=',AvFormalWidths[isc],'P=',P,'rwa=', g_poles[jset,n,c], file=omfile)
-                
-# Copy parameters back into GNDS 
-    jset = 0
-    for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
-        parity = '+' if pi_set[jset] > 0 else '-'
-#           if True: print('J,pi =',J_set[jset],parity)
-        R = Jpi.resonanceParameters.table
-        rows = R.nRows
-        cols = R.nColumns - 1  # without energy col
-        c_start = 1
-        if ReichMoore: 
-            cols -= 1
-            c_start = 2
-        for pole in range(rows):
-#               print('Update',pole,'pole',R.data[pole][0],'to',E_poles[jset,pole])
-            R.data[pole][0] = E_poles[jset,pole]
-            if ReichMoore:
-                if IFG:
-                    R.data[pole][1] = math.sqrt(D_poles[jset,pole]/2.)
-                else:
-                    R.data[pole][1] = D_poles[jset,pole]
-            for c in range(cols):
-                R.data[pole][c+c_start] = g_poles[jset,pole,c]
-#                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", "\n".join(R.toXMLList()))
-
-        for ie in range(N_opts):
-            n = npli[jset]+ie
-            row = [ E_poles[jset,n] ]
-            if ReichMoore: row.append(0.0)   # ReichMoore damping on new optical poles
-            for c in range(cols): 
-                print('Add optical width at j,n,c=',jset,n,c,':',g_poles[jset,n,c], file=omfile)
-                row.append(g_poles[jset,n,c])
-            R.data.append(row)
-        jset += 1
-                
-    print('\nR-matrix parameters:\n')
+#     print('\nR-matrix parameters:\n')
 #     for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
 # #         parity = '+' if pi_set[jset] > 0 else '-'
 #         R = Jpi.resonanceParameters.table
@@ -428,13 +509,147 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
 
     F_widths = 2.* numpy.sum( g_poles**2 * L_poles[:,:,:,1], 2 )
     O_widths = F_widths / (1. + numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2 )) # cm
-        
+    TW = base + '.denoms'
+    tw = open(TW,'w')
+    
+    energies = []
+    Owidths = []
     for jset in range(n_jsets):
         print("  For J/pi = %.1f%s: %i"  % (J_set[jset],'+' if pi_set[jset] > 0 else '-',npl[jset]) )
         for p in range(npl[jset]):
             print('   Pole %3i at Elab = %10.6f (cm %10.6f, obs %10.6f) MeV widths: formal %10.5f, obs %10.5f, damping %10.5f' \
                   % (p,E_poles[jset,p],E_poles[jset,p]/cm2lab[ipair],O_poles[jset,p]/cm2lab[ipair],F_widths[jset,p],O_widths[jset,p],D_poles[jset,p]) )
-            if 0.0 < abs(F_widths[jset,p]) < 1e-3: print(68*' ','widths: formal %10.3e, obs %10.3e' % (F_widths[jset,p],O_widths[jset,p]) )
+#             if 0.0 < abs(F_widths[jset,p]) < 1e-3: print(68*' ','widths: formal %10.3e, obs %10.3e' % (F_widths[jset,p],O_widths[jset,p]) )
+            energies.append( O_poles [jset,p] )
+            Owidths.append ( O_widths[jset,p] )
+            if E_poles[jset,p]>0: 
+               dd = 1.0 if Dspacing is None else Dcm
+               print(E_poles[jset,p]/cm2lab[ipair],O_widths[jset,p]*2*pi/dd, file=tw)
+        print('&',file=tw)
+
     print()
+    
+# calculate excitation cross-sections in MLBW formalism
+    
+    Global = False
+    G = 'G' if Global else ''        
+
+    E_scat = generateEnergyGrid(energies,Owidths, emin,emax, stride=stride)
+    n_energies = len(E_scat)
+    print('\nReconstruction energy grid over emin,emax =',emin,emax,'with',n_energies)
+
+    if Convolute is None: 
+        Convolute = 0.0
+    else:
+        def spread(de,s):
+            c = 1/pi**0.5 / s
+            return (c* math.exp(-(de/s)**2))
+    
+        fun = []
+        for i in range(100):
+            de = (i-50)*Convolute*0.1
+            f = spread(de,Convolute)
+            fun.append([de,f])
+        conv = XYs.XYs1d(fun)
+        print("Convolute with Gaussian in %s * [-5,5] with steps of 0.1*%s" % (Convolute,Convolute))
+    
+    rksq_val  = numpy.zeros([n_energies,npairs], dtype=REAL)
+    for pair in range(npairs):
+        for ie in range(n_energies):
+            E = E_scat[ie]*lab2cm + QI[pair]
+            if abs(E) < 1e-10:
+                E = (E + E_scat[ie+1]*lab2cm + QI[pair]) * 0.5
+            rksq_val[ie,pair] = 1. / (fmscal * rmass[pair] * E)
+            
+    gfac = numpy.zeros([n_energies,n_jsets,n_chans])
+    for jset in range(n_jsets):
+        for c_in in range(n_chans):   # incoming partial wave
+            pair = seg_val[jset,c_in]      # incoming partition
+            if pair>=0:
+                denom = (2.*jp[pair]+1.) * (2.*jt[pair]+1)
+                for ie in range(n_energies):
+                    gfac[ie,jset,c_in] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom 
+    
+    Ex = numpy.zeros(n_energies)
+    Cy = numpy.zeros(n_energies)
+    F_width = 2.*  g_poles**2 * L_poles[:,:,:,1]   #   jset,p,c
+    O_width = F_width / (1. + numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2, keepdims=True )) # cm
+    
+    
+#     for pin in range(npairs): 
+#         for jset in range(n_jsets):
+#             for p in range(npl[jset]):        
+#                 print('J,pole:',jset,p,'F widths:',F_width[jset,p,:nch[jset]])
+                                                    
+    for pin in range(npairs):
+        pn,il = quickName(pname[pin],tname[pin]) 
+        if il>0: continue
+        
+        if Dspacing is not None:
+            rname = base + '-MLBW-%sreac_%s' % (G,pn)
+            hname = base + '-MLBW-%sCH_%s' % (G,pn)
+            rout = open(rname,'w')
+            hout = open(hname,'w')
+            print('Reaction cross-sections for',pn,' to file   ',rname)
+            print('Half reaction cross-sections for',pn,' to file   ',hname)
+
+            
+            for ie in range(N_opts):
+                p = npli[jset]+ie
+                e = emin + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )  # lab energy in ipair
+                Ecm = e*lab2cm
+
+                E = Ecm + QI[pin] - QI[ipair]   # cm energy in pin
+                rk_isq = 1. / (fmscal * rmass[pin] * E)
+                Elab = E * cm2lab[pin]   # Elab for incoming channel (pin, not ipair)
+                denom = (2.*jp[pin]+1.) * (2.*jt[pin]+1)
+            
+                XSreac = 0.0
+                for jset in range(n_jsets):
+                    Gfac = pi * (2*J_set[jset]+1) * rk_isq / denom
+                    for cin in range(nch[jset]):
+                        if seg_val[jset,cin]!=pin: continue      
+                        XSreac += Gfac * 2*pi * O_width[jset,p,cin] / Dcm * 10.
+                print(Elab,XSreac, file=rout)
+                print(Elab,XSreac/2., file=hout)
+            rout.close()
+            hout.close()
+
+        for pout in range(npairs):
+            
+            po,ol = quickName(pname[pout],tname[pout])
+            fname = base + '-MLBW-%sch_%s-to-%s' % (G,pn,po)
+            print('Partition',pn,'to',po,': angle-integrated cross-sections to file   ',fname)
+            fout = open(fname,'w')
+            for ie in range(n_energies):
+                Ecm = E_scat[ie]*lab2cm  # pole energy in cm ipair.
+                E = Ecm + QI[pin] - QI[ipair]
+
+                XSp_mat = 0.
+                for jset in range(n_jsets):
+                    for p in range(npl[jset]):
+                        
+                        for cin in range(nch[jset]):
+                            if seg_val[jset,cin]!=pin: continue
+                            for cout in range(nch[jset]):
+                                if seg_val[jset,cout]!=pout: continue
+                                
+                                XSp_mat += O_width[jset,p,cin] * O_width[jset,p,cout]    \
+                                     / ( (E_scat[ie] - E_poles[jset,p])**2 + O_widths[jset,p]**2/4.0 ) \
+                                     *  gfac[ie,jset,cin]
+            
+                x = XSp_mat * 10.
+                Elab = E * cm2lab[pin]   # Elab for incoming channel (pair, not ipair)
+                Eo = E_scat[ie]*lab2cm if Global else Elab
+                Ex[ie] = Eo
+                Cy[ie] = x
+                if Convolute<=0. and (Global or Elab>0): print(Eo,x, file=fout)
+                
+            if Convolute>0.:
+                XSEC = XYs.XYs1d(data=(Ex,Cy), dataForm="XsAndYs"  )                
+                XSEC = XSEC.convolute(conv)
+                for ie in range(len(XSEC)):
+                    print(XSEC[ie][0],XSEC[ie][1], file=fout)                
+            fout.close()
         
     return

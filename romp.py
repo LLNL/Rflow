@@ -31,12 +31,12 @@ if __name__=='__main__':
     # Process command line options
     parser = argparse.ArgumentParser(description='Compare R-matrix Cross sections with Data')
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
-    parser.add_argument('ompFile', type=str, help='Optical model parameters to use' )
-
+    parser.add_argument("-O","--OmpFile", type=str, help='Optical model parameters to use' )
     parser.add_argument("-M", "--Model", type=str, default='B', help="Model to link |S|^2 and widths. A: log; B: lin")
-    parser.add_argument("-D", "--Dspacing", type=float,default = 1,   help="Energy spacing of optical poles")
+    parser.add_argument("-D", "--Dspacing", type=float,  help="Energy spacing of optical poles")
+
     
-    parser.add_argument("-e", "--emin", type=float, default = 11,  help="Min cm energy for optical poles.")
+    parser.add_argument("-e", "--emin", type=float, default = 0.5,  help="Min cm energy for optical poles.")
     parser.add_argument("-E", "--EMAX", type=float, default = 20, help="Max cm energy for optical poles")
     parser.add_argument("-j", "--jmin", type=float, default = 0, help="Max CN spin for optical poles")
     parser.add_argument("-J", "--JMAX", type=float, default = 5, help="Max CN spin for optical poles")
@@ -44,7 +44,9 @@ if __name__=='__main__':
     parser.add_argument("-H", "--Hcm"  , type=float, default = 0.1, help="Radial step size")
     parser.add_argument("-o", "--offset"  , type=float, default = 0., help="Shift new poles by (J + pi/2)* offset")
     
-
+    parser.add_argument("-C", "--Convolute", type=float,  help="Width of gaussian for convolution smoothing")
+    parser.add_argument("-S", "--Stride", type=int, default=5, help="Stride for accessing non-uniform grid template")
+    
     parser.add_argument("-s", "--single", action="store_true", help="Single precision: float32, complex64")
     parser.add_argument("-t", "--tag", type=str, default='', help="Tag identifier for this run")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
@@ -67,49 +69,57 @@ if __name__=='__main__':
     emaxG = args.EMAX # max(emaxG, args.EMAX)
     emin = args.emin
     emax = emaxG
-    print(' Make optical poles spaced by',args.Dspacing,'in range [',emin,',',emax,'] in lab MeV for projectile',p)
-    print(' using optical potentials from',args.ompFile,' and model ',args.Model,'to map |S|^2 to widths.\n\n')
-    rrr.domainMax = args.EMAX
-    
-    
-    f = open( args.ompFile )
-    omp_lines = f.readlines( )
-    f.close( )    
-    optical_potentials = {}
-    for l in omp_lines:
-        parts = l.split()
-        proj = parts[0]
-        targ = parts[1]
-        pair = '%s + %s' % (proj,targ)
-        om_parameters = [float(v) for v in parts[2:]]
-        optical_potentials[pair] = om_parameters
-    
     
 # parameter input for computer method
     base = args.inFile
     if args.single:           base += 's'
-# data input
-    base += '+%s' % args.ompFile.replace('.omp','')
-
-    if args.Model      is not None: base += '-%s' % args.Model
-    if args.emin       is not None: base += '-e%s' % args.emin
-    if args.EMAX       is not None: base += '-E%s' % args.EMAX
-    if args.jmin    > 0.0: base += '-j%s' % args.jmin
-    if args.JMAX       is not None: base += '-J%s' % args.JMAX
     
-    if args.offset  > 0.0: base += '-o%s' % args.offset
-    if args.Dspacing       is not None: base += '-d%s' % args.Dspacing
+    if args.Dspacing is not None:
+        print(' Make optical poles spaced by',args.Dspacing,'in range [',emin,',',emax,'] in lab MeV for projectile',p)
+        print(' using optical potentials from',args.OmpFile,' and model ',args.Model,'to map |S|^2 to widths.\n\n')
+        rrr.domainMax = args.EMAX
+    
+    
+        f = open( args.OmpFile )
+        omp_lines = f.readlines( )
+        f.close( )    
+        optical_potentials = {}
+        for l in omp_lines:
+            parts = l.split()
+            proj = parts[0]
+            targ = parts[1]
+            pair = '%s + %s' % (proj,targ)
+            om_parameters = [float(v) for v in parts[2:]]
+            optical_potentials[pair] = om_parameters
 
+# data input
+        base += '+%s' % args.OmpFile.replace('.omp','')
+
+        if args.Model      is not None: base += '-%s' % args.Model
+        if args.emin       is not None: base += '-e%s' % args.emin
+        if args.EMAX       is not None: base += '-E%s' % args.EMAX
+        if args.jmin    > 0.0: base += '-j%s' % args.jmin
+        if args.JMAX       is not None: base += '-J%s' % args.JMAX
+    
+        if args.offset  > 0.0: base += '-o%s' % args.offset
+        if args.Dspacing       is not None: base += '-D%s' % args.Dspacing
+
+    else:
+        optical_potentials = None
+
+    if args.Convolute       is not None: base += '-C%s' % args.Convolute
     if args.tag != '': base = base + '_'+args.tag
 
 #     print("        finish setup: ",tim.toString( ))
  
-    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,optical_potentials,args.Model,args.Hcm,args.offset,  
+    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,optical_potentials,
+         args.Model,args.Hcm,args.offset,args.Convolute,args.Stride,
          args.verbose,args.debug,args.inFile,ComputerPrecisions,tim)
     
-    newFitFile = base  + '-opt.xml'
-    open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnds.toXMLList( ) )
-    print('Written new fit file:',newFitFile)
+    if args.Dspacing is not None:
+        newFitFile = base  + '-opt.xml'
+        open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnds.toXMLList( ) )
+        print('Written new gnds file:',newFitFile)
     
 
 #     print("Final Romp: ",tim.toString( ))
