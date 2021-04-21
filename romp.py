@@ -33,7 +33,7 @@ if __name__=='__main__':
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
     parser.add_argument('ompFile', type=str, help='Optical model parameters to use' )
 
-    parser.add_argument("-M", "--Model", type=str, default='', help="Model to link |S|^2 and widths. A: log; B: lin")
+    parser.add_argument("-M", "--Model", type=str, default='B', help="Model to link |S|^2 and widths. A: log; B: lin")
     parser.add_argument("-D", "--Dspacing", type=float,default = 1,   help="Energy spacing of optical poles")
     
     parser.add_argument("-e", "--emin", type=float, default = 11,  help="Min cm energy for optical poles.")

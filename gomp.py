@@ -144,7 +144,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
             jt[pair],tt[pair],et[pair] = target.spin[0].float('hbar'), target.parity[0].value, target.energy[0].pqu('MeV').value
         except:
             jt[pair],tt[pair],et[pair] = 0.,1,0.
-        print(pair,":",kp,' Q =',QI[pair],'R =',prmax[pair])
+        print(pair,":",kp,' Q =',QI[pair],'R =',prmax[pair],' spins',jp[pair],jt[pair])
         pair += 1
     lab2cm = 1.0/cm2lab[ipair]
     
@@ -308,6 +308,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
     L_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
     dLdE_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
     Pole_Shifts(L_poles,dLdE_poles, E_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+    print()
         
 # CALCULATE OPTICAL-MODEL SCATTERING TO GET PARTIAL WIDTHS
 
@@ -315,7 +316,12 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
     sc_info = []
     ncm = int( prmax[ipair] / hcm + 0.5)
     hcm = prmax[ipair]/ncm
+    isc = 0
     for jset,Jpi in enumerate(RMatrix.spinGroups):
+        parity = '+' if pi_set[jset] > 0 else '-'
+        R = Jpi.resonanceParameters.table
+        cols = R.nColumns - 1  # ignore energy col
+        isc_i = isc
         for c,ch in enumerate(Jpi.channels):
             L =  L_val[jset,c]
             S =  S_val[jset,c]
@@ -341,18 +347,24 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
                 sc_info.append([jset,c,n,h,L,S,pair,E,a,rmass[pair],pname[pair],za[pair],zb[pair],AT[pair],L_poles[jset,n,c,:],phi, OpticalPot[pair]])
 
                 print( jset,c,ie,  'j,c,e Scatter',pname[pair],'on',tname[pair],'at E=',E,'LS=',L,S,'with',OpticalPot[pair], file=omfile)
+                isc += 1
+        print('J,pi =%5.1f %s, channels %3i, widths %5i -> %5i (incl)' % (J_set[jset],parity,cols,isc_i,isc-1))
     
     Smat = get_optical_S(sc_info,ncm, omfile)
     SmatMSQ = (Smat * numpy.conjugate(Smat)).real
     TC = 1.0 - SmatMSQ
 
-    if   Model=='A':
+    if   Model[0]=='A':
         AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
-    elif Model=='B':
+    elif Model[0]=='B':
         AvFormalWidths = Dspacing * TC / (2.*pi)
     else:
         print('Model',Model,'unrecognized')
         sys.exit()
+    mparts = Model.split(',')
+    if len(mparts)>1:
+        scale = float(mparts[1])
+        AvFormalWidths *= scale
             
     for isc,sc in  enumerate(sc_info):
         jset,c,n = sc[:3]

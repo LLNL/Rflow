@@ -27,7 +27,7 @@ def potl(r, zz, OpticalParameters):
     ED =  math.exp( (r - RDZ)/AD )
     Wsrf = - WD  * 4.0 * ED / (1 + ED)**2
     Vopt = complex(Vvol + VC, Wvol+Wsrf)
-        
+#    print(r, Vvol,Wvol,Wsrf, file=open('potentials','a')) 
     return(Vopt)
 
 def KoningDelaRoche(proj,xZ,xA,E):  # for n and H1
@@ -306,6 +306,7 @@ def get_optical_S(sc_info,n, ompout):
     
     isc = 0
     optopt = {}
+    optparams = []
     for jset,c,p,h,L,Spin,pair,E,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
         coef =  -1.0 / (fmscal * rmass)
         k[isc] = math.sqrt( fmscal * rmass * E)
@@ -313,47 +314,49 @@ def get_optical_S(sc_info,n, ompout):
         hcm[isc,0] = h
         ar[isc] = a
         phis[isc] = phi 
+        Elab = E * AT / (AT - rmass)
         
         if pname=='n':
             if OpticalPot[0] <= 1: 
-                OpticalParameters = KoningDelaRoche(pname,ZT,AT,E)
+                OpticalParameters = KoningDelaRoche(pname,ZT,AT,Elab)
                 opt = 'n: KoningDelaRoche'
             if OpticalPot[0] == 2: 
-                OpticalParameters = Soukhovitskii(pname,ZT,AT,E)
+                OpticalParameters = Soukhovitskii(pname,ZT,AT,Elab)
                 opt = 'n: Soukhovitskii'
             if OpticalPot[0] >= 3: 
-                OpticalParameters = becchetti(pname,ZT,AT,E)
+                OpticalParameters = becchetti(pname,ZT,AT,Elab)
                 opt = 'n: Becchetti'
         elif pname=='H1':
             if OpticalPot[0] <= 1: 
-                OpticalParameters = KoningDelaRoche(pname,ZT,AT,E)
+                OpticalParameters = KoningDelaRoche(pname,ZT,AT,Elab)
                 opt = 'p: KoningDelaRoche'
             if OpticalPot[0] == 2: 
-                OpticalParameters = Soukhovitskii(pname,ZT,AT,E)
+                OpticalParameters = Soukhovitskii(pname,ZT,AT,Elab)
                 opt = 'p: Soukhovitskii'
             if OpticalPot[0] >= 3: 
-                OpticalParameters = becchetti(pname,ZT,AT,E)
+                OpticalParameters = becchetti(pname,ZT,AT,Elab)
                 opt = 'p: Becchetti'
         elif pname=='H2':
-            OpticalParameters = perey_d(pname,ZT,AT,E)
+            OpticalParameters = perey_d(pname,ZT,AT,Elab)
             opt = 'd: Perey'
         elif pname=='H3':
             if OpticalPot[0] <= 1: 
-                OpticalParameters = perey_t(pname,ZT,AT,E)
+                OpticalParameters = perey_t(pname,ZT,AT,Elab)
                 opt = 't: Perey'
             if OpticalPot[0] >= 2: 
-                OpticalParameters = Li_t(pname,ZT,AT,E)
+                OpticalParameters = Li_t(pname,ZT,AT,Elab)
                 opt = 't: Li'
         elif pname=='He3':
-            OpticalParameters = perey_h(pname,ZT,AT,E)
+            OpticalParameters = perey_h(pname,ZT,AT,Elab)
             opt = 'h: Perey'
         elif pname=='He4':
-            OpticalParameters = Avrigeanu(pname,ZT,AT,E)        
+            OpticalParameters = Avrigeanu(pname,ZT,AT,Elab)        
             opt = 'a: Avrigeanu'
         else:
             print('Unrecognized projectile',pname)
             sys.exit()
         
+        optparams.append(OpticalParameters)
         opop = optopt.get(pname,None)
         if opop is None: print('Optical potential for',pname,'is',opt)
         optopt[pname] = opt
@@ -381,53 +384,56 @@ def get_optical_S(sc_info,n, ompout):
     
     isc = 0
     for jset,c,p,h,L,Spin,pair,E,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
-        print(isc,'is p%i, LS=%i,%s, E %8.3f, delta %9.2f, TC = %9.5f' % (pair,L,Spin,E,delta[isc], TC[isc] ) ) #,phis[isc]*180/pi),-phis[isc]/(a* k[isc]) ) #, Smat[isc], TC[isc] , file=ompout)
+        print('    %5i is p%2i, LS=%i,%s, Ecm %8.3f, delta %9.2f, TC = %9.5f' % (isc,pair,L,Spin,E,delta[isc], TC[isc] ), ) #,phis[isc]*180/pi),-phis[isc]/(a* k[isc]) ) #, Smat[isc], TC[isc] , file=ompout)
+        print(E,TC[isc],    file = open('trans%i' % L,'a') )
+        print(E,optparams[isc
+        ],    file = open('opticalp%i' % L,'a') )
         isc += 1
     return(Smat)
     
 if __name__=="__main__":
     import sys
     print('Arguments projectile name (GNDS form), target Z,A, energy:')
-    pname,ZT,AT,E,Version = sys.argv[1:6]
-    ZT,AT,E,Version = int(ZT),int(AT),float(E),int(Version)
+    pname,ZT,AT,Elab,Version = sys.argv[1:6]
+    ZT,AT,Elab,Version = int(ZT),int(AT),float(Elab),int(Version)
     
     if pname=='n':
         if Version <= 1: 
-            OpticalParameters = KoningDelaRoche(pname,ZT,AT,E)
+            OpticalParameters = KoningDelaRoche(pname,ZT,AT,Elab)
             opt = 'n: KoningDelaRoche'
         if Version == 2: 
-            OpticalParameters = Soukhovitskii(pname,ZT,AT,E)
+            OpticalParameters = Soukhovitskii(pname,ZT,AT,Elab)
             opt = 'n: Soukhovitskii'
         if Version >= 3: 
-            OpticalParameters = becchetti(pname,ZT,AT,E)
+            OpticalParameters = becchetti(pname,ZT,AT,Elab)
             opt = 'n: Becchetti'
 
     elif pname=='H1':
         if Version <= 1: 
-            OpticalParameters = KoningDelaRoche(pname,ZT,AT,E)
+            OpticalParameters = KoningDelaRoche(pname,ZT,AT,Elab)
             opt = 'p: KoningDelaRoche'
         if Version == 2: 
-            OpticalParameters = Soukhovitskii(pname,ZT,AT,E)
+            OpticalParameters = Soukhovitskii(pname,ZT,AT,Elab)
             opt = 'p: Soukhovitskii'
         if Version >= 3: 
-            OpticalParameters = becchetti(pname,ZT,AT,E)
+            OpticalParameters = becchetti(pname,ZT,AT,Elab)
             opt = 'p: Becchetti'
 
     elif pname=='H2':
-        OpticalParameters = perey_d(pname,ZT,AT,E)
+        OpticalParameters = perey_d(pname,ZT,AT,Elab)
         opt = 'd: Perey'
     elif pname=='H3':
         if Version <= 1: 
-            OpticalParameters = perey_t(pname,ZT,AT,E)
+            OpticalParameters = perey_t(pname,ZT,AT,Elab)
         opt = 't: Perey'
         if Version >= 2: 
-            OpticalParameters = Li_t(pname,ZT,AT,E)
+            OpticalParameters = Li_t(pname,ZT,AT,Elab)
         opt = 't: Li'
     elif pname=='He3':
-        OpticalParameters = perey_h(pname,ZT,AT,E)
+        OpticalParameters = perey_h(pname,ZT,AT,Elab)
         opt = 'h: Perey'
     elif pname=='He4':
-        OpticalParameters = Avrigeanu(pname,ZT,AT,E)
+        OpticalParameters = Avrigeanu(pname,ZT,AT,Elab)
         opt = 'a: Avrigeanu'
     else:
         print('Unrecognized projectile',pname)
@@ -435,7 +441,7 @@ if __name__=="__main__":
     V,RZZ,AZ, W,RWZ,AW, WD,RDZ,AD, VSO,RSOZ,ASO, RC = OpticalParameters
     ZA = ZT*1000+AT
     AC = 0.0
-    print('Optical potential for %s on ZA = %s at %7.3f MeV, version: %s' % (pname,ZA,E,opt))
+    print('Optical potential for %s on ZA = %s at %7.3f MeV lab, version: %s' % (pname,ZA,Elab,opt))
     
     print('\nFresco line mode:')
     kpp = {'n':1, 'H1':1, 'H2':2, 'H3':3, 'He3':3, 'He4':4}
@@ -447,7 +453,7 @@ if __name__=="__main__":
     
     print('\nFresco namelist:')
     WSO,RSOZ,ASO = 0.,RSOZ,ASO
-    print('&pot kp=%2i type=%2i p(1:3)=%8.4f%8.4f%8.4f%8.4f / ! %s + %s at %.3f MeV' % (kp,0,1.0,0.,RC,AC,pname,ZA,E) )
+    print('&pot kp=%2i type=%2i p(1:3)=%8.4f%8.4f%8.4f%8.4f / ! %s + %s at %.3f MeV lab' % (kp,0,1.0,0.,RC,AC,pname,ZA,Elab) )
     print('&pot kp=%2i type=%2i p(1:6)=%8.4f%8.4f%8.4f%8.4f%8.4f%8.4f /' % (kp,1,V,RZZ,AZ,W,RWZ,AW))
     print('&pot kp=%2i type=%2i p(1:6)=%8.4f%8.4f%8.4f%8.4f%8.4f%8.4f /' % (kp,-2,0.,0.,0.,WD,RDZ,AD))
     print('&pot kp=%2i type=%2i p(1:6)=%8.4f%8.4f%8.4f%8.4f%8.4f%8.4f /' % (kp,3,VSO,RSOZ,ASO,WSO,RSOZ,ASO))
