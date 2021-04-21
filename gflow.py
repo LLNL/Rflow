@@ -11,6 +11,7 @@ from write_covariances import write_gnds_covariances
 from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
 from xData.series1d  import Legendre
+from xData import date
 
 from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
@@ -26,6 +27,9 @@ fmscal = 2e0 * amu / hbc**2
 etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
+
+def now():
+    return date.Date( resolution = date.Resolution.time )
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
         Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ML,ABES,Grid,
@@ -1167,7 +1171,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #         print('\n*** chisq/pt = %12.5f including ww %12.5f and chisq/dof= %12.5f  for dof = %s\n' % (chisq_n/n_dof,ww/n_dof,(chisq_n - ww)/n_dof,n_dof) )
       
         n_normsFitted = border[3]-border[2]
-        docLines = [' ','Fitted by Rflow','   '+inFile,time.ctime(),pwd.getpwuid(os.getuid())[4],' ',' ']
+        docLines = [' ','Fitted by Rflow','   '+inFile,now(),pwd.getpwuid(os.getuid())[4],' ',' ']
         docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n/n_data)]
         docLines += [' Final   chisq/pt: %12.5f including ww/dof %12.5f and Chisq/DOF = %12.5f  for dof = %s\n' % (chisq_n/n_dof,ww/n_dof,(chisq_n - ww)/n_dof,n_dof) ,' ']
         docLines += [' Fitted norm %12.5f for %s' % (searchpars_n[n+border[2]],searchnames[n+border[2]] ) for n in range(n_normsFitted)] 
@@ -1180,7 +1184,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             if codeLabel not in codeLabels: break
         print('\nNew computerCode is "%s" after' % codeLabel,codeLabels,'\n')
 
-        computerCode = computerCodeModule.ComputerCode( label = codeLabel, name = 'Rflow', version = '', date = time.ctime() )
+        computerCode = computerCodeModule.ComputerCode( label = codeLabel, name = 'Rflow', version = '', date = now() )
         computerCode.note.body = '\n'.join( docLines )
         RMatrix.documentation.computerCodes.add( computerCode )
 

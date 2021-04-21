@@ -13,6 +13,10 @@ plsymbol = {0:".", 1:"o", 2:"s", 3: "D", 4:"^", 5:"<", 6: "v", 7:">",
 lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
 from PoPs.groups.misc import *
+from xData import date
+
+def now():
+    return date.Date( resolution = date.Resolution.time )
 
 def nuclIDs (nucl):
     datas = chemicalElementALevelIDsAndAnti(nucl)
@@ -53,10 +57,10 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
             if deckLabel not in deckLabels: break
         print('\nNew InputDeck is "%s" after' % deckLabel,deckLabels,'\n')
     else: 
-        computerCodeFit = computerCodeModule.ComputerCode( label = 'R-matrix fit', name = 'Rflow', version = '', date = time.ctime() )
+        computerCodeFit = computerCodeModule.ComputerCode( label = 'R-matrix fit', name = 'Rflow', version = '', date = now() )
         deckLabel = 'Fitted_data'
         
-    inputDataSpecs = computerCodeModule.InputDeck( deckLabel , ('\n  %s\n' % time.ctime() )  + ('\n'.join( docLines ))+'\n' )
+    inputDataSpecs = computerCodeModule.InputDeck( deckLabel , ('\n  %s\n' % now() )  + ('\n'.join( docLines ))+'\n' )
     computerCodeFit.inputDecks.add( inputDataSpecs )
 
     if not previousFit: 
