@@ -385,9 +385,8 @@ def get_optical_S(sc_info,n, ompout):
     isc = 0
     for jset,c,p,h,L,Spin,pair,E,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
         print('    %5i is p%2i, LS=%i,%s, Ecm %8.3f, delta %9.2f, TC = %9.5f' % (isc,pair,L,Spin,E,delta[isc], TC[isc] ), ) #,phis[isc]*180/pi),-phis[isc]/(a* k[isc]) ) #, Smat[isc], TC[isc] , file=ompout)
-        print(E,TC[isc],    file = open('trans%i' % L,'a') )
-        print(E,optparams[isc
-        ],    file = open('opticalp%i' % L,'a') )
+#       print(E,TC[isc],    file = open('trans%i' % L,'a') )
+#       print(E,optparams[isc],    file = open('opticalp%i' % L,'a') )
         isc += 1
     return(Smat)
     

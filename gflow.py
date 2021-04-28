@@ -1171,7 +1171,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #         print('\n*** chisq/pt = %12.5f including ww %12.5f and chisq/dof= %12.5f  for dof = %s\n' % (chisq_n/n_dof,ww/n_dof,(chisq_n - ww)/n_dof,n_dof) )
       
         n_normsFitted = border[3]-border[2]
-        docLines = [' ','Fitted by Rflow','   '+inFile,now(),pwd.getpwuid(os.getuid())[4],' ',' ']
+        docLines = [' ','Fitted by Rflow','   '+inFile,str(now()),pwd.getpwuid(os.getuid())[4],' ',' ']
         docLines += [' Initial chisq/pt: %12.5f' % (chisq0_n/n_data)]
         docLines += [' Final   chisq/pt: %12.5f including ww/dof %12.5f and Chisq/DOF = %12.5f  for dof = %s\n' % (chisq_n/n_dof,ww/n_dof,(chisq_n - ww)/n_dof,n_dof) ,' ']
         docLines += [' Fitted norm %12.5f for %s' % (searchpars_n[n+border[2]],searchnames[n+border[2]] ) for n in range(n_normsFitted)] 

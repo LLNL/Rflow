@@ -108,7 +108,7 @@ def generateEnergyGrid(energies,widths, lowBound, highBound, stride=1):
     return numpy.asarray(grid, dtype=REAL)
                        
 
-def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,offset,Convolute,stride,
+def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, hcm,offset,Convolute,stride,
        verbose,debug,inFile,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
@@ -435,6 +435,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
         TC = 1.0 - SmatMSQ
 
         Dcm = Dspacing*lab2cm
+        print('Model',Model)
         if   Model[0]=='A':
             AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
         elif Model[0]=='B':
@@ -443,14 +444,18 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
             print('Model',Model,'unrecognized')
             sys.exit()
         mparts = Model.split(',')
+        scale = 1.0
+        Eslope = 0.0
         if len(mparts)>1:
             scale = float(mparts[1])
-            AvFormalWidths *= scale
+            if len(mparts)>2: Eslope = float(mparts[2])
             
         for isc,sc in  enumerate(sc_info):
             jset,c,n = sc[:3]
             E = sc[7]
+            AvFormalWidths[isc] *= scale  + E * Eslope 
             if E < 1e-3: continue    # sub-threshold 
+            if AvFormalWidths[isc] < gmin: continue  # too narrow
             g_poles[jset,n,c] = AvFormalWidths[isc]
             if IFG==1:  # get rwa
                 P =  L_poles[jset,n,c,1]
@@ -505,7 +510,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
         O_poles  = E_poles 
     else: # recalculate P and S' at the 'observed' energies
         O_poles  = E_poles - numpy.sum( g_poles**2 * L_poles[:,:,:,0], 2 ) * cm2lab[ipair]  # both terms lab
-        Pole_Shifts(L_poles,dLdE_poles, O_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+    Pole_Shifts(L_poles,dLdE_poles, O_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
 
     F_widths = 2.* numpy.sum( g_poles**2 * L_poles[:,:,:,1], 2 )
     O_widths = F_widths / (1. + numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2 )) # cm
@@ -528,6 +533,8 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
         print('&',file=tw)
 
     print()
+    noRecon = Convolute is None
+    if noRecon and scale != 1.0 : return()
     
 # calculate excitation cross-sections in MLBW formalism
     
@@ -538,9 +545,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
     n_energies = len(E_scat)
     print('\nReconstruction energy grid over emin,emax =',emin,emax,'with',n_energies)
 
-    if Convolute is None: 
-        Convolute = 0.0
-    else:
+    if Convolute is not None and  Convolute > 0.0: 
         def spread(de,s):
             c = 1/pi**0.5 / s
             return (c* math.exp(-(de/s)**2))
@@ -571,10 +576,17 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
                     gfac[ie,jset,c_in] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom 
     
     Ex = numpy.zeros(n_energies)
+    Ry = numpy.zeros(n_energies)
     Cy = numpy.zeros(n_energies)
+    Dy = numpy.zeros(n_energies)
+    
     F_width = 2.*  g_poles**2 * L_poles[:,:,:,1]   #   jset,p,c
     O_width = F_width / (1. + numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2, keepdims=True )) # cm
-    
+
+#     Pole_Shiftse(E_scat,L_polese,dLdE_poles, O_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+#     
+#     F_widthe = 2.*  g_poles**2 * L_polese[:,:,:,1]   #   jset,p,c
+#     O_widthe = F_widthe / (1. + numpy.sum( g_poles**2 * dLdE_E[:,:,:,0], 2, keepdims=True )) # cm    
     
 #     for pin in range(npairs): 
 #         for jset in range(n_jsets):
@@ -609,47 +621,91 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,hcm,off
                     Gfac = pi * (2*J_set[jset]+1) * rk_isq / denom
                     for cin in range(nch[jset]):
                         if seg_val[jset,cin]!=pin: continue      
-                        XSreac += Gfac * 2*pi * O_width[jset,p,cin] / Dcm * 10.
+                        XSreac += Gfac * 2*pi * O_width[jset,p,cin] / Dspacing * 10.
                 print(Elab,XSreac, file=rout)
                 print(Elab,XSreac/2., file=hout)
             rout.close()
             hout.close()
 
+        if noRecon: continue
+
+
         for pout in range(npairs):
             
             po,ol = quickName(pname[pout],tname[pout])
-            fname = base + '-MLBW-%sch_%s-to-%s' % (G,pn,po)
+            fname = base + '-SLBW-%sch_%s-to-%s' % (G,pn,po)
             print('Partition',pn,'to',po,': angle-integrated cross-sections to file   ',fname)
             fout = open(fname,'w')
+            fcname = base + '-NLBW-%scch_%s-to-%s' % (G,pn,po)
+            print('Partition',pn,'to',po,': coherent angle-integrated cross-sections to file   ',fcname)
+            fcout = open(fcname,'w')
+            fdname = base + '-MLBW-%sdch_%s-to-%s' % (G,pn,po)
+            print('Partition',pn,'to',po,': coherent (fixed-width) angle-integrated cross-sections to file   ',fdname)
+            fdout = open(fdname,'w')
+            
             for ie in range(n_energies):
                 Ecm = E_scat[ie]*lab2cm  # pole energy in cm ipair.
                 E = Ecm + QI[pin] - QI[ipair]
 
                 XSp_mat = 0.
+                XSp_coh = 0.
+                XSa_coh = 0.
+                
                 for jset in range(n_jsets):
+                    amp_coh = 0.0 + 0j
+                    ama_coh = 0.0 + 0j
                     for p in range(npl[jset]):
                         
                         for cin in range(nch[jset]):
                             if seg_val[jset,cin]!=pin: continue
+                            Lin = L_val[jset,cin]
                             for cout in range(nch[jset]):
                                 if seg_val[jset,cout]!=pout: continue
+                                Lout = L_val[jset,cout]
                                 
-                                XSp_mat += O_width[jset,p,cin] * O_width[jset,p,cout]    \
-                                     / ( (E_scat[ie] - E_poles[jset,p])**2 + O_widths[jset,p]**2/4.0 ) \
-                                     *  gfac[ie,jset,cin]
-            
+                                ampl  = cmath.sqrt( O_width[jset,p,cin] * O_width[jset,p,cout]  *  gfac[ie,jset,cin] )  \
+                                     / complex( E_scat[ie] - E_poles[jset,p] , O_widths[jset,p]*0.5 )
+                                amp_coh += ampl
+                                
+                                ampl2 = ampl * math.sqrt( max(0.,E_scat[ie]/E_poles[jset,p]) )  # ** (Lin + Lout + 1)
+                                ama_coh += ampl2
+
+                                XSp_mat += O_width[jset,p,cin] * O_width[jset,p,cout]  *  gfac[ie,jset,cin]  \
+                                     / ( (E_scat[ie] - E_poles[jset,p])**2 + O_widths[jset,p]**2/4.0 )
+                                     
+                    XSp_coh +=  ( amp_coh * amp_coh.conjugate() ).real
+                    XSa_coh +=  ( ama_coh * ama_coh.conjugate() ).real
+
                 x = XSp_mat * 10.
+                xc = XSp_coh * 10.
+                xa = XSa_coh * 10.
                 Elab = E * cm2lab[pin]   # Elab for incoming channel (pair, not ipair)
                 Eo = E_scat[ie]*lab2cm if Global else Elab
                 Ex[ie] = Eo
-                Cy[ie] = x
-                if Convolute<=0. and (Global or Elab>0): print(Eo,x, file=fout)
-                
+                Ry[ie] = x
+                Cy[ie] = xa
+                Dy[ie] = xc
+                if Convolute<=0. and (Global or Elab>0): 
+                    print(Eo,x, file=fout)
+                    print(Eo,xa,xc, file=fcout)
+ 
             if Convolute>0.:
-                XSEC = XYs.XYs1d(data=(Ex,Cy), dataForm="XsAndYs"  )                
+                XSEC = XYs.XYs1d(data=(Ex,Ry), dataForm="XsAndYs"  )
                 XSEC = XSEC.convolute(conv)
                 for ie in range(len(XSEC)):
-                    print(XSEC[ie][0],XSEC[ie][1], file=fout)                
+                    print(XSEC[ie][0],XSEC[ie][1], file=fout)
+
+                XSEC = XYs.XYs1d(data=(Ex,Cy), dataForm="XsAndYs"  )
+                XSEC = XSEC.convolute(conv)
+                for ie in range(len(XSEC)):
+                    print(XSEC[ie][0],XSEC[ie][1], file=fcout)    
+
+                XSEC = XYs.XYs1d(data=(Ex,Dy), dataForm="XsAndYs"  )
+                XSEC = XSEC.convolute(conv)
+                for ie in range(len(XSEC)):
+                    print(XSEC[ie][0],XSEC[ie][1], file=fdout)    
+
             fout.close()
-        
+            fcout.close()
+
     return
