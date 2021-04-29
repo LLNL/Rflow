@@ -40,8 +40,7 @@ if __name__=='__main__':
     parser.add_argument("-E", "--EMAX", type=float, default = 20, help="Max cm energy for optical poles")
     parser.add_argument("-j", "--jmin", type=float, default = 0, help="Max CN spin for optical poles")
     parser.add_argument("-J", "--JMAX", type=float, default = 5, help="Max CN spin for optical poles")
-    parser.add_argument("-g", "--gmin", type=float, default = 0, help="Min width for optical poles")
-    parser.add_argument("-Y", "--YRAST", type=float, default = 1,  help="Max CN spin(E) = max(jmin + YRAST*sqrt(E), JMAX)")
+    parser.add_argument("-Y", "--YRAST", type=float, default = 0.3,  help="Min CN energy = max(emin , YRAST*J*(J+1) )")
     parser.add_argument("-H", "--Hcm"  , type=float, default = 0.1, help="Radial step size")
     parser.add_argument("-o", "--offset"  , type=float, default = 0., help="Shift new poles by (J + pi/2)* offset")
     
@@ -104,7 +103,7 @@ if __name__=='__main__':
     
         if args.offset  > 0.0: base += '-o%s' % args.offset
         if args.Dspacing       is not None: base += '-D%s' % args.Dspacing
-        if args.gmin    > 0.0: base += '-g%s' % args.gmin
+        if args.YRAST    > 0.0: base += '-Y%s' % args.YRAST
 
     else:
         optical_potentials = None
@@ -115,7 +114,7 @@ if __name__=='__main__':
 #     print("        finish setup: ",tim.toString( ))
  
     Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,optical_potentials,
-         args.Model,args.gmin,args.Hcm,args.offset,args.Convolute,args.Stride,
+         args.Model,args.YRAST,args.Hcm,args.offset,args.Convolute,args.Stride,
          args.verbose,args.debug,args.inFile,ComputerPrecisions,tim)
     
     if args.Dspacing is not None:

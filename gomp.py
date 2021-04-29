@@ -108,7 +108,7 @@ def generateEnergyGrid(energies,widths, lowBound, highBound, stride=1):
     return numpy.asarray(grid, dtype=REAL)
                        
 
-def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, hcm,offset,Convolute,stride,
+def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, hcm,offset,Convolute,stride,
        verbose,debug,inFile,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
@@ -249,13 +249,13 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
     
     N_opts = max(int( (emax - emin)/Dspacing + 1.5), 0) if Dspacing is not None else 0
     D = (emax-emin)/(N_opts-1) if N_opts > 1 else 0.0
-    print("Increase max poles from",n_poles,"to",n_poles + N_opts)
+    print("Increase max poles from",n_poles,"towards",n_poles + N_opts)
     n_poles += N_opts
 
     nch = numpy.zeros(n_jsets, dtype=INT)
     npli = numpy.zeros(n_jsets, dtype=INT)
     npl = numpy.zeros(n_jsets, dtype=INT)
-    E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL)
+    E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) + 1e6
     D_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL)
     has_widths = numpy.zeros([n_jsets,n_poles], dtype=INT)
     g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
@@ -340,6 +340,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
     for Jpi in RMatrix.spinGroups:
         R = Jpi.resonanceParameters.table
 #         print('R:\n',R.data)
+        J = J_set[jset]
         cols = R.nColumns - 1  # ignore energy col
         rows = R.nRows
         E_poles[jset,:rows] = numpy.asarray( R.getColumn('energy','MeV') , dtype=REAL)   # lab MeV
@@ -349,13 +350,14 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
             for n in range(rows):
                 D_poles[jset,n] = R.data[n][damping_pair+1]
             if IFG==1:     D_poles[jset,:] = 2*D_poles[jset,:]**2
-        if jmin <= Jpi.spin <= jmax: 
+        if jmin <= J <= jmax: 
             for ie in range(N_opts):
-                e = emin + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )
+                e = emin + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )  + YRAST * J*(J+1.)
+                if e > emax: continue
                 n = npli[jset]+ie
                 E_poles[jset,n] = e
                 has_widths[jset,n] = 1
-            rows += N_opts
+                rows += 1
         npl[jset] = rows
         
         for n in range(rows):
@@ -410,7 +412,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
                     e = E_poles[jset,n]
 
                     pair = seg_val[jset,c] 
-                    if pair < 0: continue
+                    if pair < 0 or e > emax: continue
                     E = e*lab2cm + QI[pair]
                     if E <= 1e-3: continue
                 
@@ -455,7 +457,6 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
             E = sc[7]
             AvFormalWidths[isc] *= scale  + E * Eslope 
             if E < 1e-3: continue    # sub-threshold 
-            if AvFormalWidths[isc] < gmin: continue  # too narrow
             g_poles[jset,n,c] = AvFormalWidths[isc]
             if IFG==1:  # get rwa
                 P =  L_poles[jset,n,c,1]
@@ -466,7 +467,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
         jset = 0
         for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
             parity = '+' if pi_set[jset] > 0 else '-'
-    #           if True: print('J,pi =',J_set[jset],parity)
+            if True: print('\nJ,pi =',J_set[jset],parity, file=omfile)
             R = Jpi.resonanceParameters.table
             rows = R.nRows
             cols = R.nColumns - 1  # without energy col
@@ -488,14 +489,25 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
 
             for ie in range(N_opts):
                 n = npli[jset]+ie
+                if E_poles[jset,n] > emax: break
                 row = [ E_poles[jset,n] ]
                 if ReichMoore: row.append(0.0)   # ReichMoore damping on new optical poles
+                totwid = 0.0
                 for c in range(cols): 
-                    print('Add optical width at j,n,c=',jset,n,c,':',g_poles[jset,n,c], file=omfile)
+                    print('   Add optical width at j,n,c=',jset,n,c,':',g_poles[jset,n,c], file=omfile)
                     row.append(g_poles[jset,n,c])
+
+                    if IFG==1:
+                        totwid  += 2. * row[c+c_start]**2 *  L_poles[jset,n,c,1]
+                    else:
+                        totwid  +=  row[c+c_start] 
+                        
+                print('For',J_set[jset],parity,'pole',n,'at',E_poles[jset,n],' formal width=',totwid,'from', row[c+c_start] ,file=omfile)
+                
+
                 R.data.append(row)
             jset += 1
-                
+    
 #     print('\nR-matrix parameters:\n')
 #     for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
 # #         parity = '+' if pi_set[jset] > 0 else '-'
@@ -524,7 +536,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
         for p in range(npl[jset]):
             print('   Pole %3i at Elab = %10.6f (cm %10.6f, obs %10.6f) MeV widths: formal %10.5f, obs %10.5f, damping %10.5f' \
                   % (p,E_poles[jset,p],E_poles[jset,p]/cm2lab[ipair],O_poles[jset,p]/cm2lab[ipair],F_widths[jset,p],O_widths[jset,p],D_poles[jset,p]) )
-#             if 0.0 < abs(F_widths[jset,p]) < 1e-3: print(68*' ','widths: formal %10.3e, obs %10.3e' % (F_widths[jset,p],O_widths[jset,p]) )
+            if abs(F_widths[jset,p]) < 1e-3: print(68*' ','widths: formal %10.3e, obs %10.3e' % (F_widths[jset,p],O_widths[jset,p]) )
             energies.append( O_poles [jset,p] )
             Owidths.append ( O_widths[jset,p] )
             if E_poles[jset,p]>0: 
@@ -642,6 +654,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
             fdname = base + '-MLBW-%sdch_%s-to-%s' % (G,pn,po)
             print('Partition',pn,'to',po,': coherent (fixed-width) angle-integrated cross-sections to file   ',fdname)
             fdout = open(fdname,'w')
+            sys.stdout.flush()
             
             for ie in range(n_energies):
                 Ecm = E_scat[ie]*lab2cm  # pole energy in cm ipair.
@@ -655,16 +668,19 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
                     amp_coh = 0.0 + 0j
                     ama_coh = 0.0 + 0j
                     for p in range(npl[jset]):
+                        if O_widths[jset,p] < 1e-5: continue
                         
                         for cin in range(nch[jset]):
                             if seg_val[jset,cin]!=pin: continue
+                            if O_width[jset,p,cin] < 1e-5: continue
                             Lin = L_val[jset,cin]
                             for cout in range(nch[jset]):
                                 if seg_val[jset,cout]!=pout: continue
+                                if O_width[jset,p,cout] < 1e-5: continue
                                 Lout = L_val[jset,cout]
                                 
                                 ampl  = cmath.sqrt( O_width[jset,p,cin] * O_width[jset,p,cout]  *  gfac[ie,jset,cin] )  \
-                                     / complex( E_scat[ie] - E_poles[jset,p] , O_widths[jset,p]*0.5 )
+                                     / complex( E_scat[ie] - E_poles[jset,p] , O_widths[jset,p]*0.5 + 1e-10)
                                 amp_coh += ampl
                                 
                                 ampl2 = ampl * math.sqrt( max(0.,E_scat[ie]/E_poles[jset,p]) )  # ** (Lin + Lout + 1)
@@ -676,9 +692,9 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,gmin, h
                     XSp_coh +=  ( amp_coh * amp_coh.conjugate() ).real
                     XSa_coh +=  ( ama_coh * ama_coh.conjugate() ).real
 
-                x = XSp_mat * 10.
-                xc = XSp_coh * 10.
-                xa = XSa_coh * 10.
+                x = XSp_mat * 10.   # SLBW  decoherent
+                xc = XSp_coh * 10.  # MLBW  fixed G
+                xa = XSa_coh * 10.  # NLBW  scaled G
                 Elab = E * cm2lab[pin]   # Elab for incoming channel (pair, not ipair)
                 Eo = E_scat[ie]*lab2cm if Global else Elab
                 Ex[ie] = Eo
