@@ -27,7 +27,7 @@ xs_scale = scales[args.units]
 for root,dirs,files in os.walk(args.primary_dir):
     for name in sorted(files):
         if 'swp' in name: continue        
-        incident,_,out = name.split('_')
+        incident,_,out = name.replace('.dat','').split('_')
         projectile,target = incident.split('+')
         Ein,residual = out.split('-')
         Ein = float(Ein)
@@ -37,12 +37,12 @@ for root,dirs,files in os.walk(args.primary_dir):
             if qnames[za] == projectile: ZAp = za
         Zp = ZAp // 1000
         Ap = ZAp % 1000
-#         print('Projectile:',Zp,Ap)
         At = int(re.search('(\d+)',target).group())
         St = re.search('(\D+)',target).group()
         Zt = elementZFromSymbol(St)
         Ar = int(re.search('(\d+)',residual).group())
         Sr = re.search('(\D+)',residual).group()
+        print('From',name,'projectile:',Zp,Ap,'residual:',residual,Ar,Sr)
         Zr = elementZFromSymbol(Sr)
         Ze = Zt+Zp - Zr
         Ae = At+Ap - Ar

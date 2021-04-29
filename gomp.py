@@ -351,9 +351,10 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
                 D_poles[jset,n] = R.data[n][damping_pair+1]
             if IFG==1:     D_poles[jset,:] = 2*D_poles[jset,:]**2
         if jmin <= J <= jmax: 
+            e_yrast = YRAST * J*(J+1.)
             for ie in range(N_opts):
-                e = emin + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )  + YRAST * J*(J+1.)
-                if e > emax: continue
+                e = emin + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )
+                if not (e_yrast < e < emax): continue
                 n = npli[jset]+ie
                 E_poles[jset,n] = e
                 has_widths[jset,n] = 1
@@ -589,8 +590,8 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
     
     Ex = numpy.zeros(n_energies)
     Ry = numpy.zeros(n_energies)
+    Ay = numpy.zeros(n_energies)
     Cy = numpy.zeros(n_energies)
-    Dy = numpy.zeros(n_energies)
     
     F_width = 2.*  g_poles**2 * L_poles[:,:,:,1]   #   jset,p,c
     O_width = F_width / (1. + numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2, keepdims=True )) # cm
@@ -648,12 +649,12 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
             fname = base + '-SLBW-%sch_%s-to-%s' % (G,pn,po)
             print('Partition',pn,'to',po,': angle-integrated cross-sections to file   ',fname)
             fout = open(fname,'w')
-            fcname = base + '-NLBW-%scch_%s-to-%s' % (G,pn,po)
-            print('Partition',pn,'to',po,': coherent angle-integrated cross-sections to file   ',fcname)
+            faname = base + '-NLBW-%scch_%s-to-%s' % (G,pn,po)
+            print('Partition',pn,'to',po,': coherent angle-integrated cross-sections to file   ',faname)
+            faout = open(faname,'w')
+            fcname = base + '-MLBW-%sdch_%s-to-%s' % (G,pn,po)
+            print('Partition',pn,'to',po,': coherent (fixed-width) angle-integrated cross-sections to file   ',fcname)
             fcout = open(fcname,'w')
-            fdname = base + '-MLBW-%sdch_%s-to-%s' % (G,pn,po)
-            print('Partition',pn,'to',po,': coherent (fixed-width) angle-integrated cross-sections to file   ',fdname)
-            fdout = open(fdname,'w')
             sys.stdout.flush()
             
             for ie in range(n_energies):
@@ -661,49 +662,52 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
                 E = Ecm + QI[pin] - QI[ipair]
 
                 XSp_mat = 0.
-                XSp_coh = 0.
+                XSc_coh = 0.
                 XSa_coh = 0.
                 
                 for jset in range(n_jsets):
-                    amp_coh = 0.0 + 0j
-                    ama_coh = 0.0 + 0j
-                    for p in range(npl[jset]):
-                        if O_widths[jset,p] < 1e-5: continue
+
+                    for cin in range(nch[jset]):
+                        if seg_val[jset,cin]!=pin: continue
+                        Lin = L_val[jset,cin]
+                        for cout in range(nch[jset]):
+                            if seg_val[jset,cout]!=pout: continue
+                            Lout = L_val[jset,cout]
+                            
+                            ama_coh = 0.0 + 0j
+                            amc_coh = 0.0 + 0j
+                            for p in range(npl[jset]):
+                                if O_widths[jset,p] < 1e-5: continue
                         
-                        for cin in range(nch[jset]):
-                            if seg_val[jset,cin]!=pin: continue
-                            if O_width[jset,p,cin] < 1e-5: continue
-                            Lin = L_val[jset,cin]
-                            for cout in range(nch[jset]):
-                                if seg_val[jset,cout]!=pout: continue
-                                if O_width[jset,p,cout] < 1e-5: continue
-                                Lout = L_val[jset,cout]
-                                
-                                ampl  = cmath.sqrt( O_width[jset,p,cin] * O_width[jset,p,cout]  *  gfac[ie,jset,cin] )  \
+                                                        
+                                ampl  = cmath.sqrt( O_width[jset,p,cin] * O_width[jset,p,cout]  )  \
                                      / complex( E_scat[ie] - E_poles[jset,p] , O_widths[jset,p]*0.5 + 1e-10)
-                                amp_coh += ampl
+                                amc_coh += ampl
                                 
                                 ampl2 = ampl * math.sqrt( max(0.,E_scat[ie]/E_poles[jset,p]) )  # ** (Lin + Lout + 1)
                                 ama_coh += ampl2
 
-                                XSp_mat += O_width[jset,p,cin] * O_width[jset,p,cout]  *  gfac[ie,jset,cin]  \
-                                     / ( (E_scat[ie] - E_poles[jset,p])**2 + O_widths[jset,p]**2/4.0 )
-                                     
-                    XSp_coh +=  ( amp_coh * amp_coh.conjugate() ).real
-                    XSa_coh +=  ( ama_coh * ama_coh.conjugate() ).real
+#                                 XSp_mat += O_width[jset,p,cin] * O_width[jset,p,cout]   \
+#                                      / ( (E_scat[ie] - E_poles[jset,p])**2 + O_widths[jset,p]**2/4.0 )
+
+                                XSp_mat += ( ampl * ampl.conjugate() ).real    *  gfac[ie,jset,cin] 
+                                                                          
+                            XSc_coh +=  ( amc_coh * amc_coh.conjugate() ).real *  gfac[ie,jset,cin] 
+                            XSa_coh +=  ( ama_coh * ama_coh.conjugate() ).real *  gfac[ie,jset,cin] 
 
                 x = XSp_mat * 10.   # SLBW  decoherent
-                xc = XSp_coh * 10.  # MLBW  fixed G
+                xc = XSc_coh * 10.  # MLBW  fixed G
                 xa = XSa_coh * 10.  # NLBW  scaled G
                 Elab = E * cm2lab[pin]   # Elab for incoming channel (pair, not ipair)
                 Eo = E_scat[ie]*lab2cm if Global else Elab
                 Ex[ie] = Eo
                 Ry[ie] = x
-                Cy[ie] = xa
-                Dy[ie] = xc
+                Ay[ie] = xa
+                Cy[ie] = xc
                 if Convolute<=0. and (Global or Elab>0): 
                     print(Eo,x, file=fout)
-                    print(Eo,xa,xc, file=fcout)
+                    print(Eo,xa, file=faout)
+                    print(Eo,xc, file=fcout)
  
             if Convolute>0.:
                 XSEC = XYs.XYs1d(data=(Ex,Ry), dataForm="XsAndYs"  )
@@ -711,15 +715,15 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
                 for ie in range(len(XSEC)):
                     print(XSEC[ie][0],XSEC[ie][1], file=fout)
 
+                XSEC = XYs.XYs1d(data=(Ex,Ay), dataForm="XsAndYs"  )
+                XSEC = XSEC.convolute(conv)
+                for ie in range(len(XSEC)):
+                    print(XSEC[ie][0],XSEC[ie][1], file=faout)    
+
                 XSEC = XYs.XYs1d(data=(Ex,Cy), dataForm="XsAndYs"  )
                 XSEC = XSEC.convolute(conv)
                 for ie in range(len(XSEC)):
                     print(XSEC[ie][0],XSEC[ie][1], file=fcout)    
-
-                XSEC = XYs.XYs1d(data=(Ex,Dy), dataForm="XsAndYs"  )
-                XSEC = XSEC.convolute(conv)
-                for ie in range(len(XSEC)):
-                    print(XSEC[ie][0],XSEC[ie][1], file=fdout)    
 
             fout.close()
             fcout.close()
