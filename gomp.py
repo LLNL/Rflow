@@ -97,12 +97,17 @@ def generateEnergyGrid(energies,widths, lowBound, highBound, stride=1):
     # also add rough grid, to cover any big gaps between resonances, should give at least 10 points per decade:
     npoints = int(numpy.ceil(numpy.log10(highBound)-numpy.log10(lowBound)) * 10)
     grid += list(numpy.logspace(numpy.log10(lowBound), numpy.log10(highBound), npoints))[1:-1]
-    grid += [lowBound, highBound, 0.0253]   # region boundaries + thermal
+    grid += [lowBound, highBound]   # region boundaries 
     # if threshold reactions present, add dense grid at and above threshold
     for threshold in thresholds:
         grid += [threshold]
         grid += list(threshold + resonancePos * 1e-2)
+    eStrings = ['%12.6f'%e for e in grid]
+    sStrings = sorted(set(eStrings))
+#     print('\n'.join(sStrings) , file=open('grid_q_sorted','w'))
+    grid = [float(e) for e in sStrings]
     grid = sorted(set(grid))
+#     print('\n'.join([str(e) for e in grid]) , file=open('grid_sorted','w'))
     # toss any points outside of energy bounds:
     grid = grid[grid.index(lowBound) : grid.index(highBound)+1]
     return numpy.asarray(grid, dtype=REAL)
@@ -353,8 +358,8 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
         if jmin <= J <= jmax: 
             e_yrast = YRAST * J*(J+1.)
             for ie in range(N_opts):
-                e = emin + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )
-                if not (e_yrast < e < emax): continue
+                e = max(emin,e_yrast) + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )
+                if e > emax: continue
                 n = npli[jset]+ie
                 E_poles[jset,n] = e
                 has_widths[jset,n] = 1
@@ -606,17 +611,18 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
 #             for p in range(npl[jset]):        
 #                 print('J,pole:',jset,p,'F widths:',F_width[jset,p,:nch[jset]])
                                                     
-    for pin in range(npairs):
+##  for pin in range(npairs):
+    for pin in range(1):
         pn,il = quickName(pname[pin],tname[pin]) 
         if il>0: continue
         
         if Dspacing is not None:
             rname = base + '-MLBW-%sreac_%s' % (G,pn)
-            hname = base + '-MLBW-%sCH_%s' % (G,pn)
+#           hname = base + '-MLBW-%sCH_%s' % (G,pn)
             rout = open(rname,'w')
-            hout = open(hname,'w')
+#           hout = open(hname,'w')
             print('Reaction cross-sections for',pn,' to file   ',rname)
-            print('Half reaction cross-sections for',pn,' to file   ',hname)
+#           print('Half reaction cross-sections for',pn,' to file   ',hname)
 
             
             for ie in range(N_opts):
@@ -636,9 +642,9 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
                         if seg_val[jset,cin]!=pin: continue      
                         XSreac += Gfac * 2*pi * O_width[jset,p,cin] / Dspacing * 10.
                 print(Elab,XSreac, file=rout)
-                print(Elab,XSreac/2., file=hout)
+#               print(Elab,XSreac/2., file=hout)
             rout.close()
-            hout.close()
+#           hout.close()
 
         if noRecon: continue
 
