@@ -107,7 +107,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
             if level == 0: continue
             targetex = pops["%s_e%s" % (tgs,level)].nucleus
             print('R*',targetex.id,targetex.spin[0],targetex.parity[0],targetex.energy[0])
-            jt,tp,et = targetex.spin[0].float('hbar'), targetex.parity[0].value, targetex.energy[0].pqu('MeV').value
+            jt,pt,et = targetex.spin[0].float('hbar'), targetex.parity[0].value, targetex.energy[0].pqu('MeV').value
             print("  &STATES  copyp=1                       jt=%s ptyt=%s et=%s /" % (jt,pt,et) , file=fresco)
             excitationPairs.append([jp,pp,ep,jt,pt,et])
         excitationLists.append(excitationPairs)
@@ -322,7 +322,7 @@ parser.add_argument("-P", "--Projectiles", type=str, nargs='+', help="List of pr
 parser.add_argument("-L", "--LevelsMax", type=int, nargs='+', help="List of max level numbers of corresponding targets, in same order as -P")
 parser.add_argument("-B", "--EminCN", type=float, help="Minimum energy relative to gs of the compound nucleus.")
 parser.add_argument("-C", "--EmaxCN", type=float,  help="Maximum energy relative to gs of the compound nucleus.")
-parser.add_argument("-J", "--Jmax", type=float, default=5.0, help="Maximum total J of partial wave set.")
+parser.add_argument("-J", "--Jmax", type=float, default=8.0, help="Maximum total J of partial wave set.")
 parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum incident lab energy in first partition.")
 parser.add_argument("-E", "--emaxp", type=float, default=25., help="Maximum incident lab energy in first partition.")
 parser.add_argument("-r", "--Rmatrix_radius", type=float, default=1.4, help="Reduced R-matrix radius: factor of (A1^1/3+A2^1/3).")
