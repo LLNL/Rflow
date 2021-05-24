@@ -19,6 +19,7 @@ etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 hbar = 6.582e-22 # MeV.s
 
 defaultPops = '../ripl2pops_to_Z8.xml'
+lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
 fresco_start = \
 """R-matrix starter for {%s}
@@ -32,7 +33,7 @@ NAMELIST
 """
  
 def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Projectiles,EminCN,EmaxCN,emin,emax,
-        Rmatrix_radius,jdef,pidef,widef,Term0,gammas,ReichMoore):
+        Rmatrix_radius,jdef,pidef,widef,Term0,gammas,ReichMoore,outbase,MaxPars):
 
 #     pops = databaseModule.database.readFile(popsicles[0])
 #     for p in popsicles[1:]:
@@ -47,7 +48,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
     print(' CN partition is ',projs.index('photon'))
 
     mxp = 0
-    reaction = ', '.join(["%s+%s" % (projs[ic],targs[ic]) for ic in range(len(projs)) ]) 
+    reaction = ', '.join([("%s+%s" % (projs[ic],targs[ic]) if projs[ic]!='photon' or gammas else '') for ic in range(len(projs)) ]) 
     CN = None
     OtherSep = -1e6
     excitationLists = []
@@ -60,7 +61,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
         tz = charges[t]
         pmass = masses[p];  Ap = int(pmass+0.5)
         tmass = masses[t];  At = int(tmass+0.5)
-        prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.))
+        prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.)) if Rmatrix_radius > 0 else abs(Rmatrix_radius)
         Q = qvalue[p]
 
         if ic==0: # put in namelist start
@@ -193,7 +194,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
             tz = charges[t]
             pmass = masses[p];  Ap = int(pmass+0.5)
             tmass = masses[t];  At = int(tmass+0.5)
-            prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.))
+            prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.)) if Rmatrix_radius > 0 else abs(Rmatrix_radius)
             rmass = pmass*tmass/(pmass+tmass)
             Q = qvalue[p]
             print('Partition',ic,':',p,t,'so Q=',Q)
@@ -223,6 +224,8 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
                         if Epole+Q > 0. and rmass>0:    # don't bother for sub-threshold states 
                             dSoPc = dSoP(Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch)
 #                             print('dSoP(',Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch, ') = ',dSoPc)
+#                             print('w,width,dSoPc:',w,width,dSoPc)
+                            if dSoPc is None: dSoPc = 0.
                             w *= ( 1 - width * dSoPc/2.)
                             w *= first   # more weight on lowest L !!!!
                             print('For ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.,'w =',w)
@@ -281,14 +284,26 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
     fresco.close()
     frescoVars.close()
    
-    sfrescoName = "%sr%s.sfresco" % (CN,gs)
+#     sfrescoName = "%sr%s.sfresco" % (CN,gs)
+    pel = pel-1
+    print(projs)
+    pq = lightnuclei.get(projs[pel],projs[pel])
+    sfrescoName = "%s%s%s-%s.sfresco" % (CN,pq,gs,outbase)
     sf = open(sfrescoName,'w')
     fLines = open('fresco%s.in' % gs,'r').readlines()
     vLines = open('fresco%s.vars' % gs,'r').readlines()
     print(" '='  '%s.frout' " % (sfrescoName+gs), file=sf )
-    print(nvars,0,'\n', file=sf)
+    if MaxPars is None:
+        print(nvars,0,'\n', file=sf) 
+    else:
+        print(min(nvars,MaxPars),0,'\n', file=sf) 
     sf.writelines(fLines)
-    sf.writelines(vLines)
+    if MaxPars is None:
+        sf.writelines(vLines)
+    
+    else:
+        sf.writelines(vLines[:MaxPars+1])
+
     return
     
 
@@ -325,7 +340,7 @@ parser.add_argument("-C", "--EmaxCN", type=float,  help="Maximum energy relative
 parser.add_argument("-J", "--Jmax", type=float, default=8.0, help="Maximum total J of partial wave set.")
 parser.add_argument("-e", "--eminp", type=float, default=0.1, help="Minimum incident lab energy in first partition.")
 parser.add_argument("-E", "--emaxp", type=float, default=25., help="Maximum incident lab energy in first partition.")
-parser.add_argument("-r", "--Rmatrix_radius", type=float, default=1.4, help="Reduced R-matrix radius: factor of (A1^1/3+A2^1/3).")
+parser.add_argument("-r", "--Rmatrix_radius", type=float, default=-10, help="Reduced R-matrix radius: factor of (A1^1/3+A2^1/3).")
 parser.add_argument("-G", "--GammaChannel", action="store_true", help="Include discrete gamma channel")
 parser.add_argument("-R", "--ReichMoore", action="store_true", help="Inclusive capture channel")
 parser.add_argument("-j", "--jdef", type=float, default=2.0, help="Default spins for unknown RIPL states")
@@ -346,6 +361,7 @@ parser.add_argument("-n", "--Norms", type=str,  default="flow.norms", help="outp
 parser.add_argument("-S", "--Sfresco", action="store_true", help="Outputs for Sfresco")
 parser.add_argument(      "--SF", action="store_true", help="Plot S-factor data, not as cross-sections")
 parser.add_argument("-T", "--Term0", type=int, default=0, help="First 'term' in Sfresco output")
+parser.add_argument("-M", "--MaxPars", type=int, help="Max numver of R-matrix parameters")
 
 parser.add_argument(      "--CSV", type=str,  default="datafile.props.csv", help="property datafile.props.csv in args.Dir")
 parser.add_argument("-a", "--Adjusts", type=str,  default="adjusts", help="list of current norm and shift adjustments")
@@ -991,5 +1007,6 @@ print("Excited states used:",levels)
 print('\nFresco input file:')
 make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,args.Jmax,Projectiles,
     args.EminCN,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,
-    args.jdef,args.pidef,args.widef,args.Term0,args.GammaChannel,args.ReichMoore)
+    args.jdef,args.pidef,args.widef,args.Term0,args.GammaChannel,args.ReichMoore,
+    args.Out.replace('flow-','').replace('.data',''),args.MaxPars)
 
