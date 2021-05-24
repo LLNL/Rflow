@@ -32,7 +32,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Compare R-matrix Cross sections with Data')
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
     parser.add_argument("-O","--OmpFile", type=str, help='Optical model parameters to use' )
-    parser.add_argument("-M", "--Model", type=str, default='B', help="Model to link |S|^2 and widths. A: log; B: lin")
+    parser.add_argument("-M", "--Model", type=str, default='B', help="Model to link |S|^2 and widths. A: log; B: lin; X")
     parser.add_argument("-D", "--Dspacing", type=float,  help="Energy spacing of optical poles")
 
     
@@ -77,7 +77,7 @@ if __name__=='__main__':
     if args.Dspacing is not None:
         print(' Make optical poles spaced by',args.Dspacing,'in range [',emin,',',emax,'] in lab MeV for projectile',p)
         print(' using optical potentials from',args.OmpFile,' and model ',args.Model,'to map |S|^2 to widths.\n\n')
-        rrr.domainMax = args.EMAX
+#       rrr.domainMax = args.EMAX
     
     
         f = open( args.OmpFile )
@@ -99,7 +99,7 @@ if __name__=='__main__':
         if args.emin       is not None: base += '-e%s' % args.emin
         if args.EMAX       is not None: base += '-E%s' % args.EMAX
         if args.jmin    > 0.0: base += '-j%s' % args.jmin
-        if args.JMAX       is not None: base += '-J%s' % args.JMAX
+        if args.JMAX    != 8.0        : base += '-J%s' % args.JMAX
     
         if args.offset  > 0.0: base += '-o%s' % args.offset
         if args.Dspacing       is not None: base += '-D%s' % args.Dspacing

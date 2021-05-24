@@ -158,6 +158,32 @@ def becchetti(proj,Z,A,E):  # for n and H1
 
     return( (V,RZZ,AZ, W,RWZ,AW, WD,RDZ,AD, VSO,RSOZ,ASO, RC) )
 
+def islam(proj,Z,A,E):  # for n on 14N
+    AOV=A**0.333333333
+    RC = 1.3 * AOV
+    N=A-Z
+    if proj=='n':
+        V=52.4-0.29*E
+        R0=1.197
+        R=R0*AOV
+        A=0.593
+        
+        W=0.267*E - 5.86 if E > 22 else 0. 
+        WD=5.43 - 0.16*(22-E) if E<=22 else 8.64 - 0.145*E
+        RW0=1.388
+        RW=RW0*AOV
+        AW=0.593
+        
+        VSO=6.0
+        RSO=1.01
+        RSOZ=RSO*AOV
+        ASO=0.30
+    else:
+        print("Islam potential not suitable for ",proj,' only n')
+        sys.exit()
+
+    return( (V,R,A, W,RW,AW, WD,RW,AW, VSO,RSOZ,ASO, RC) )
+
 def perey_d(proj,Z,A,E):    # for H2
     if proj != 'H2':
         print("Perey_d potential not suitable for ",proj,' only H2')
@@ -323,9 +349,12 @@ def get_optical_S(sc_info,n, ompout):
             if OpticalPot[0] == 2: 
                 OpticalParameters = Soukhovitskii(pname,ZT,AT,Elab)
                 opt = 'n: Soukhovitskii'
-            if OpticalPot[0] >= 3: 
+            if OpticalPot[0] == 3: 
                 OpticalParameters = becchetti(pname,ZT,AT,Elab)
                 opt = 'n: Becchetti'
+            if OpticalPot[0] >= 4: 
+                OpticalParameters = islam(pname,ZT,AT,Elab)
+                opt = 'n: Islam'
         elif pname=='H1':
             if OpticalPot[0] <= 1: 
                 OpticalParameters = KoningDelaRoche(pname,ZT,AT,Elab)
@@ -403,10 +432,13 @@ if __name__=="__main__":
         if Version == 2: 
             OpticalParameters = Soukhovitskii(pname,ZT,AT,Elab)
             opt = 'n: Soukhovitskii'
-        if Version >= 3: 
+        if Version == 3: 
             OpticalParameters = becchetti(pname,ZT,AT,Elab)
             opt = 'n: Becchetti'
-
+        if Version >= 4: 
+            OpticalParameters = islam(pname,ZT,AT,Elab)
+            opt = 'n: Islam'
+            
     elif pname=='H1':
         if Version <= 1: 
             OpticalParameters = KoningDelaRoche(pname,ZT,AT,Elab)

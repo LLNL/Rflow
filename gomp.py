@@ -446,7 +446,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
         print('Model',Model)
         if   Model[0]=='A':
             AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
-        elif Model[0]=='B':
+        elif Model[0] in ['B','X','Y']:
             AvFormalWidths = Dspacing * TC / (2.*pi)
         else:
             print('Model',Model,'unrecognized')
@@ -460,8 +460,11 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
             
         for isc,sc in  enumerate(sc_info):
             jset,c,n = sc[:3]
+            pair = seg_val[jset,c]
+            pn,il = quickName(pname[pair],tname[pair]) 
             E = sc[7]
-            AvFormalWidths[isc] *= scale  + E * Eslope 
+            if not ( Model[0]=='X' and  il==0 ) and not (Model[0]=='Y' and  c==0):   # scale only  excited states for model X.  All except n-elastic for Y
+                AvFormalWidths[isc] *= scale  + E * Eslope 
             if E < 1e-3: continue    # sub-threshold 
             g_poles[jset,n,c] = AvFormalWidths[isc]
             if IFG==1:  # get rwa
@@ -617,34 +620,38 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
         if il>0: continue
         
         if Dspacing is not None:
-            rname = base + '-MLBW-%sreac_%s' % (G,pn)
-#           hname = base + '-MLBW-%sCH_%s' % (G,pn)
+            rname = base + '-SLBW-%sreac_%s' % (G,pn)
             rout = open(rname,'w')
-#           hout = open(hname,'w')
             print('Reaction cross-sections for',pn,' to file   ',rname)
-#           print('Half reaction cross-sections for',pn,' to file   ',hname)
 
-            
-            for ie in range(N_opts):
-                p = npli[jset]+ie
-                e = emin + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )  # lab energy in ipair
-                Ecm = e*lab2cm
+            denom = (2.*jp[pin]+1.) * (2.*jt[pin]+1)
+            XSreac = []
+            for jset in range(n_jsets):
+                J = J_set[jset]
+                parity = pi_set[jset]
+                e_yrast = YRAST * J*(J+1.)
+                XSr = [[0.,0.]]
+                for ie in range(N_opts):
 
-                E = Ecm + QI[pin] - QI[ipair]   # cm energy in pin
-                rk_isq = 1. / (fmscal * rmass[pin] * E)
-                Elab = E * cm2lab[pin]   # Elab for incoming channel (pin, not ipair)
-                denom = (2.*jp[pin]+1.) * (2.*jt[pin]+1)
-            
-                XSreac = 0.0
-                for jset in range(n_jsets):
+                    p = npli[jset]+ie
+                    e = max(emin,e_yrast) + D * (ie + offset * (J + int(parity)/3.0) ) # lab energy in ipair
+                    Ecm = e*lab2cm
+
+                    E = Ecm + QI[pin] - QI[ipair]   # cm energy in pin
+                    rk_isq = 1. / (fmscal * rmass[pin] * E)
+                    Elab = E * cm2lab[pin]   # Elab for incoming channel (pin, not ipair)
+                
                     Gfac = pi * (2*J_set[jset]+1) * rk_isq / denom
+                    XS = 0.0
                     for cin in range(nch[jset]):
                         if seg_val[jset,cin]!=pin: continue      
-                        XSreac += Gfac * 2*pi * O_width[jset,p,cin] / Dspacing * 10.
-                print(Elab,XSreac, file=rout)
-#               print(Elab,XSreac/2., file=hout)
+                        XS += Gfac * 2*pi * O_width[jset,p,cin] / Dspacing * 10.
+                    XSr.append([Elab,XS])
+                XSEC = XYs.XYs1d(data=XSr, dataForm="XYs"  )
+                XSreac = XSEC if jset==0 else XSreac + XSEC
+            for ie in range(len(XSreac)):
+                print(XSreac[ie][0],XSreac[ie][1], file=rout)   
             rout.close()
-#           hout.close()
 
         if noRecon: continue
 
