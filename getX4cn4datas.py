@@ -614,7 +614,7 @@ if __name__ == "__main__":
                                 elif 'COS-CM' in labels:
                                     Ang_index = labels.index('COS-CM')
                                     cosines = True   # data already in cosines
-#                                 elif 'E' in labels and observable!='DA':
+#                                 elif 'E' in labels:
 #                                     Ang_index = labels.index('E')
                                 else:
                                     excuses[subent] = 'No exit '+exit_quantity+' column found'
@@ -624,7 +624,7 @@ if __name__ == "__main__":
                                     dAng_index = labels.index('d(Angle)')
                                 elif 'ANG-ERR-D' in labels:
                                     dAng_index = labels.index('ANG-ERR-D')
-                                elif 'E-ERR-DIG' in labels and observable!='DA':
+                                elif 'E-ERR-DIG' in labels:
                                     dAng_index = labels.index('E-ERR-DIG')
                                 else:
                                     dAng_index = None
