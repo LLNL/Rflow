@@ -113,7 +113,7 @@ def generateEnergyGrid(energies,widths, lowBound, highBound, stride=1):
     return numpy.asarray(grid, dtype=REAL)
                        
 
-def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, hcm,offset,Convolute,stride,
+def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,Model,YRAST, hcm,offset,Convolute,stride,
        verbose,debug,inFile,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
@@ -396,9 +396,10 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
     Pole_Shifts(L_poles,dLdE_poles, E_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
     print()
         
-        
+    seed = 1
     if Dspacing is not None:
     # CALCULATE OPTICAL-MODEL SCATTERING TO GET PARTIAL WIDTHS
+        numpy.random.seed(seed)
 
         omfile = open(base + '-omp.txt','w')
         sc_info = []
@@ -466,12 +467,16 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
             if not ( Model[0]=='X' and  il==0 ) and not (Model[0]=='Y' and  c==0):   # scale only  excited states for model X.  All except n-elastic for Y
                 AvFormalWidths[isc] *= scale  + E * Eslope 
             if E < 1e-3: continue    # sub-threshold 
-            g_poles[jset,n,c] = AvFormalWidths[isc]
-            if IFG==1:  # get rwa
-                P =  L_poles[jset,n,c,1]
-                g_poles[jset,n,c] = abs(AvFormalWidths[isc]/(2*P)) ** 0.5
-                print(isc,jset,c,n,E,'fw=',AvFormalWidths[isc],'P=',P,'rwa=', g_poles[jset,n,c], file=omfile)
-                
+            
+            P =  L_poles[jset,n,c,1]
+            gav = abs(AvFormalWidths[isc]/(2*P)) ** 0.5
+            g_poles[jset,n,c] = numpy.random.normal(0,gav) if PorterThomas else gav
+            print(isc,jset,c,n,E,'fw=',AvFormalWidths[isc],'P=',P,'rwa=', g_poles[jset,n,c], file=omfile)
+            
+            if IFG==0:  # get endf formal width
+                g_poles[jset,n,c] = 2. * g_poles[jset,n,c]**2 * P * (-1 if g_poles[jset,n,c] < 0. else +1.)
+
+  
     # Copy parameters back into GNDS 
         jset = 0
         for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
@@ -510,8 +515,8 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
                         totwid  += 2. * row[c+c_start]**2 *  L_poles[jset,n,c,1]
                     else:
                         totwid  +=  row[c+c_start] 
-                        
-                print('For',J_set[jset],parity,'pole',n,'at',E_poles[jset,n],' formal width=',totwid,'from', row[c+c_start] ,file=omfile)
+#                 print('For',J_set[jset],parity,'pole',n,'at',E_poles[jset,n],' formal width=',totwid,'from', row[c_start] ,file=omfile)
+                print('For',J_set[jset],parity,'pole',n,'at',E_poles[jset,n],' formal width=',totwid,file=omfile)
                 
 
                 R.data.append(row)
@@ -545,7 +550,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
         for p in range(npl[jset]):
             print('   Pole %3i at Elab = %10.6f (cm %10.6f, obs %10.6f) MeV widths: formal %10.5f, obs %10.5f, damping %10.5f' \
                   % (p,E_poles[jset,p],E_poles[jset,p]/cm2lab[ipair],O_poles[jset,p]/cm2lab[ipair],F_widths[jset,p],O_widths[jset,p],D_poles[jset,p]) )
-            if abs(F_widths[jset,p]) < 1e-3: print(68*' ','widths: formal %10.3e, obs %10.3e' % (F_widths[jset,p],O_widths[jset,p]) )
+#             if abs(F_widths[jset,p]) < 1e-3: print(68*' ','widths: formal %10.3e, obs %10.3e' % (F_widths[jset,p],O_widths[jset,p]) )
             energies.append( O_poles [jset,p] )
             Owidths.append ( O_widths[jset,p] )
             if E_poles[jset,p]>0: 
@@ -647,6 +652,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,optical_potentials,Model,YRAST, 
                         if seg_val[jset,cin]!=pin: continue      
                         XS += Gfac * 2*pi * O_width[jset,p,cin] / Dspacing * 10.
                     XSr.append([Elab,XS])
+                XSr.append([Elab+.1,0.])  # zero to terminate domain
                 XSEC = XYs.XYs1d(data=XSr, dataForm="XYs"  )
                 XSreac = XSEC if jset==0 else XSreac + XSEC
             for ie in range(len(XSreac)):
