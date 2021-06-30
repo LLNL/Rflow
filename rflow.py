@@ -83,13 +83,14 @@ if __name__=='__main__':
     parser.add_argument("-P", "--PMAX", type=float, help="Max energy of R-matrix pole to fit. If p>P, create gap.")
     parser.add_argument("-d", "--dmin", type=float, help="Min energy of R-matrix pole to fit damping, in gnds cm energy frame.")
     parser.add_argument("-D", "--DMAX", type=float, help="Max energy of R-matrix pole to fit damping. If d>D, create gap.")
+    parser.add_argument("-N", "--NLMAX", type=int, help="Max number of partial waves in one reaction pair")
     parser.add_argument("-L", "--Lambda", type=float, help="Use (E-dmin)^Lambda to modulate all damping widths at gnds-scattering cm energy E.")
     parser.add_argument(      "--ABES", action="store_true", help="Allow Brune Energy Shifts.  Use inexact method")
     parser.add_argument("-G", "--Grid", type=float, default=Gdefault, help="Make energy grid with this energy spacing (MeV) for 1d interpolation, default %s" % Gdefault)
 
     parser.add_argument("-S", "--Search", type=str, help="Search minimization target.")
     parser.add_argument("-I", "--Iterations", type=int, default=2000, help="max_iterations for search")
-    parser.add_argument("-i", "--init",type=str, nargs="*", help="iterations and snap file name for starting parameters")
+    parser.add_argument("-i", "--init",type=str, nargs=2, help="iterations and snap file name for starting parameters")
     parser.add_argument("-A", "--Averaging", type=float, default=0.0, help="Averaging width to all scattering: imaginary = Average/2.")
     parser.add_argument("-w", "--widthWeight", type=float, default=0.0, help="Add widthWeight*vary_widths**2 to chisq during searches")
     parser.add_argument("-X", "--XCLUDE", type=float,  help="Make dataset*3 with data chi < X (e.g. X=3). Needs -C data.")
@@ -391,13 +392,14 @@ if __name__=='__main__':
     base += '+%s' % args.dataFile.replace('.data','')
     base += dataFilter
 # searching
+    if args.NLMAX       is not None: base += '-N%s' % args.NLMAX
     if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('.*','@').replace('[',':').replace(']',':')
     if args.normsfixed            : base += '+n' 
     if args.pmin       is not None: base += '-p%s' % args.pmin
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
     if args.dmin       is not None: base += '-d%s' % args.dmin
     if args.DMAX       is not None: base += '-D%s' % args.DMAX
-    if args.Lambda     is not None: base += '-L%s' % args.Lambda
+    if args.Lambda     is not None: base += '-La%s' % args.Lambda
     if args.init       is not None: base += '@i%s'  % args.init[0]
     if args.init       is not None: print('Re-initialize at line',args.init[0],'of snap file',args.init[1])
     if args.Search     is not None: base += '+S%s'  % args.Search +  '_I%s' % args.Iterations
@@ -415,7 +417,7 @@ if __name__=='__main__':
  
     chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-                        Ein_list,args.Fixed,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Averaging, args.Multi,args.ML,args.ABES,args.Grid,
+                        Ein_list,args.Fixed,args.NLMAX,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Averaging, args.Multi,args.ML,args.ABES,args.Grid,
                         norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
                         args.Cross_Sections,args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large,ComputerPrecisions,tim)

@@ -32,7 +32,7 @@ def now():
     return date.Date( resolution = date.Resolution.time )
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-        Ein_list, fixedlist, emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ML,ABES,Grid,
+        Ein_list, fixedlist, NLMAX,emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ML,ABES,Grid,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
@@ -183,8 +183,16 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         n = R.nColumns-1
         if ReichMoore: n -= 1
         n_chans = max(n_chans,n)
+
+        partition_channels = numpy.zeros(npairs, dtype=INT)
         for ch in Jpi.channels:
+            rr = ch.resonanceReaction
+            pair = partitions[rr] #.get(rr,None)
+#             print('rr,pair: p_c',rr,pair,partition_channels[pair])
+            if NLMAX is not None and partition_channels[pair] >= NLMAX: continue
             Lmax = max(Lmax,ch.L)
+#             print('       L,Lmax',ch.L,Lmax)
+            partition_channels[pair] += 1
     print('Need %i energies in %i Jpi sets with %i poles max, and %i channels max. Lmax=%i' % (n_data,n_jsets,n_poles,n_chans,Lmax))
 
     nch = numpy.zeros(n_jsets, dtype=INT)
@@ -200,7 +208,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     GNDS_order = numpy.zeros([n_jsets,n_poles,n_chans+2], dtype=INT) # [,,0] is energy, 1 is damping, as in GNDS
     J_set = numpy.zeros(n_jsets, dtype=REAL)
     pi_set = numpy.zeros(n_jsets, dtype=INT)
-    L_val  =  numpy.zeros([n_jsets,n_chans], dtype=INT)
+    L_val  =  numpy.zeros([n_jsets,n_chans], dtype=INT) - 1
     S_val  =  numpy.zeros([n_jsets,n_chans], dtype=REAL)
     B_val  =  numpy.zeros([npairs,n_jsets,n_chans], dtype=REAL)
     p_mask =  numpy.zeros([npairs,n_jsets,n_chans], dtype=REAL)
@@ -255,7 +263,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 pairc = partitions.get(rr,None)
                 if pairc is None or pairc!=pair: continue
                 m = ch.columnIndex - 1
+                if NLMAX is not None and partition_channels[pair] >= NLMAX: continue
                 L_val[jset,c] = ch.L
+#                 print(' Jset,c =',jset,c,': L=',ch.L)
                 S = float(ch.channelSpin)
                 S_val[jset,c] = S
                 has_widths[jset,:rows] = 1
@@ -274,7 +284,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     print(' Total channels',tot_channels,' and total poles',tot_poles,'\n')
     maxpc = numpy.amax(all_partition_channels)
-    print('Max channels in each partition:',all_partition_channels,' max=',maxpc)
+    print('Max channels in each partition:',all_partition_channels,' max=',maxpc,'from NLMAX=',NLMAX)
     for jset in range(n_jsets):
         if debug: print('Channel ranges for each parition:',[[c0[jset,pair],cn[jset,pair]] for pair in range(npairs)])
         
@@ -356,7 +366,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         n = None
         c = 0
         for pair in range(npairs):
+            cp = 0
             for ch in Jpi.channels:
+                if NLMAX is not None and cp >= NLMAX: continue
+
                 ic = c - c0[jset,pair]
                 rr = ch.resonanceReaction
                 pairc = partitions.get(rr,None)
@@ -403,6 +416,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                         if pair==pin : CSp_diag_in[ie,jset,ic]       = Csig_exp[ie,pair,ch.L]
                         if pair==pout: CSp_diag_out[ie,jset,ic]      = Csig_exp[ie,pair,ch.L]
                 c += 1
+                cp += 1
         if debug:
             print('J set %i: E_poles \n' % jset,E_poles[jset,:])
             print('g_poles \n',g_poles[jset,:,:])
@@ -758,6 +772,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                         ic = c - c0[jset,pin]
                         if seg_val[jset,c] == pin:
                             L = L_val[jset,c]
+                            if L < 0: continue
                             InterferenceAmpl[ie,jset,ic] = (2*J+1) * Pleg[ie,L] * 2 * rsqr4pi * CoulAmpl.conjugate()
     else:
         Rutherford, InterferenceAmpl = None, None
