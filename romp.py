@@ -34,8 +34,7 @@ if __name__=='__main__':
     parser.add_argument("-O","--OmpFile", type=str, help='Optical model parameters to use' )
     parser.add_argument("-M", "--Model", type=str, default='B', help="Model to link |S|^2 and widths. A: log; B: lin; X")
     parser.add_argument("-D", "--Dspacing", type=float,  help="Energy spacing of optical poles")
-    parser.add_argument("-P", "--PorterThomas", action="store_true", help="RWA Gaussian around optical mean")
-
+    parser.add_argument("-P", "--PorterThomas", type=int, default=0, help="rwa: 0: positive, 1: altenating sign, 3: random sign, >3: Porter Thomas")
     
     parser.add_argument("-e", "--emin", type=float, default = 0.5,  help="Min cm energy for optical poles.")
     parser.add_argument("-E", "--EMAX", type=float, default = 20, help="Max cm energy for optical poles")
@@ -104,7 +103,7 @@ if __name__=='__main__':
     
         if args.offset  > 0.0: base += '-o%s' % args.offset
         if args.Dspacing       is not None: base += '-D%s' % args.Dspacing
-        if args.PorterThomas: base += 'P'
+        if args.PorterThomas > 0: base += 'P%s' % args.PorterThomas
         if args.YRAST    > 0.0: base += '-Y%s' % args.YRAST
 
     else:
