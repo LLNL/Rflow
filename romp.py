@@ -34,8 +34,8 @@ if __name__=='__main__':
     parser.add_argument("-O","--OmpFile", type=str, help='Optical model parameters to use' )
     parser.add_argument("-M", "--Model", type=str, default='B', help="Model to link |S|^2 and widths. A: log; B: lin; X")
     parser.add_argument("-D", "--Dspacing", type=float,  help="Energy spacing of optical poles")
-    parser.add_argument("-P", "--PorterThomas", action="store_true", help="RWA Gaussian around optical mean")
-
+    parser.add_argument("-P", "--PorterThomas", type=int, default=0, help="rwa: 0: positive, <0: Porter-Thomas, >0: random sign")
+    parser.add_argument("-R", "--Rmax", type=float, default = 20.0,  help="Radius limit for optical potentials.")
     
     parser.add_argument("-e", "--emin", type=float, default = 0.5,  help="Min cm energy for optical poles.")
     parser.add_argument("-E", "--EMAX", type=float, default = 20, help="Max cm energy for optical poles")
@@ -101,10 +101,12 @@ if __name__=='__main__':
         if args.EMAX       is not None: base += '-E%s' % args.EMAX
         if args.jmin    > 0.0: base += '-j%s' % args.jmin
         if args.JMAX    != 8.0        : base += '-J%s' % args.JMAX
+        if args.Rmax    != 20.        : base += '-R%s' % args.Rmax
     
         if args.offset  > 0.0: base += '-o%s' % args.offset
         if args.Dspacing       is not None: base += '-D%s' % args.Dspacing
-        if args.PorterThomas: base += 'P'
+        if args.PorterThomas > 0: base += 'P%s' % args.PorterThomas
+        if args.PorterThomas < 0: base += 'Pm%s' % abs(args.PorterThomas)
         if args.YRAST    > 0.0: base += '-Y%s' % args.YRAST
 
     else:
@@ -115,7 +117,7 @@ if __name__=='__main__':
 
 #     print("        finish setup: ",tim.toString( ))
  
-    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,args.PorterThomas,optical_potentials,
+    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,args.PorterThomas,optical_potentials,args.Rmax,
          args.Model,args.YRAST,args.Hcm,args.offset,args.Convolute,args.Stride,
          args.verbose,args.debug,args.inFile,ComputerPrecisions,tim)
     

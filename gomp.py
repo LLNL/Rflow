@@ -113,7 +113,7 @@ def generateEnergyGrid(energies,widths, lowBound, highBound, stride=1):
     return numpy.asarray(grid, dtype=REAL)
                        
 
-def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,Model,YRAST, hcm,offset,Convolute,stride,
+def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,Rmax,Model,YRAST, hcm,offset,Convolute,stride,
        verbose,debug,inFile,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
@@ -158,6 +158,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
             print('\nReich-Moore channel is',damping_pair,':',damping_label)
         
     prmax = numpy.zeros(np, dtype=REAL)
+    optrmax = numpy.zeros(np, dtype=REAL)
     QI = numpy.zeros(np, dtype=REAL)
     rmass = numpy.zeros(np, dtype=REAL)
     za = numpy.zeros(np, dtype=REAL)
@@ -391,20 +392,32 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
             print('g_poles \n',g_poles[jset,:,:])
         jset += 1   
 
+    LO_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
+    dLdEO_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
     L_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
     dLdE_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
-    Pole_Shifts(L_poles,dLdE_poles, E_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
+        
+    # Coulomb functions at prmax[:] for optical-model scattering
+    optrmax[:] = Rmax
+    Pole_Shifts(LO_poles,dLdEO_poles, E_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,optrmax, etacns,za,zb,L_val) 
+    
+    # Coulomb functions at prmax[:] for R-matrix
+    Pole_Shifts(L_poles, dLdE_poles,  E_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax,   etacns,za,zb,L_val) 
+
+
     print()
         
-    seed = 1
+    seed = abs(PorterThomas)
+    numpy.random.seed(seed)
     if Dspacing is not None:
     # CALCULATE OPTICAL-MODEL SCATTERING TO GET PARTIAL WIDTHS
-        numpy.random.seed(seed)
 
         omfile = open(base + '-omp.txt','w')
         sc_info = []
-        ncm = int( prmax[ipair] / hcm + 0.5)
-        hcm = prmax[ipair]/ncm
+#         ncm = int( prmax[ipair] / hcm + 0.5)
+        ncm = int( Rmax / hcm + 0.5)
+#         hcm = prmax[ipair]/ncm
+        hcm = Rmax/ncm
         isc = 0
         for jset,Jpi in enumerate(RMatrix.spinGroups):
             parity = '+' if pi_set[jset] > 0 else '-'
@@ -424,27 +437,29 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
                     if E <= 1e-3: continue
                 
                     sqE = math.sqrt(E)
-                    a = prmax[pair]
+#                     a = prmax[pair]
+                    a = Rmax
                     h = a / ncm
                     rho = a * math.sqrt(fmscal*rmass[pair]) * sqE
                     eta = etacns * za[pair]*zb[pair] * math.sqrt(rmass[pair]) / sqE 
                     EPS=1e-10; LIMIT = 2000000; ACC8 = 1e-12
                     F = cf1(rho,eta,L,EPS,LIMIT) * rho
-                    Shift = L_poles[jset,n,c,0]
-                    P     = L_poles[jset,n,c,1]
+                    Shift = LO_poles[jset,n,c,0]
+                    P     = LO_poles[jset,n,c,1]
                     phi = - math.atan2(P, F - Shift)
-                    sc_info.append([jset,c,n,h,L,S,pair,E,a,rmass[pair],pname[pair],za[pair],zb[pair],AT[pair],L_poles[jset,n,c,:],phi, OpticalPot[pair]])
+                    sc_info.append([jset,c,n,h,L,S,pair,E,a,rmass[pair],pname[pair],za[pair],zb[pair],AT[pair],LO_poles[jset,n,c,:],phi, OpticalPot[pair]])
 
                     print( jset,c,ie,  'j,c,e Scatter',pname[pair],'on',tname[pair],'at E=',E,'LS=',L,S,'with',OpticalPot[pair], file=omfile)
                     isc += 1
             print('J,pi =%5.1f %s, channels %3i, widths %5i -> %5i (incl)' % (J_set[jset],parity,cols,isc_i,isc-1))
     
         Smat = get_optical_S(sc_info,ncm, omfile)
+        
         SmatMSQ = (Smat * numpy.conjugate(Smat)).real
         TC = 1.0 - SmatMSQ
 
         Dcm = Dspacing*lab2cm
-        print('Model',Model)
+        print('Model',Model,'with Porter-Thomas=',PorterThomas)
         if   Model[0]=='A':
             AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
         elif Model[0] in ['B','X','Y']:
@@ -453,6 +468,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
             print('Model',Model,'unrecognized')
             sys.exit()
         mparts = Model.split(',')
+
         scale = 1.0
         Eslope = 0.0
         if len(mparts)>1:
@@ -470,13 +486,31 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
             
             P =  L_poles[jset,n,c,1]
             gav = abs(AvFormalWidths[isc]/(2*P)) ** 0.5
-            g_poles[jset,n,c] = numpy.random.normal(0,gav) if PorterThomas else gav
+            pt_rwa = numpy.random.normal(0,gav)
+            if PorterThomas==0:  
+                g_poles[jset,n,c] = gav
+            elif PorterThomas>0:
+                g_poles[jset,n,c] = gav * (1. if pt_rwa > 0 else -1.)
+            else: # negative
+                g_poles[jset,n,c] = pt_rwa
+                
             print(isc,jset,c,n,E,'fw=',AvFormalWidths[isc],'P=',P,'rwa=', g_poles[jset,n,c], file=omfile)
             
             if IFG==0:  # get endf formal width
                 g_poles[jset,n,c] = 2. * g_poles[jset,n,c]**2 * P * (-1 if g_poles[jset,n,c] < 0. else +1.)
 
-  
+        Weighted_dSdE = numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2 )  # cm
+
+ # take optical widths as observed, so make formal to give those observed values.
+        for jset in range(n_jsets): # take optical widths as observed, so make formal to give those observed values
+            parity = '+' if pi_set[jset] > 0 else '-'
+            for p in range(npl[jset]):
+                if Weighted_dSdE[jset,p]>1.:
+                    print('Set %5.1f%s' % (J_set[jset],parity),'pole at %8.3f has width too large by %7.3f' % (E_poles[jset,p], Weighted_dSdE[jset,p]) )
+                    Weighted_dSdE[jset,p] = 0.9
+                g_poles[jset,p,:] /= (1. - Weighted_dSdE[jset,p]) **0.5 
+    
+        print('E_poles:',E_poles.shape)
     # Copy parameters back into GNDS 
         jset = 0
         for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
@@ -491,6 +525,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
                 c_start = 2
             for pole in range(rows):
     #               print('Update',pole,'pole',R.data[pole][0],'to',E_poles[jset,pole])
+                print('jset,pole:',jset,pole)
                 R.data[pole][0] = E_poles[jset,pole]
                 if ReichMoore:
                     if IFG:
