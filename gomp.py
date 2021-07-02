@@ -396,10 +396,10 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
     Pole_Shifts(L_poles,dLdE_poles, E_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
     print()
         
-    seed = PorterThomas
-    numpy.random.seed(seed)
+    seed = 1
     if Dspacing is not None:
     # CALCULATE OPTICAL-MODEL SCATTERING TO GET PARTIAL WIDTHS
+        numpy.random.seed(seed)
 
         omfile = open(base + '-omp.txt','w')
         sc_info = []
@@ -444,7 +444,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         TC = 1.0 - SmatMSQ
 
         Dcm = Dspacing*lab2cm
-        print('Model',Model,'with Porter-Thomas=',PorterThomas)
+        print('Model',Model)
         if   Model[0]=='A':
             AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
         elif Model[0] in ['B','X','Y']:
@@ -470,17 +470,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
             
             P =  L_poles[jset,n,c,1]
             gav = abs(AvFormalWidths[isc]/(2*P)) ** 0.5
-            if PorterThomas==0:
-                g_poles[jset,n,c] = gav
-            elif PorterThomas==1:
-                g_poles[jset,n,c] = gav * (-1)**n
-            elif PorterThomas==2:
-                g_poles[jset,n,c] = gav * (-1)**(n+c)
-            elif PorterThomas==3:
-                g_poles[jset,n,c] = gav * (1. if numpy.random.normal(0,gav) > 0 else -1.)
-            else:
-                g_poles[jset,n,c] = numpy.random.normal(0,gav)
-                
+            g_poles[jset,n,c] = numpy.random.normal(0,gav) if PorterThomas else gav
             print(isc,jset,c,n,E,'fw=',AvFormalWidths[isc],'P=',P,'rwa=', g_poles[jset,n,c], file=omfile)
             
             if IFG==0:  # get endf formal width
