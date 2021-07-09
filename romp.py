@@ -34,6 +34,7 @@ if __name__=='__main__':
     parser.add_argument("-O","--OmpFile", type=str, help='Optical model parameters to use' )
     parser.add_argument("-M", "--Model", type=str, default='B', help="Model to link |S|^2 and widths. A: log; B: lin; X")
     parser.add_argument("-D", "--Dspacing", type=float,  help="Energy spacing of optical poles")
+    parser.add_argument("-L", "--LevelDensity", type=str,  help="Level-density parameter file for compound nucleus")
     parser.add_argument("-P", "--PorterThomas", type=int, default=0, help="rwa: 0: positive, <0: Porter-Thomas, >0: random sign")
     parser.add_argument("-R", "--Rmax", type=float, default = 20.0,  help="Radius limit for optical potentials.")
     
@@ -75,8 +76,23 @@ if __name__=='__main__':
     base = args.inFile
     if args.single:           base += 's'
     
-    if args.Dspacing is not None:
-        print(' Make optical poles spaced by',args.Dspacing,'in range [',emin,',',emax,'] in lab MeV for projectile',p)
+    NewLevels = args.Dspacing is not None or args.LevelDensity is not None
+    if  NewLevels:
+        if args.Dspacing is not None:
+            print(' Make optical poles spaced by',args.Dspacing,'in range [',emin,',',emax,'] in lab MeV for projectile',p)
+        if args.LevelDensity is not None:
+            print(' Make optical poles spaced by parameters ',args.LevelDensity,'in range [',emin,',',emax,'] in lab MeV for projectile',p)
+            ld = open(args.LevelDensity,'r')
+            LDparameters = ld.readlines()
+            LevelParms = {}
+            LevelParms['low_e_mod']  = 1.0 # 9
+            for line in LDparameters:
+                parts = line.strip().split('=')
+                if len(parts) == 2 and 'UNAVAILABLE' not in parts[1] and 'Rho' not in parts[0]:
+                      parts[1] = parts[1].strip().replace('for positive and negative parities','')
+                      LevelParms[parts[0].strip()] = float(parts[1]) if 'G & C' not in parts[1] else 'G & C'
+            print('Level Density Parameters:\n',LevelParms)
+
         print(' using optical potentials from',args.OmpFile,' and model ',args.Model,'to map |S|^2 to widths.\n\n')
 #       rrr.domainMax = args.EMAX
     
@@ -105,8 +121,9 @@ if __name__=='__main__':
     
         if args.offset  > 0.0: base += '-o%s' % args.offset
         if args.Dspacing       is not None: base += '-D%s' % args.Dspacing
-        if args.PorterThomas > 0: base += 'P%s' % args.PorterThomas
-        if args.PorterThomas < 0: base += 'Pm%s' % abs(args.PorterThomas)
+        if args.LevelDensity   is not None: base += '-L%s' % args.LevelDensity.replace('.dat','')
+        if args.PorterThomas > 0: base += ':P%s' % args.PorterThomas
+        if args.PorterThomas < 0: base += ':Pm%s' % abs(args.PorterThomas)
         if args.YRAST    > 0.0: base += '-Y%s' % args.YRAST
 
     else:
@@ -117,11 +134,11 @@ if __name__=='__main__':
 
 #     print("        finish setup: ",tim.toString( ))
  
-    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,args.PorterThomas,optical_potentials,args.Rmax,
+    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,LevelParms,args.PorterThomas,optical_potentials,args.Rmax,
          args.Model,args.YRAST,args.Hcm,args.offset,args.Convolute,args.Stride,
          args.verbose,args.debug,args.inFile,ComputerPrecisions,tim)
     
-    if args.Dspacing is not None:
+    if NewLevels:
         newFitFile = base  + '-opt.xml'
         open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnds.toXMLList( ) )
         print('Written new gnds file:',newFitFile)

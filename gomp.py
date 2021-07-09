@@ -6,6 +6,7 @@ import os,math,numpy,cmath,pwd,sys,time,json,re
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from opticals import get_optical_S
+from levelDensities import leveldensity
 
 from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
@@ -17,9 +18,9 @@ from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
 # from scipy import interpolate
 
-REAL = numpy.double
-CMPLX = numpy.complex128
-INT = numpy.int32
+# REAL = numpy.double
+# CMPLX = numpy.complex128
+# INT = numpy.int32
 
 # CONSTANTS: 
 hbc =   197.3269788e0             # hcross * c (MeV.fm)
@@ -113,10 +114,11 @@ def generateEnergyGrid(energies,widths, lowBound, highBound, stride=1):
     return numpy.asarray(grid, dtype=REAL)
                        
 
-def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,Rmax,Model,YRAST, hcm,offset,Convolute,stride,
+def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_potentials,Rmax,Model,YRAST, hcm,offset,Convolute,stride,
        verbose,debug,inFile,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
+    NewLevels = Dspacing is not None or len(LevelParms) > 0
 
     PoPs = gnds.PoPs
     projectile = PoPs[gnds.projectile]
@@ -193,7 +195,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         projectile = PoPs[p];
         target     = PoPs[t];
         A_B = '%s + %s' % (p,t)
-        if Dspacing is not None:
+        if NewLevels:
             if A_B not in optical_potentials.keys():
                 print('\nChannel',A_B,'optical potential not specified. Stop')
                 sys.exit()
@@ -203,7 +205,8 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         pMass = projectile.getMass('amu');   
         AT[pair] = target.A
         tMass =     target.getMass('amu');
-        rmass[pair] = pMass * tMass / (pMass + tMass)
+        cMass = pMass + tMass
+        rmass[pair] = pMass * tMass / cMass
         if hasattr(projectile, 'nucleus'): projectile = projectile.nucleus
         if hasattr(target, 'nucleus'):     target = target.nucleus
 
@@ -221,6 +224,14 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
 
         if partition.label == elasticChannel:
             ipair = pair  # incoming
+            cZ = za[pair]+zb[pair]
+            cA = int(cMass + 0.5)
+            cElement = 'N'
+            cNuclide = '%s%i' % (cElement,cA)
+            cMassGS = PoPs[cNuclide].getMass('amu')
+            cCaptureQ = (cMass - cMassGS)*amu
+            
+            
         cm2lab[pair] = (pMass + tMass) / tMass
             
         jp[pair],pt[pair],ep[pair] = projectile.spin[0].float('hbar'), projectile.parity[0].value, 0.0
@@ -234,6 +245,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
     
     if verbose: print("\nElastic channel is",elasticChannel,'with IFG=',IFG)
 #     if debug: print("Charged-particle elastic:",chargedElastic,",  identical:",identicalParticles,' rStyle:',rStyle)
+    print('Capture Q=%8.4f' % cCaptureQ)
     npairs  = pair
     if not IFG:
         print("Not yet coded for IFG =",IFG)
@@ -251,11 +263,24 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         n_chans = max(n_chans,n)
         for ch in Jpi.channels:
             Lmax = max(Lmax,ch.L)
-    print('Initially %i Jpi sets with %i poles max, and %i channels max. Lmax=%i' % (n_jsets,n_poles,n_chans,Lmax))
+    print('Initially %i Jpi sets with %i poles max, and %i channels max. Lmax=%i\n' % (n_jsets,n_poles,n_chans,Lmax))
     
-    N_opts = max(int( (emax - emin)/Dspacing + 1.5), 0) if Dspacing is not None else 0
-    D = (emax-emin)/(N_opts-1) if N_opts > 1 else 0.0
-    print("Increase max poles from",n_poles,"towards",n_poles + N_opts)
+    N_opts = 0
+    if Dspacing is not None:
+        N_opts = max(int( (emax - emin)/Dspacing + 1.5), 0)
+        D = (emax-emin)/(N_opts-1) if N_opts > 1 else 0.0
+        
+    Densities = {}
+    discreteLevels = {}
+    if len(LevelParms)>0:
+        nopts = 0
+        for Jpi in RMatrix.spinGroups:
+            jpi = (Jpi.spin,Jpi.parity)
+            discreteLevels[jpi],Densities[jpi] = leveldensity(jpi,LevelParms,emin+cCaptureQ,emax+cCaptureQ,cMass)
+            nopts = len(discreteLevels[jpi])
+            N_opts = max(N_opts,nopts)
+            
+    print("Increase max poles from",n_poles,"towards (max)",n_poles + N_opts)
     n_poles += N_opts
 
     nch = numpy.zeros(n_jsets, dtype=INT)
@@ -291,16 +316,19 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         J_set[jset] = Jpi.spin
         pi_set[jset] = Jpi.parity
         parity = '+' if pi_set[jset] > 0 else '-'
+        jpi = (Jpi.spin,Jpi.parity)
         R = Jpi.resonanceParameters.table
         cols = R.nColumns - 1  # ignore energy col
         if ReichMoore: cols -= 1 # ignore damping width just now
         rows = R.nRows
         nch[jset] = cols
         npli[jset] = rows
-        npl[jset] = rows + N_opts
+        nopts = len(discreteLevels[jpi])
+        npl[jset] = rows + nopts
         if True: print('J,pi =%5.1f %s, channels %3i, poles %3i -> %i' % (J_set[jset],parity,cols,npli[jset],npl[jset]) )
         tot_channels += cols
-        tot_poles    += rows
+        tot_poles    += npl[jset]
+        
         seg_col[jset] = cols    
 
         c = 0
@@ -347,6 +375,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         R = Jpi.resonanceParameters.table
 #         print('R:\n',R.data)
         J = J_set[jset]
+        jpi = (Jpi.spin,Jpi.parity)
         cols = R.nColumns - 1  # ignore energy col
         rows = R.nRows
         E_poles[jset,:rows] = numpy.asarray( R.getColumn('energy','MeV') , dtype=REAL)   # lab MeV
@@ -358,8 +387,17 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
             if IFG==1:     D_poles[jset,:] = 2*D_poles[jset,:]**2
         if jmin <= J <= jmax: 
             e_yrast = YRAST * J*(J+1.)
-            for ie in range(N_opts):
-                e = max(emin,e_yrast) + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) )
+            
+            
+            nopts = len(discreteLevels[jpi])
+            if Dspacing is not None: nopts = N_opts
+            for ie in range(nopts):
+                                            
+                if Dspacing is not None: 
+                    e = max(emin,e_yrast) + D * (ie + offset * (Jpi.spin + int(Jpi.parity)/3.0) ) # lab energy in ipair
+                elif  len(LevelParms)>0 :
+                    e = (discreteLevels[jpi][ie] - cCaptureQ) / lab2cm
+                        
                 if e > emax: continue
                 n = npli[jset]+ie
                 E_poles[jset,n] = e
@@ -409,7 +447,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         
     seed = abs(PorterThomas)
     numpy.random.seed(seed)
-    if Dspacing is not None:
+    if NewLevels:
     # CALCULATE OPTICAL-MODEL SCATTERING TO GET PARTIAL WIDTHS
 
         omfile = open(base + '-omp.txt','w')
@@ -421,13 +459,17 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         isc = 0
         for jset,Jpi in enumerate(RMatrix.spinGroups):
             parity = '+' if pi_set[jset] > 0 else '-'
+            jpi = (Jpi.spin,Jpi.parity)
             R = Jpi.resonanceParameters.table
             cols = R.nColumns - 1  # ignore energy col
             isc_i = isc
             for c,ch in enumerate(Jpi.channels):
                 L =  L_val[jset,c]
                 S =  S_val[jset,c]
-                for ie in range(N_opts):
+                
+                nopts = len(discreteLevels[jpi])
+                if Dspacing is not None: nopts = N_opts
+                for ie in range(nopts):
                     n = npli[jset]+ie
                     e = E_poles[jset,n]
 
@@ -435,7 +477,14 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
                     if pair < 0 or e > emax: continue
                     E = e*lab2cm + QI[pair]
                     if E <= 1e-3: continue
-                
+                    
+                    Pspace = None
+                    if  len(LevelParms)>0 :
+                        den  = Densities[jpi].evaluate(E+cCaptureQ)
+                        Pspace = 1.0 / max(0.1, den )
+                    if  Dspacing is not None:
+                        Pspace = D
+                                        
                     sqE = math.sqrt(E)
 #                     a = prmax[pair]
                     a = Rmax
@@ -447,28 +496,30 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
                     Shift = LO_poles[jset,n,c,0]
                     P     = LO_poles[jset,n,c,1]
                     phi = - math.atan2(P, F - Shift)
-                    sc_info.append([jset,c,n,h,L,S,pair,E,a,rmass[pair],pname[pair],za[pair],zb[pair],AT[pair],LO_poles[jset,n,c,:],phi, OpticalPot[pair]])
+                    sc_info.append([jset,c,n,h,L,S,pair,E,Pspace,a,rmass[pair],pname[pair],za[pair],zb[pair],AT[pair],LO_poles[jset,n,c,:],phi, OpticalPot[pair]])
 
                     print( jset,c,ie,  'j,c,e Scatter',pname[pair],'on',tname[pair],'at E=',E,'LS=',L,S,'with',OpticalPot[pair], file=omfile)
+                    
                     isc += 1
             print('J,pi =%5.1f %s, channels %3i, widths %5i -> %5i (incl)' % (J_set[jset],parity,cols,isc_i,isc-1))
     
-        Smat = get_optical_S(sc_info,ncm, omfile)
+        Smat,Pspacing = get_optical_S(sc_info,ncm, omfile)
         
         SmatMSQ = (Smat * numpy.conjugate(Smat)).real
         TC = 1.0 - SmatMSQ
 
-        Dcm = Dspacing*lab2cm
         print('Model',Model,'with Porter-Thomas=',PorterThomas)
+        
         if   Model[0]=='A':
-            AvFormalWidths = Dspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
+            AvFormalWidths = Pspacing * (-numpy.log(SmatMSQ)) / (2.*pi)
         elif Model[0] in ['B','X','Y']:
-            AvFormalWidths = Dspacing * TC / (2.*pi)
+            AvFormalWidths = Pspacing * TC / (2.*pi)
         else:
             print('Model',Model,'unrecognized')
             sys.exit()
         mparts = Model.split(',')
-
+        print('Model',Model,' Pspacing:',Pspacing,'\nAvFormalWidths',AvFormalWidths)
+        
         scale = 1.0
         Eslope = 0.0
         if len(mparts)>1:
@@ -499,16 +550,16 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
             if IFG==0:  # get endf formal width
                 g_poles[jset,n,c] = 2. * g_poles[jset,n,c]**2 * P * (-1 if g_poles[jset,n,c] < 0. else +1.)
 
-        Weighted_dSdE = numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2 )  # cm
-
- # take optical widths as observed, so make formal to give those observed values.
-        for jset in range(n_jsets): # take optical widths as observed, so make formal to give those observed values
-            parity = '+' if pi_set[jset] > 0 else '-'
-            for p in range(npl[jset]):
-                if Weighted_dSdE[jset,p]>1.:
-                    print('Set %5.1f%s' % (J_set[jset],parity),'pole at %8.3f has width too large by %7.3f' % (E_poles[jset,p], Weighted_dSdE[jset,p]) )
-                    Weighted_dSdE[jset,p] = 0.9
-                g_poles[jset,p,:] /= (1. - Weighted_dSdE[jset,p]) **0.5 
+#         Weighted_dSdE = numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2 )  # cm
+# 
+#  # take optical widths as observed, so make formal to give those observed values.
+#         for jset in range(n_jsets): # take optical widths as observed, so make formal to give those observed values
+#             parity = '+' if pi_set[jset] > 0 else '-'
+#             for p in range(npl[jset]):
+#                 if Weighted_dSdE[jset,p]>1.:
+#                     print('Set %5.1f%s' % (J_set[jset],parity),'pole at %8.3f has width too large by %7.3f' % (E_poles[jset,p], Weighted_dSdE[jset,p]) )
+#                     Weighted_dSdE[jset,p] = 0.9
+#                 g_poles[jset,p,:] /= (1. - Weighted_dSdE[jset,p]) **0.5 
     
         print('E_poles:',E_poles.shape)
     # Copy parameters back into GNDS 
@@ -516,6 +567,8 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
             parity = '+' if pi_set[jset] > 0 else '-'
             if True: print('\nJ,pi =',J_set[jset],parity, file=omfile)
+            jpi = (Jpi.spin,Jpi.parity)
+
             R = Jpi.resonanceParameters.table
             rows = R.nRows
             cols = R.nColumns - 1  # without energy col
@@ -536,7 +589,10 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
                     R.data[pole][c+c_start] = g_poles[jset,pole,c]
     #                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", "\n".join(R.toXMLList()))
 
-            for ie in range(N_opts):
+            nopts = len(discreteLevels[jpi])
+            if Dspacing is not None: nopts = N_opts
+            for ie in range(nopts):
+                
                 n = npli[jset]+ie
                 if E_poles[jset,n] > emax: break
                 row = [ E_poles[jset,n] ]
@@ -575,8 +631,9 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
 
     F_widths = 2.* numpy.sum( g_poles**2 * L_poles[:,:,:,1], 2 )
     O_widths = F_widths / (1. + numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2 )) # cm
-    TW = base + '.denoms'
-    tw = open(TW,'w')
+#     TW = base + '.denoms'
+#     tw = open(TW,'w')
+#     Dcm = Pspacing*lab2cm
     
     energies = []
     Owidths = []
@@ -588,14 +645,14 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
 #             if abs(F_widths[jset,p]) < 1e-3: print(68*' ','widths: formal %10.3e, obs %10.3e' % (F_widths[jset,p],O_widths[jset,p]) )
             energies.append( O_poles [jset,p] )
             Owidths.append ( O_widths[jset,p] )
-            if E_poles[jset,p]>0: 
-               dd = 1.0 if Dspacing is None else Dcm
-               print(E_poles[jset,p]/cm2lab[ipair],O_widths[jset,p]*2*pi/dd, file=tw)
-        print('&',file=tw)
+#             if E_poles[jset,p]>0: 
+#                dd = 1.0 if Dspacing is None else Dcm
+#                print(E_poles[jset,p]/cm2lab[ipair],O_widths[jset,p]*2*pi/dd, file=tw)
+#         print('&',file=tw)
 
     print()
     noRecon = Convolute is None
-    if noRecon and scale != 1.0 : return()
+    if noRecon : return()
     
 # calculate excitation cross-sections in MLBW formalism
     
@@ -659,7 +716,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
         pn,il = quickName(pname[pin],tname[pin]) 
         if il>0: continue
         
-        if Dspacing is not None:
+        if NewLevels :
             rname = base + '-SLBW-%sreac_%s' % (G,pn)
             rout = open(rname,'w')
             print('Reaction cross-sections for',pn,' to file   ',rname)
@@ -669,23 +726,36 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,PorterThomas,optical_potentials,
             for jset in range(n_jsets):
                 J = J_set[jset]
                 parity = pi_set[jset]
+                jpi = (J,parity)
                 e_yrast = YRAST * J*(J+1.)
                 XSr = [[0.,0.]]
-                for ie in range(N_opts):
+                nopts = len(discreteLevels[jpi])
+                if Dspacing is not None: nopts = N_opts
+                for ie in range(nopts):
 
                     p = npli[jset]+ie
-                    e = max(emin,e_yrast) + D * (ie + offset * (J + int(parity)/3.0) ) # lab energy in ipair
+                     
+                    if Dspacing is not None: 
+                        e = max(emin,e_yrast) + D * (ie + offset * (J + int(parity)/3.0) ) # lab energy in ipair
+                    else:
+                        e = (discreteLevels[jpi][ie] - cCaptureQ) / lab2cm
                     Ecm = e*lab2cm
 
                     E = Ecm + QI[pin] - QI[ipair]   # cm energy in pin
                     rk_isq = 1. / (fmscal * rmass[pin] * E)
                     Elab = E * cm2lab[pin]   # Elab for incoming channel (pin, not ipair)
+                    
+                    if  len(LevelParms)>0 :
+                        den = Densities[jpi].evaluate(E+cCaptureQ)
+                        Pspacing = 1.0 / max(0.1, den )
+                    if  Dspacing is not None:
+                        Pspacing = D
                 
                     Gfac = pi * (2*J_set[jset]+1) * rk_isq / denom
                     XS = 0.0
                     for cin in range(nch[jset]):
                         if seg_val[jset,cin]!=pin: continue      
-                        XS += Gfac * 2*pi * O_width[jset,p,cin] / Dspacing * 10.
+                        XS += Gfac * 2*pi * O_width[jset,p,cin] / Pspacing * 10.
                     XSr.append([Elab,XS])
                 XSr.append([Elab+.1,0.])  # zero to terminate domain
                 XSEC = XYs.XYs1d(data=XSr, dataForm="XYs"  )

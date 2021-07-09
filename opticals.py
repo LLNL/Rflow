@@ -329,11 +329,12 @@ def get_optical_S(sc_info,n, ompout):
     hcm  = numpy.zeros([nsc,1], dtype=REAL)
     phis  = numpy.zeros([nsc], dtype=REAL)
     ar  = numpy.zeros([nsc], dtype=REAL)
+    Pspacing  = numpy.zeros([nsc], dtype=REAL)
     
     isc = 0
     optopt = {}
     optparams = []
-    for jset,c,p,h,L,Spin,pair,E,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
+    for jset,c,p,h,L,Spin,pair,E,Pspace,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
         coef =  -1.0 / (fmscal * rmass)
         k[isc] = math.sqrt( fmscal * rmass * E)
         Lc[isc] = complex(L_coul[0], L_coul[1])
@@ -341,6 +342,7 @@ def get_optical_S(sc_info,n, ompout):
         ar[isc] = a
         phis[isc] = phi 
         Elab = E * AT / (AT - rmass)
+        Pspacing[isc] = Pspace
         
         if pname=='n':
             if OpticalPot[0] <= 1: 
@@ -412,12 +414,12 @@ def get_optical_S(sc_info,n, ompout):
 #    return(Smat)
     
     isc = 0
-    for jset,c,p,h,L,Spin,pair,E,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
+    for jset,c,p,h,L,Spin,pair,E,Pspace,a,rmass,pname,ZP,ZT,AT,L_coul,phi, OpticalPot in sc_info:
         print('    %5i is p%2i, LS=%i,%s, Ecm %8.3f, delta %9.2f, TC = %9.5f' % (isc,pair,L,Spin,E,delta[isc], TC[isc] ), ) #,phis[isc]*180/pi),-phis[isc]/(a* k[isc]) ) #, Smat[isc], TC[isc] , file=ompout)
 #       print(E,TC[isc],    file = open('trans%i' % L,'a') )
 #       print(E,optparams[isc],    file = open('opticalp%i' % L,'a') )
         isc += 1
-    return(Smat)
+    return(Smat, Pspacing)
     
 if __name__=="__main__":
     import sys
