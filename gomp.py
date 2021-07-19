@@ -18,9 +18,9 @@ from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
 # from scipy import interpolate
 
-# REAL = numpy.double
-# CMPLX = numpy.complex128
-# INT = numpy.int32
+REAL = numpy.double
+CMPLX = numpy.complex128
+INT = numpy.int32
 
 # CONSTANTS: 
 hbc =   197.3269788e0             # hcross * c (MeV.fm)
@@ -114,7 +114,8 @@ def generateEnergyGrid(energies,widths, lowBound, highBound, stride=1):
     return numpy.asarray(grid, dtype=REAL)
                        
 
-def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_potentials,Rmax,Model,YRAST, hcm,offset,Convolute,stride,
+def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_potentials,
+       FormalWidths,Rmax,Model,YRAST, hcm,offset,Convolute,stride,
        verbose,debug,inFile,ComputerPrecisions,tim):
         
     REAL, CMPLX, INT, realSize = ComputerPrecisions
@@ -550,16 +551,22 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
             if IFG==0:  # get endf formal width
                 g_poles[jset,n,c] = 2. * g_poles[jset,n,c]**2 * P * (-1 if g_poles[jset,n,c] < 0. else +1.)
 
-#         Weighted_dSdE = numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2 )  # cm
-# 
-#  # take optical widths as observed, so make formal to give those observed values.
-#         for jset in range(n_jsets): # take optical widths as observed, so make formal to give those observed values
-#             parity = '+' if pi_set[jset] > 0 else '-'
-#             for p in range(npl[jset]):
-#                 if Weighted_dSdE[jset,p]>1.:
-#                     print('Set %5.1f%s' % (J_set[jset],parity),'pole at %8.3f has width too large by %7.3f' % (E_poles[jset,p], Weighted_dSdE[jset,p]) )
-#                     Weighted_dSdE[jset,p] = 0.9
-#                 g_poles[jset,p,:] /= (1. - Weighted_dSdE[jset,p]) **0.5 
+        gi_poles = g_poles * 1.0
+        if not FormalWidths:   # take optical widths as observed, so make formal to give those observed values.
+            print('Convert widths from Observed to Formal')
+            Weighted_dSdE = numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0] , 2 )  # cm   , summing over channels
+     
+            for jset in range(n_jsets): # take optical widths as observed, so make formal to give those observed values
+                parity = '+' if pi_set[jset] > 0 else '-'
+                for p in range(npl[jset]):
+                    if Weighted_dSdE[jset,p]>=1.:
+                        FW = numpy.sum( g_poles[jset,p,:]**2 * L_poles[jset,p,:,1] , 0 )
+                        MFW = 2.0 * L_poles[jset,p,:,1] / dLdE_poles[jset,p,:,0]
+                        print('Set %5.1f%s' % (J_set[jset],parity),'pole at %8.3f has width %7.3f too large by %7.3f; maxes:' % (E_poles[jset,p], FW, Weighted_dSdE[jset,p]),
+                               ' '.join( [('%i' %  int(MFW[i])) if not math.isinf(MFW[i]) else 'inf' for i in range(nch[jset]) ] ) )
+                        Weighted_dSdE[jset,p] = 0.9
+                    g_poles[jset,p,:] /= (1. - Weighted_dSdE[jset,p]) **0.5 
+ 
     
         print('E_poles:',E_poles.shape)
     # Copy parameters back into GNDS 
@@ -619,7 +626,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
 #         R = Jpi.resonanceParameters.table
 #         print('J,pi =',Jpi.spin,Jpi.parity,' matrix is',R.nRows,'*',R.nColumns, '(len=%i)' % len(R.data))
 
-    print("Formal and 'Observed' properties by first-order (Thomas) corrections:")
+    print("\nFormal and 'Observed' properties by first-order (Thomas) corrections:")
 #     L_poles    = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
 #     dLdE_poles = numpy.zeros([n_jsets,n_poles,n_chans,2], dtype=REAL)
 #     Pole_Shifts(L_poles,dLdE_poles, E_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
@@ -629,6 +636,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
         O_poles  = E_poles - numpy.sum( g_poles**2 * L_poles[:,:,:,0], 2 ) * cm2lab[ipair]  # both terms lab
     Pole_Shifts(L_poles,dLdE_poles, O_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
 
+    I_widths = 2.* numpy.sum( gi_poles**2 * L_poles[:,:,:,1], 2 )
     F_widths = 2.* numpy.sum( g_poles**2 * L_poles[:,:,:,1], 2 )
     O_widths = F_widths / (1. + numpy.sum( g_poles**2 * dLdE_poles[:,:,:,0], 2 )) # cm
 #     TW = base + '.denoms'
@@ -640,8 +648,9 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
     for jset in range(n_jsets):
         print("  For J/pi = %.1f%s: %i"  % (J_set[jset],'+' if pi_set[jset] > 0 else '-',npl[jset]) )
         for p in range(npl[jset]):
-            print('   Pole %3i at Elab = %10.6f (cm %10.6f, obs %10.6f) MeV widths: formal %10.5f, obs %10.5f, damping %10.5f' \
-                  % (p,E_poles[jset,p],E_poles[jset,p]/cm2lab[ipair],O_poles[jset,p]/cm2lab[ipair],F_widths[jset,p],O_widths[jset,p],D_poles[jset,p]) )
+            ratio = O_widths[jset,p] / (I_widths[jset,p] + 1e-5)
+            print('   Pole %3i at Elab = %10.6f (cm %10.6f, obs %10.6f) MeV widths: initial %10.5f, formal %10.5f, obs %10.5f (%.2f), damping %10.5f' \
+                  % (p,E_poles[jset,p],E_poles[jset,p]/cm2lab[ipair],O_poles[jset,p]/cm2lab[ipair],I_widths[jset,p],F_widths[jset,p],O_widths[jset,p],ratio, D_poles[jset,p]) )
 #             if abs(F_widths[jset,p]) < 1e-3: print(68*' ','widths: formal %10.3e, obs %10.3e' % (F_widths[jset,p],O_widths[jset,p]) )
             energies.append( O_poles [jset,p] )
             Owidths.append ( O_widths[jset,p] )
@@ -652,7 +661,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
 
     print()
     noRecon = Convolute is None
-    if noRecon : return()
+#    if noRecon : return()
     
 # calculate excitation cross-sections in MLBW formalism
     
@@ -719,14 +728,18 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
         if NewLevels :
             rname = base + '-SLBW-%sreac_%s' % (G,pn)
             rout = open(rname,'w')
-            print('Reaction cross-sections for',pn,' to file   ',rname)
+            print('\nReaction cross-sections for',pn,' to file   ',rname)
 
             denom = (2.*jp[pin]+1.) * (2.*jt[pin]+1)
             XSreac = []
-            for jset in range(n_jsets):
+            jset = 0
+            for Jpi in RMatrix.spinGroups:   # jset values need to be in the same order as before
+                jpi = (Jpi.spin,Jpi.parity)
+            
+#             for jset in range(n_jsets):
                 J = J_set[jset]
                 parity = pi_set[jset]
-                jpi = (J,parity)
+#                 jpi = (J,parity)
                 e_yrast = YRAST * J*(J+1.)
                 XSr = [[0.,0.]]
                 nopts = len(discreteLevels[jpi])
@@ -750,7 +763,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
                         Pspacing = 1.0 / max(0.1, den )
                     if  Dspacing is not None:
                         Pspacing = D
-                
+#                     print("Evaluate SLBW at Elab=",E,Elab,'from Jpi =',J,parity)
                     Gfac = pi * (2*J_set[jset]+1) * rk_isq / denom
                     XS = 0.0
                     for cin in range(nch[jset]):
@@ -760,6 +773,8 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
                 XSr.append([Elab+.1,0.])  # zero to terminate domain
                 XSEC = XYs.XYs1d(data=XSr, dataForm="XYs"  )
                 XSreac = XSEC if jset==0 else XSreac + XSEC
+                jset += 1
+#                 print('# points in SLBW:',len(XSEC),len(XSreac))
             for ie in range(len(XSreac)):
                 print(XSreac[ie][0],XSreac[ie][1], file=rout)   
             rout.close()

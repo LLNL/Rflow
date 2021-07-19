@@ -94,7 +94,7 @@ def leveldensity(jpi,LevelParms,emin,emax,A):
     for i in range(int(Nlevels)):
         ei = inverse_cdf.evaluate(float(i)+0.5)
         levelCandidates.append(ei)
-    print('Ep =',', '.join(['%.1f' %  ei for ei in levelCandidates]))
+    print('Ep =',', '.join(['%.2f' %  ei for ei in levelCandidates]))
     return(levelCandidates, densityFunction)
     
 def spin_fac(xJ,sg2):

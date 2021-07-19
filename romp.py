@@ -31,12 +31,13 @@ if __name__=='__main__':
     # Process command line options
     parser = argparse.ArgumentParser(description='Compare R-matrix Cross sections with Data')
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
-    parser.add_argument("-O","--OmpFile", type=str, help='Optical model parameters to use' )
+    parser.add_argument("-O", "--OmpFile", type=str, help='Optical model parameters to use' )
     parser.add_argument("-M", "--Model", type=str, default='B', help="Model to link |S|^2 and widths. A: log; B: lin; X")
     parser.add_argument("-D", "--Dspacing", type=float,  help="Energy spacing of optical poles")
     parser.add_argument("-L", "--LevelDensity", type=str,  help="Level-density parameter file for compound nucleus")
     parser.add_argument("-P", "--PorterThomas", type=int, default=0, help="rwa: 0: positive, <0: Porter-Thomas, >0: random sign")
     parser.add_argument("-R", "--Rmax", type=float, default = 20.0,  help="Radius limit for optical potentials.")
+    parser.add_argument("-F", "--FormalWidths", action="store_true", help="Optical model widths taken as Formal, not Observed. Default Observed (previously Formal)")
     
     parser.add_argument("-e", "--emin", type=float, default = 0.5,  help="Min cm energy for optical poles.")
     parser.add_argument("-E", "--EMAX", type=float, default = 20, help="Max cm energy for optical poles")
@@ -113,6 +114,7 @@ if __name__=='__main__':
         base += '+%s' % args.OmpFile.replace('.omp','')
 
         if args.Model      is not None: base += '-%s' % args.Model
+        if not args.FormalWidths : base += 'O'
         if args.emin       is not None: base += '-e%s' % args.emin
         if args.EMAX       is not None: base += '-E%s' % args.EMAX
         if args.jmin    > 0.0: base += '-j%s' % args.jmin
@@ -134,8 +136,8 @@ if __name__=='__main__':
 
 #     print("        finish setup: ",tim.toString( ))
  
-    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,LevelParms,args.PorterThomas,optical_potentials,args.Rmax,
-         args.Model,args.YRAST,args.Hcm,args.offset,args.Convolute,args.Stride,
+    Gomp(gnds,base,emin,emax,args.jmin,args.JMAX,args.Dspacing,LevelParms,args.PorterThomas,optical_potentials,
+         args.FormalWidths,args.Rmax,args.Model,args.YRAST,args.Hcm,args.offset,args.Convolute,args.Stride,
          args.verbose,args.debug,args.inFile,ComputerPrecisions,tim)
     
     if NewLevels:
