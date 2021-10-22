@@ -804,8 +804,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     if n_angles > 0:
         cc = (n_jsets*n_chans**2)**2
         ccp = (n_jsets*maxpc**2)**2
-#         print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*8/1e9, cc*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,n_chans))
-        print('AAL, AA sizes/p= %5.3f, %5.3f GB' % (ccp*npairs**2*NL*8/1e9, ccp*n_angles*8/1e9 ),'from %s*(%s*%s^2)^2 dbles' % (n_angles,n_jsets,maxpc))
+#         print('AAL, AA sizes= %5.3f, %5.3f GB' % (cc*npairs**2*NL*realSize/1e9, cc*n_angles*realSize/1e9 ),'from %s*(%s*%s^2)^2 reals' % (n_angles,n_jsets,n_chans))
+        print('AAL, AA sizes/p= %5.3f, %5.3f GB' % (ccp*npairs**2*NL*realSize/1e9, ccp*n_angles*realSize/1e9 ),'from %s*(%s*%s^2)^2 reals' % (n_angles,n_jsets,maxpc))
         AAL = numpy.zeros([npairs,npairs, n_jsets,maxpc,maxpc, n_jsets,maxpc,maxpc ,NL], dtype=REAL)
 
         for rr_in in RMatrix.resonanceReactions:

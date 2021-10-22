@@ -18,6 +18,8 @@ etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 
 hbar = 6.582e-22 # MeV.s
 
+EPS = 1e-6 # upper bound on accuracy of Coulomb functions from CoulCF.py
+
 defaultPops = '../ripl2pops_to_Z8.xml'
 lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
@@ -33,7 +35,7 @@ NAMELIST
 """
  
 def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Projectiles,EminCN,EmaxCN,emin,emax,
-        Rmatrix_radius,jdef,pidef,widef,Term0,gammas,ReichMoore,outbase,MaxPars):
+        Rmatrix_radius,jdef,pidef,widef,Term0,gammas,ReichMoore,outbase,MaxPars,FormalWidths):
 
 #     pops = databaseModule.database.readFile(popsicles[0])
 #     for p in popsicles[1:]:
@@ -160,7 +162,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
             halflife = level.halflife[0].pqu('s').value
             width = hbar/halflife*math.log(2)
         except:
-            width = widef  # starting point for fitting
+            width = None 
         try:
             print('Include',level.id,'resonance at',Er,'MeV','halflife:',level.halflife[0].pqu('s').value if level.halflife is not None else None, 'Width:',width,'MeV')
         except:
@@ -174,6 +176,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
             
         Epole = Er - Qpel   # fresco convention for R-matrix poles
         print("\n&Variable kind=3 name='%s' term=%s jtot=%s par=%s energy=%s step=%s / obs width ~ %6s" % (name,term,jt,pt,Epole,step,width), file=frescoVars)
+        print('Epole:',Epole,'(cm). %.1f%s' % (jt,parity), ':',name)
         nvars += 1
         
         if ReichMoore:
@@ -196,8 +199,10 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
             tmass = masses[t];  At = int(tmass+0.5)
             prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.)) if Rmatrix_radius > 0 else abs(Rmatrix_radius)
             rmass = pmass*tmass/(pmass+tmass)
-            Q = qvalue[p]
-            print('Partition',ic,':',p,t,'so Q=',Q)
+            Qp = qvalue[p]
+            wignerLimitRWA = ( 3.0/prmax**2  / (fmscal * rmass) ) ** 0.5
+
+            print('\n##\nPartition',ic,':',p,t,'so Q=',Qp,'  Wigner rwa=',wignerLimitRWA)
             icnew += 1
              
             ia = 0
@@ -205,6 +210,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
             for excitationPair in excitationList:
                 ia += 1
                 jp,pp,ep,jt,pt,et = excitationPair
+                Q = Qp - et
                 smin = abs(jt-jp)
                 smax = jt+jp
                 s2min = int(2*smin+0.5)
@@ -218,17 +224,33 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
                     for lch in range(lmin,lmax+1):
                         if pi != pp*pt*(-1)**lch: continue
                         if Epole < 0 and lch > abs(pz) : continue                   # only allow s-wave neutrons, s,p-wave protons, etc in closed channels
-                        channels.append((icnew+1,ia,lch,sch,ic))
                         # print(' Partial wave channels IC,IA,L,S:',ic,ia,lch,sch)
                         w = 1./(2*lch+1)**2
+                        widthCH = widef
+                        print('--')
                         if Epole+Q > 0. and rmass>0:    # don't bother for sub-threshold states 
-                            dSoPc = dSoP(Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch)
-#                             print('dSoP(',Epole, Q,fmscal,rmass,prmax, etacns,pz,pt,lch, ') = ',dSoPc)
+                            dSoPc,P = dSoP(Epole, Q,fmscal,rmass,prmax, etacns,pz,tz,lch)
+#                             print('dSoP,P(',Epole, Q,fmscal,rmass,prmax, etacns,pz,tz,lch, ') = ',dSoPc,P)
 #                             print('w,width,dSoPc:',w,width,dSoPc)
+                            if abs(P) < EPS: 
+                                widthCH = 0.0
+                                channels.append((icnew+1,ia,lch,sch,ic,et,widthCH))
+                                continue
+
                             if dSoPc is None: dSoPc = 0.
-                            w *= ( 1 - width * dSoPc/2.)
+                            WignerFW = 2*wignerLimitRWA**2*P
+                            if width is None:
+                                widthCH = WignerFW * widef   # starting point for fitting
+                            else:
+                                widthCH = width
+                            if abs(widthCH) > WignerFW:
+                                widthCH = WignerFW if widthCH > 0 else -WignerFW                            
+                                
+                            if not FormalWidths: 
+                                w *= ( 1 - widthCH * dSoPc/2.)
                             w *= first   # more weight on lowest L !!!!
-                            print('For ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.,'w =',w)
+                            rwa = abs(widthCH/(2*P.real))**0.5
+                            print('For ch',(ic,ia,lch,sch,widthCH),'Er,Epole,Q,P =%7.3f, %7.3f, %7.3f, %.3e' %(Er, Epole,Q,P), 'WigFW=%6.2f, rwa=%6.2f' % (WignerFW,rwa) )#'dSoPc=',dSoPc, width*dSoPc/2.,'w =',w)
                             weight += w
                         elif rmass == 0.0:  # photons
                             w = 1e-4
@@ -236,31 +258,33 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
                             print('For photon ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'w =',w)
                         else:
                             dSoPc = 0.
-                            print('Closed ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q),'dSoPc=',dSoPc, width*dSoPc/2.,'w =',w)
-                        first *= 1e-3
+                            print('Closed ch',(ic,ia,lch,sch),'Er,Epole,Q =%7.3f, %7.3f, %7.3f,' %(Er, Epole,Q) ) #  ,'dSoPc=',dSoPc, width*dSoPc/2.,'w =',w)
+                            widthCH = 0.0
+                        channels.append((icnew+1,ia,lch,sch,ic,et,widthCH))
                              
                         
         nChans = len(channels)
         Jpi = '%s,%s' % (JJ,pi)
         spinGroups[Jpi] = channels
         c = 0
-        for icch,iach,lch,sch,ic in channels:
-            Ec = Epole+qvalue[projs[ic]]
-            print('Ch:',icch,iach,lch,sch,ic,'with p,Q,Ec =',projs[ic],qvalue[projs[ic]],Ec)
+        print()
+        for icch,iach,lch,sch,ic,et,widthCH in channels:
+            Ec = Epole+qvalue[projs[ic]] - et
+            print('Ch:',icch,iach,lch,sch,ic,'with p,Q,Ec,widthCH =',projs[ic],qvalue[projs[ic]],Ec,widthCH)
             w = 1./(2*lch+1)**2  # if Ec > 0. else 0  # channel not open: does not contribute to widths
-            wRel = w/(weight+1e-10) if weight > 0 else 1.0
+            wRel = w/(weight+1e-10) if weight > 0 else w
             c += 1
             stepFactor = 1e-2
-            pWid = width*wRel
+            pWid = widthCH*wRel
             print("&Variable kind=4 name='w%s,%s' term=%s icch=%s iach=%s lch=%s sch=%s width=%s rwa=F step= %9.2e/ for E=%s" % (c,name,term,icch,iach,lch,sch,pWid,pWid*stepFactor,Ec), file=frescoVars)
             nvars += 1
             
     resonanceTerms = term
     
-    BackGroundTerms = True
+    BackGroundTerms = False
     if BackGroundTerms: 
         EBG = 40.0
-        wBG = 10
+        wBG = 1
         step = 0.1
         for spinGroup in spinGroups.keys():
             channels = spinGroups[spinGroup]
@@ -273,7 +297,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
             print("\n&Variable kind=3 name='%s' term=%s jtot=%s par=%s energy=%s step=%s / obs width ~ %6s" % (name,term,JJ,pi,Epole,step,wBG), file=frescoVars)
             nvars += 1 
             c = 0
-            for icch,iach,lch,sch,ic in channels:
+            for icch,iach,lch,sch,ic,et,widthCH  in channels:
                 c += 1
                 print("&Variable kind=4 name='w%s,%s' term=%s icch=%s iach=%s lch=%s sch=%s width=%s rwa=F step= %9.2e/ for E=%s" % (c,name,term,icch,iach,lch,sch,wBG,wBG*step,EBG), file=frescoVars)
                 nvars += 1     
@@ -346,6 +370,7 @@ parser.add_argument("-R", "--ReichMoore", action="store_true", help="Inclusive c
 parser.add_argument("-j", "--jdef", type=float, default=2.0, help="Default spins for unknown RIPL states")
 parser.add_argument("-p", "--pidef", type=int, default=1, help="Default spins for unknown RIPL states")
 parser.add_argument("-w", "--widef", type=float, default=0.10, help="Default width (MeV) for unknown RIPL states")
+parser.add_argument("-F", "--FormalWidths", action="store_true", help="Treat widths as already formal widths.")
 
 parser.add_argument('-I', '--InFiles', type=str, nargs="+", help='cross-section data files: E,angle,expt,err as desribed in property file.')
 parser.add_argument('-s', '--scalefactors', type=str, default='../ScalingFactors', help='File of preliminary scale factors for unscaled data: filename,value pairs')
@@ -1008,5 +1033,5 @@ print('\nFresco input file:')
 make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,args.Jmax,Projectiles,
     args.EminCN,args.EmaxCN,args.eminp,args.emaxp,args.Rmatrix_radius,
     args.jdef,args.pidef,args.widef,args.Term0,args.GammaChannel,args.ReichMoore,
-    args.Out.replace('flow-','').replace('.data',''),args.MaxPars)
+    args.Out.replace('flow-','').replace('.data',''),args.MaxPars,args.FormalWidths)
 

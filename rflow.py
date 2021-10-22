@@ -413,7 +413,8 @@ if __name__=='__main__':
     dataDir = base 
 #   if args.Cross_S0ctions or args.Matplot or args.TransitionMatrix >= 0 : os.system('mkdir '+dataDir)
     if args.Search or args.Cross_Sections : os.system('mkdir '+dataDir)
-    print("Finish setup: ",tim.toString( ))
+    print("File base:",base)
+    print("Finish setup: ",tim.toString( ),'\n')
  
     chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,

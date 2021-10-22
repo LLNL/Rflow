@@ -1,0 +1,198 @@
+#! /usr/bin/env python3
+from __future__ import print_function
+
+import json,sys,argparse,numpy
+from matplotlib import pyplot as pl
+
+import argparse
+# Process command line options
+parser = argparse.ArgumentParser(description='Use matplotlib to make pdf files from JSON-encoded plot data')
+
+parser.add_argument("-w", "--window", type=str, default="12,8",  help="Initial size of opened graph window width,height in inches. Default=20,15")
+parser.add_argument('plotFile', type=str, nargs="+", help='plot files in JSON form')
+parser.add_argument(      "--debug", action="store_true", help="Debug outputs")
+parser.add_argument('-s', "--datasize", type=float,  default="1.0", help="Rescale symbol sizes")
+parser.add_argument('-e', "--EMin", type=float, default="-1e20",  help="Min x-axis value")
+parser.add_argument('-E', "--EMax", type=float, default="+1e20",  help="Max x-axis value")
+parser.add_argument('-i', "--increment", type=float, help="Increment for each dataset pair")
+parser.add_argument('-l', "--legendsize", type=float,default="0.0", help="Rescale legend sizes")
+parser.add_argument('-X', "--Xaxis", action="store_true", help="Shared x scale")
+parser.add_argument('-x', "--logx", action="store_true", help="Log x scale")
+parser.add_argument('-y', "--logy", action="store_true", help="Log y scale")
+parser.add_argument('-d', "--data", action="store_true", help="print out evaluation as xydy file")
+parser.add_argument('-D', "--Data", action="store_true", help="List input data file names in file *.data.list")
+parser.add_argument('-m', "--Min", type=int, default="0",  help="Min number of points to display plot. The pdf is always produced")
+parser.add_argument("-L", "--Lines", type=str, help="Make all lines this color")
+parser.add_argument("-p", "--plot", type=str, nargs="+", help="Plot also barns xy data from this file")
+parser.add_argument("-P", "--Plot", type=str, nargs="+", help="Plot also mbarns xy data from this file")
+
+
+args = parser.parse_args()
+
+xlimits = 'for'
+Emin = args.EMin
+Emax = args.EMax
+tag = ''
+if Emin > -1e19: 
+    xlimits = ' %s < X' % Emin
+    tag = '_e%s' % Emin
+if Emax < +1e19: 
+    xlimits = ', X < %s ' % Emax
+    tag += '-E%s' % Emax
+
+plcolor = {0:"black", 1:"red", 2:"green", 3: "blue", 4:"yellow", 5:"brown", 6: "grey", 7:"violet",
+           8:"cyan", 9:"magenta", 10:"orange", 11:"indigo", 12:"maroon", 13:"turquoise", 14:"darkgreen"}
+            
+for plotFile in args.plotFile:
+
+    with open(plotFile,'r') as ifile:
+        rows,cols,cmd,GraphList = json.load(ifile)
+    if rows*cols==0: continue
+    numpoints = 0
+
+    base = plotFile.replace('.json','')
+    fileOutPyplot = base + tag + '.pdf'
+    print("\nFrom",plotFile,", make",len(GraphList),"graphs in",rows,"rows and",cols,"columns,",xlimits," making file",fileOutPyplot)
+    width,height = args.window.split(','); 
+    width=int(width); height = int(height)
+    print("initial window size:",width,'*',height)
+    legendsize = 0.5 # default
+    if rows*cols: args.Xaxis = False
+
+    if args.data:
+        evalout = open(plotFile + '.eval','w')
+    if args.Data:
+        fileout = open(plotFile + '.data.list','w')
+    if args.debug:  
+        traceFileName = 'Pyplot-%s+%ix%i.pydata'% (plotFile.replace('/','_'),rows,cols)
+        pyplot_trace = open(traceFileName, 'w')
+    fig,axes = pl.subplots(rows,cols, figsize=(width,height) )
+    axes.tick_params(direction = 'in', labelsize=20.)
+    axes.set_xlabel('Neutron energy [MeV, lab]')
+    axes.set_ylabel('Cross section [mb]')
+    i = 0
+    for Lines,subtitle,logs,pageKind in GraphList:
+        i += 1
+        if args.debug: print('Graph',i,'has',len(Lines),' lines, and',subtitle,logs,pageKind)
+        #   make subplots in the same order as default xmgr layout
+        c = (i-1) // rows + 1
+        r = (rows+1) - (i - (c-1)*rows)
+        m = (r-1)*cols + c
+        
+        print('subplot',i,' at rc=',r,c,' so pyplot',m,' subtitle',subtitle,', '+logs if logs != '' else '')
+        pl.subplot(rows,cols,m)
+        if 'x' in logs or args.logx: pl.xscale('log')
+        if 'y' in logs or args.logy: pl.yscale('log')
+        pl.title(subtitle) 
+        
+        legends = []
+        lines = []
+        numLines = len(Lines)
+#       print('# lines:',numLines)
+        il = 0
+        firstModel = False
+
+        for Line in Lines:
+            PL = Line[0]  # property dictionary   
+            kind = PL.get('kind',None)
+            if kind is None: continue
+            if args.debug:
+                if kind == 'Data': print('LineData:',Line,file=pyplot_trace)
+                if kind == 'Model': print('LineModel:',Line,file=pyplot_trace)
+            c = PL['color']
+
+            XX = numpy.array(Line[1][0])
+            X  = numpy.array(Line[1][0])[(Emin < XX) & (XX < Emax)]
+            Y  = numpy.array(Line[1][1])[(Emin < XX) & (XX < Emax)]
+            DX = numpy.array(Line[1][2])[(Emin < XX) & (XX < Emax)] 
+            DY = numpy.array(Line[1][3])[(Emin < XX) & (XX < Emax)]
+            if len(DX)==0: DX = None
+            if len(DY)==0: DY = None
+            symbolsize = None
+            if kind=='Model' and not firstModel:
+                il = 0
+                firstModel = True
+            if args.increment is not None:
+                Y = Y + args.increment * il
+    
+            if kind == 'Data': 
+                legend = PL['legend']
+                legendsize = PL['legendsize'] 
+                symbolsize = int(PL['symbolsize']*2    * args.datasize * 12)
+                line = pl.errorbar(X, Y, xerr = DX, yerr = DY, 
+                    marker=PL['symbol'], linestyle='', ms=symbolsize, mfc=c, mec=c, ecolor=c )[0]
+                if args.debug: print('Line',legend,'has marker,ms,c=',PL['symbol'],symbolsize,c,' l-size',legendsize,' with',len(X),'pts')
+                legends.append(legend)
+                lines.append(line) 
+                numpoints += len(X)
+                if args.Data and legend[-1] not in ['+','-']:
+                    print('cp ' + legend.split(' ')[0]+'.dat' + ' 4plot', file=fileout)
+
+            else: # kind = 'Model'
+                if c=='black' and numLines==2: c = 'red'   # plot is single and all black, make the line red
+                if args.Lines is not None: c = args.Lines
+                line = pl.plot(X, Y, color=c, linestyle=PL['linestyle'] , zorder=10 )[0]
+                evaluation = PL['evaluation']
+                legend = evaluation
+                lines.append(line) 
+                if legend != '': legends.append(legend)
+                if symbolsize is None: symbolsize = 10
+                if args.debug: print('Line',legend,'has marker,ms,c=',c,symbolsize,c,' l-size',legendsize,' with',len(X),'pts')
+                if DY is not None:
+                    upper = Y + DY
+                    lower = Y - DY
+                    pl.fill_between(X, lower, upper, alpha=0.2, color=c)                      
+                if args.data:
+                    print('# Model curve %s' % evaluation, file=evalout)
+                    for j in range(len(X)):
+                        print('%12.5f %12.5f %12.5f' % (X[j],Y[j],DY[j]), file=evalout)
+                    print('&', file=evalout)
+            il += 1
+        
+        ic = 0
+        if args.plot is None: args.plot = []
+        for plot in args.plot:
+            plotData = open(plot,'r').readlines()
+            X = []; Y=[]
+            for line in plotData:
+                if line[0] not in ['#','!']:
+                    stuff = line.split()
+                    xx = float(stuff[0])
+                    if Emin < xx < Emax:
+                        X.append(xx)
+                        Y.append(1000*float(stuff[1]))
+            line = pl.plot(X, Y, color=plcolor[ic % 15], zorder=10 )[0]
+            lines.append(line) 
+            legends.append(plot)
+            ic += 1
+
+        if args.Plot is None: args.Plot = []
+        for Plot in args.Plot:
+            plotData = open(Plot,'r').readlines()
+            X = []; Y=[]
+            for line in plotData:
+                if line[0] not in ['#','!']:
+                    stuff = line.split()
+                    xx = float(stuff[0])
+                    if Emin < xx < Emax:
+                        X.append(xx)
+                        Y.append(float(stuff[1]))
+            line = pl.plot(X, Y, color=plcolor[ic % 15],  zorder=10 )[0]
+            lines.append(line) 
+            legends.append(Plot)
+            ic += 1
+                        
+            
+        legendsizeFactor = min(1.0,height*4.0/len(Lines))   # reduce font size if too many for page height
+        finalLegSize = legendsize*legendsizeFactor + args.legendsize
+        print("    Legends %s (size %s) for %s lines:" % (finalLegSize,len(legends),len(lines)),legends)
+        pl.legend(lines,legends,fontsize=finalLegSize*12)
+    # pl.suptitle(pageKind + ', with '+evaluation, y=0.95)    
+    pl.suptitle(pageKind , y=0.95)    
+    pl.figtext(0.05,0.02,cmd,size='small')
+    pl.savefig(open(fileOutPyplot,'wb'),format='pdf')
+    if numpoints > args.Min: 
+        pl.show(block=True)
+    else:
+        pl.close() # show(block=False)
+        print('Plot in file %s not displayed, as only %i data points' % (fileOutPyplot,numpoints))

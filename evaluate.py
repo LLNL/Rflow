@@ -19,6 +19,8 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
     # import tensorflow as tf
     import tensorflow.compat.v2 as tf
     tf.enable_v2_behavior()
+    # tf.compat.v1.disable_eager_execution()
+    tf.config.run_functions_eagerly(False)
 
     if ML is not None:
         from tensorflow.python.compiler.mlcompute import mlcompute
@@ -99,7 +101,7 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
 
     Tind = numpy.zeros([n_data,n_jsets,maxpc,maxpc,2], dtype=INT) 
     Mind = numpy.zeros([n_data,n_jsets,maxpc,maxpc], dtype=CMPLX)
-    print('\nTp_mat size',n_data*n_jsets*(npairs*maxpc)**2*16/1e9,'GB')
+    print('\nTp_mat size',n_data*n_jsets*(npairs*maxpc)**2*2*realSize/1e9,'GB')
     for jset in range(n_jsets):
         for ie in range(n_data):
             pin = data_p[ie,0]
@@ -578,7 +580,7 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
         MAind = numpy.zeros([n_data,n_jsets,npairs,maxpc,npairs,maxpc], dtype=CMPLX)  # mask: 1 = physically valid
         
     
-        print('TAp_mat size',n_data*n_jsets*(npairs*maxpc)**2*16/1e9,'GB')
+        print('TAp_mat size',n_data*n_jsets*(npairs*maxpc)**2*2*realSize/1e9,'GB')
         for jset in range(n_jsets):
             for np1 in range(npairs):
                 for np2 in range(npairs):
@@ -592,7 +594,7 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
                          
         TCind = numpy.zeros([n_angles,n_jsets,maxpc,maxpc,2], dtype=INT) 
         MCind = numpy.zeros([n_angles,n_jsets,maxpc,maxpc], dtype=CMPLX)
-        print('TCp_mat size',n_angles*n_jsets*(npairs*maxpc)**2*16/1e9,'GB')
+        print('TCp_mat size',n_angles*n_jsets*(npairs*maxpc)**2*2*realSize/1e9,'GB')
         for jset in range(n_jsets):
             for ie in range(n_angles):
                 pin = data_p[ie,0]
