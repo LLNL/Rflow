@@ -1,0 +1,379 @@
+
+Rflow
+Command: ../../rflow.py h-002_He_004-tt3.xml test2.data test2.norms -C 
+
+ Trim incoming data within [ 1.0 , 12.0 ] in lab MeV for projectile He3
+1874 data lines after -x and lab energies defined by projectile He3 ( 0 lines excluded)
+Using previously fitted norm for r:Barnard              :  1.00105e+00 instead of  1.00000e+00
+Using previously fitted norm for r:Elwyn                :  1.09767e+00 instead of  1.00000e+00
+Using previously fitted norm for r:Elwyn_dXS            :  1.08813e+00 instead of  1.00000e+00
+Using previously fitted norm for r:Fasoli               :  9.84753e-01 instead of  1.00000e+00
+Using previously fitted norm for r:Fiedler              :  1.48659e+00 instead of  1.00000e+00
+Using previously fitted norm for r:Harrison             :  1.20135e+00 instead of  1.00000e+00
+Using previously fitted norm for r:Ivanovic             :  1.05147e+00 instead of  1.00000e+00
+Using previously fitted norm for r:McCray               :  1.13100e+00 instead of  1.00000e+00
+Using previously fitted norm for r:Spiger_3He3He        :  9.24014e-01 instead of  1.00000e+00
+Using previously fitted norm for r:Spiger_3Hep          :  1.02697e+00 instead of  1.00000e+00
+Using previously fitted norm for r:Tumino               :  1.12291e+00 instead of  1.00000e+00
+
+Data points: 1874 of which 1809 are for angles, 65 are for angle-integrals, and  0 are for totals 
+Data groups: 92 
+X4 groups: 11 
+Variable norms: 11  of which  7 constrained, 4 free, and 0  fixed ( 0 temporarily)
+
+Energy limits:   Data min,max: None None .  Poles min,max: None None
+File base: h-002_He_004-tt3.xml+test2+C
+Finish setup:  delta times: cpu = 0.78 s, wall = 0.54 s on Thu Oct 21 17:18:21 2021 
+
+Partition 0 elim,label False He3 + He4
+Partition 1 elim,label False H1 + Li6
+
+Channels:
+0 : He3 + He4  Q = 0.0 R = 4.24151
+1 : H1 + Li6  Q = -4.0198 R = 3.94396
+Need 1874 energies in 10 Jpi sets with 3 poles max, and 4 channels max. Lmax=6
+J,pi =  1.5 -, channels   4, poles   3
+J,pi =  0.5 -, channels   3, poles   2
+J,pi =  3.5 -, channels   4, poles   2
+J,pi =  2.5 -, channels   4, poles   3
+J,pi =  0.5 +, channels   3, poles   1
+J,pi =  1.5 +, channels   4, poles   2
+J,pi =  2.5 +, channels   4, poles   2
+J,pi =  3.5 +, channels   4, poles   0
+J,pi =  4.5 -, channels   4, poles   0
+J,pi =  4.5 +, channels   4, poles   0
+ Total channels 38  and total poles 15 
+
+Max channels in each partition: [1 3]  max= 3 from NLMAX= None
+Variable borders: [ 0 15 72 83 83] and Fixed frontiers: [0 0 0 0 0]
+Variable parameters - E,w,norms,D:  15 57 11 0  = 83
+Fixed    parameters - E,w,norms,D:  0 0 0 0  = 0
+# zero widths  = 63 
+
+Searching on pole energies: [ -7.01304437  24.07859608  35.07034297 -29.12814573  35.07034297
+ -21.77410855  35.07034297  11.70926747  10.98257148  35.07034297
+  35.07034297  22.33489863  35.07034297  27.18337354  35.07034297]
+Keep fixed   pole energies: []
+Searching on damping widths: [  ]
+L4 norm of widths: 34044.28710718078
+AAL, AA sizes/p= 0.003, 0.117 GB from 1809*(10*3^2)^2 reals
+Number of search parameters: 83
+To start tf:  delta times: cpu = 2.7600000000000002 s, wall = 2.56 s on Thu Oct 21 17:18:23 2021
+GPUs: []
+
+Tp_mat size 0.01079424 GB
+Search parameters : 83
+Data points: 1874 of which 1809 are for angles, 65 are for angle-integrals, and  0 are for totals. Dof= 1791
+First FitStatusTF:  delta times: cpu = 7.13 s, wall = 7.65 s on Thu Oct 21 17:18:28 2021
+
+First run chisq/pt: 1.9282181414517356 including ww/pt 0.0 : 1.9282181414517356 for data.
+
+Second FitStatusTF start:  delta times: cpu = 27.160000000000004 s, wall = 22.98 s on Thu Oct 21 17:18:44 2021
+chisq from FitStatusTF/pt: 1.9282181414517356  chisq/dof = 2.01757721780042
+TAp_mat size 0.01079424 GB
+TCp_mat size 0.01041984 GB
+First FitStatusTF:  delta times: cpu = 37.32 s, wall = 26.42 s on Thu Oct 21 17:18:47 2021 giving chisq/pt 1.9282181414517354
+Ending tf:  delta times: cpu = 37.32 s, wall = 26.42 s on Thu Oct 21 17:18:47 2021
+Finished tf:  delta times: cpu = 37.32 s, wall = 26.42 s on Thu Oct 21 17:18:47 2021
+
+R-matrix parameters:
+
+Formal and 'Observed' properties by first-order (Thomas) corrections:
+  For J/pi = 1.5-: 3
+   Pole   0 at Elab =  -7.013044 (cm  -3.999416, obs  16.132677) MeV widths: formal   28.52830, obs   24.92406, damping    0.00000
+   Pole   1 at Elab =  24.078596 (cm  13.731600, obs  18.991480) MeV widths: formal   71.77850, obs   63.14079, damping    0.00000
+   Pole   2 at Elab =  35.070343 (cm  20.000000, obs  21.361339) MeV widths: formal   56.98242, obs   54.57334, damping    0.00000
+  For J/pi = 0.5-: 2
+   Pole   0 at Elab = -29.128146 (cm -16.611269, obs  70.580039) MeV widths: formal  288.79901, obs  287.46500, damping    0.00000
+   Pole   1 at Elab =  35.070343 (cm  20.000000, obs  20.488176) MeV widths: formal   47.41392, obs   46.70327, damping    0.00000
+  For J/pi = 3.5-: 2
+   Pole   0 at Elab = -21.774109 (cm -12.417391, obs 970.870689) MeV widths: formal 10534.94963, obs 10520.61659, damping    0.00000
+   Pole   1 at Elab =  35.070343 (cm  20.000000, obs  50.282643) MeV widths: formal  434.99157, obs  386.25978, damping    0.00000
+  For J/pi = 2.5-: 3
+   Pole   0 at Elab =  11.709267 (cm   6.677589, obs  13.789608) MeV widths: formal    9.98821, obs    8.42633, damping    0.00000
+   Pole   1 at Elab =  10.982571 (cm   6.263167, obs  27.160136) MeV widths: formal   47.29962, obs   41.42780, damping    0.00000
+   Pole   2 at Elab =  35.070343 (cm  20.000000, obs  39.950929) MeV widths: formal  241.27303, obs  210.31502, damping    0.00000
+  For J/pi = 0.5+: 1
+   Pole   0 at Elab =  35.070343 (cm  20.000000, obs  21.748368) MeV widths: formal  293.09930, obs  278.63085, damping    0.00000
+  For J/pi = 1.5+: 2
+   Pole   0 at Elab =  22.334899 (cm  12.737200, obs  22.181896) MeV widths: formal  111.54111, obs   96.89637, damping    0.00000
+   Pole   1 at Elab =  35.070343 (cm  20.000000, obs  22.996839) MeV widths: formal   89.42958, obs   82.89072, damping    0.00000
+  For J/pi = 2.5+: 2
+   Pole   0 at Elab =  27.183374 (cm  15.502200, obs 220.650503) MeV widths: formal 1677.89615, obs 1647.69682, damping    0.00000
+   Pole   1 at Elab =  35.070343 (cm  20.000000, obs  21.739353) MeV widths: formal   62.62011, obs   59.57491, damping    0.00000
+  For J/pi = 3.5+: 0
+  For J/pi = 4.5-: 0
+  For J/pi = 4.5+: 0
+
+   P  Loc   Start:    V           grad    Parameter
+   0    0   S:   -7.01304          -3.11   PJ1.5-:E-7.013
+   1    1   S:   24.07860          14.41   PJ1.5-:E24.079
+   2    2   S:   35.07034          16.41   PJ1.5-:E35.070
+   3    3   S:  -29.12815          -0.80   PJ0.5-:E-29.128
+   4    4   S:   35.07034          -7.07   PJ0.5-:E35.070
+   5    6   S:  -21.77411         358.28   PJ3.5-:E-21.774
+   6    7   S:   35.07034          15.61   PJ3.5-:E35.070
+   7    9   S:   11.70927          22.53   PJ2.5-:E11.709
+   8   10   S:   10.98257          63.86   PJ2.5-:E10.983
+   9   11   S:   35.07034           0.44   PJ2.5-:E35.070
+  10   12   S:   35.07034          48.18   PJ0.5+:E35.070
+  11   15   S:   22.33490          21.47   PJ1.5+:E22.335
+  12   16   S:   35.07034         -32.87   PJ1.5+:E35.070
+  13   18   S:   27.18337          -8.40   PJ2.5+:E27.183
+  14   19   S:   35.07034          35.32   PJ2.5+:E35.070
+  15    0   S:   -1.02728          65.70   w0,J1.5-:E-7.013
+  16    1   S:   -0.01523         -20.47   w1,J1.5-:E-7.013
+  17    2   S:   -1.83588          -1.05   w2,J1.5-:E-7.013
+  18    3   S:    1.41413         -13.54   w3,J1.5-:E-7.013
+  19    4   S:   -0.22451        -224.58   w0,J1.5-:E24.079
+  20    5   S:   -1.84383          33.54   w1,J1.5-:E24.079
+  21    6   S:   -3.00246         140.92   w2,J1.5-:E24.079
+  22    7   S:   -1.36026          -1.78   w3,J1.5-:E24.079
+  23    8   S:    2.14740        -339.75   w0,J1.5-:E35.070
+  24    9   S:    0.92192         -18.36   w1,J1.5-:E35.070
+  25   10   S:    0.25154         125.23   w2,J1.5-:E35.070
+  26   11   S:    1.00041         -24.08   w3,J1.5-:E35.070
+  27   12   S:   -1.66256          24.27   w0,J0.5-:E-29.128
+  28   13   S:    4.18476          10.53   w1,J0.5-:E-29.128
+  29   14   S:    0.95228         -83.39   w2,J0.5-:E-29.128
+  30   16   S:    1.72252         110.57   w0,J0.5-:E35.070
+  31   17   S:    0.02755           0.13   w1,J0.5-:E35.070
+  32   18   S:   -1.71781        -100.24   w2,J0.5-:E35.070
+  33   24   S:    4.54266       -1818.34   w0,J3.5-:E-21.774
+  34   25   S:   -1.37753        -202.72   w1,J3.5-:E-21.774
+  35   26   S:  -12.62615       -2000.64   w2,J3.5-:E-21.774
+  36   27   S:    4.58028         457.58   w3,J3.5-:E-21.774
+  37   28   S:    3.74730          80.91   w0,J3.5-:E35.070
+  38   29   S:   -1.15102          16.99   w1,J3.5-:E35.070
+  39   30   S:   -4.90761         251.33   w2,J3.5-:E35.070
+  40   31   S:    0.23924         -64.05   w3,J3.5-:E35.070
+  41   36   S:   -0.90634          56.92   w0,J2.5-:E11.709
+  42   37   S:    0.86979         -17.34   w1,J2.5-:E11.709
+  43   38   S:    1.41596         -12.13   w2,J2.5-:E11.709
+  44   39   S:   -0.25595          -6.19   w3,J2.5-:E11.709
+  45   40   S:   -0.45263          16.21   w0,J2.5-:E10.983
+  46   41   S:   -1.45976          41.96   w1,J2.5-:E10.983
+  47   42   S:   -2.20137          31.37   w2,J2.5-:E10.983
+  48   43   S:   -1.42671          13.12   w3,J2.5-:E10.983
+  49   44   S:   -3.04521          72.65   w0,J2.5-:E35.070
+  50   45   S:   -0.07469           9.19   w1,J2.5-:E35.070
+  51   46   S:   -3.59878         -20.59   w2,J2.5-:E35.070
+  52   47   S:    1.97946           9.30   w3,J2.5-:E35.070
+  53   48   S:   -4.02976         488.27   w0,J0.5+:E35.070
+  54   49   S:   -3.88860         116.89   w1,J0.5+:E35.070
+  55   50   S:   -1.79540          15.78   w2,J0.5+:E35.070
+  56   60   S:    0.03961        -244.27   w0,J1.5+:E22.335
+  57   61   S:    2.65794        -115.94   w1,J1.5+:E22.335
+  58   62   S:    0.61623           8.59   w2,J1.5+:E22.335
+  59   63   S:    3.56809         -31.12   w3,J1.5+:E22.335
+  60   64   S:    2.36411        1214.43   w0,J1.5+:E35.070
+  61   65   S:   -0.54556        -239.69   w1,J1.5+:E35.070
+  62   66   S:    2.12504        -277.46   w2,J1.5+:E35.070
+  63   67   S:   -1.15648         140.81   w3,J1.5+:E35.070
+  64   72   S:   -0.49861         -80.86   w0,J2.5+:E27.183
+  65   73   S:    1.71645         104.37   w1,J2.5+:E27.183
+  66   74   S:    0.08500          36.05   w2,J2.5+:E27.183
+  67   75   S:   -8.57109          -8.04   w3,J2.5+:E27.183
+  68   76   S:   -2.24798         617.66   w0,J2.5+:E35.070
+  69   77   S:   -1.60160         235.25   w1,J2.5+:E35.070
+  70   78   S:    0.14041          30.73   w2,J2.5+:E35.070
+  71   79   S:    0.16688           9.24   w3,J2.5+:E35.070
+  72    0   S:    1.00105         -85.02   r:Barnard
+  73    1   S:    1.09767           0.40   r:Elwyn
+  74    2   S:    1.08813          17.49   r:Elwyn_dXS
+  75    3   S:    0.98475           0.86   r:Fasoli
+  76    4   S:    1.48659          -0.14   r:Fiedler
+  77    5   S:    1.20135         -18.73   r:Harrison
+  78    6   S:    1.05147         -21.66   r:Ivanovic
+  79    7   S:    1.13100         -24.25   r:McCray
+  80    8   S:    0.92401         -10.78   r:Spiger_3He3He
+  81    9   S:    1.02697           7.83   r:Spiger_3Hep
+  82   10   S:    1.12291           0.21   r:Tumino
+
+   P  Loc   Fixed:    V                   Parameter
+
+*** chisq/pt = 1.9282181414517356  so chisq/dof= 2.01757721780042  with ww 0.0  so data chisq/dof 2.01757721780042
+
+*** chisq/pt =      2.01758 including ww/dof =      0.00000 and chisq/dof=      2.01758  for dof = 1791
+
+    Total cross-sections for incoming 0 to file h-002_He_004-tt3.xml+test2+C-ftot_h 
+         and capture to h-002_He_004-tt3.xml+test2+C-fcap_h
+        Partition 0 to 1 : angle-integrated cross-sections to file h-002_He_004-tt3.xml+test2+C-fch_h-to-p
+    Total cross-sections for incoming 1 to file h-002_He_004-tt3.xml+test2+C-ftot_p 
+         and capture to h-002_He_004-tt3.xml+test2+C-fcap_p
+        Partition 1 to 0 : angle-integrated cross-sections to file h-002_He_004-tt3.xml+test2+C-fch_p-to-h
+    Total cross-sections for incoming 0 to file h-002_He_004-tt3.xml+test2+C-Gtot_h 
+         and capture to h-002_He_004-tt3.xml+test2+C-Gcap_h
+        Partition 0 to 1 : angle-integrated cross-sections to file h-002_He_004-tt3.xml+test2+C-Gch_h-to-p
+    Total cross-sections for incoming 1 to file h-002_He_004-tt3.xml+test2+C-Gtot_p 
+         and capture to h-002_He_004-tt3.xml+test2+C-Gcap_p
+        Partition 1 to 0 : angle-integrated cross-sections to file h-002_He_004-tt3.xml+test2+C-Gch_p-to-h
+
+Experimental data groups, by energy or angle groups if simpler:
+
+Model  1 curve (  78 pts)  Barnard@a104.633-fit                              :   chisq/gp =    0.781     1.685 %
+Model  2 curve (  84 pts)  Barnard@a106.6-fit                                :   chisq/gp =    0.974     2.265 %
+Model  3 curve ( 104 pts)  Barnard@a116.617-fit                              :   chisq/gp =    2.039     5.870 %
+Model  4 curve (  81 pts)  Barnard@a125.317-fit                              :   chisq/gp =    0.955     2.141 %
+Model  5 curve (  54 pts)  Barnard@a140.833-fit                              :   chisq/gp =    2.280     3.408 %
+Model  6 curve (  75 pts)  Barnard@a54.733-fit                               :   chisq/gp =    1.069     2.220 %
+Model  7 curve (  85 pts)  Barnard@a63.4-fit                                 :   chisq/gp =    0.930     2.187 %
+Model  8 curve ( 124 pts)  Barnard@a73.95-fit                                :   chisq/gp =    0.225     0.771 %
+Model  9 curve ( 125 pts)  Barnard@a90.03-fit                                :   chisq/gp =    0.613     2.121 %
+Model 10 curve (  30 pts)  Elwyn-Aint                                        :   chisq/gp =    0.272     0.226 %
+Model 11 curve (  10 pts)  Elwyn_dXS@e0.13543570347957642-fit                :   chisq/gp =    2.008     0.556 %
+Model 12 curve (  10 pts)  Elwyn_dXS@e0.18564031770045386-fit                :   chisq/gp =    0.107     0.030 %
+Model 13 curve (  10 pts)  Elwyn_dXS@e0.2521906202723147-fit                 :   chisq/gp =   16.315     4.515 %
+Model 14 curve (  10 pts)  Elwyn_dXS@e0.32457866868381247-fit                :   chisq/gp =    6.704     1.855 %
+Model 15 curve (  14 pts)  Elwyn_dXS@e0.4903706505295008-fit                 :   chisq/gp =    4.247     1.645 %
+Model 16 curve (  14 pts)  Elwyn_dXS@e0.588444780635401-fit                  :   chisq/gp =    2.091     0.810 %
+Model 17 curve (  14 pts)  Elwyn_dXS@e0.6876864599092285-fit                 :   chisq/gp =    5.947     2.304 %
+Model 18 curve (  14 pts)  Elwyn_dXS@e0.786928139183056-fit                  :   chisq/gp =    1.283     0.497 %
+Model 19 curve (  14 pts)  Elwyn_dXS@e0.887337367624811-fit                  :   chisq/gp =    3.196     1.238 %
+Model 20 curve (   5 pts)  Fasoli@a109.87-fit                                :   chisq/gp =    5.396     0.747 %
+Model 21 curve (   6 pts)  Fasoli@a125.27-fit                                :   chisq/gp =    2.998     0.498 %
+Model 22 curve (   6 pts)  Fasoli@a146.77-fit                                :   chisq/gp =    2.762     0.459 %
+Model 23 curve (   5 pts)  Fasoli@a149.4-fit                                 :   chisq/gp =    3.555     0.492 %
+Model 24 curve (   7 pts)  Fasoli@a168.65-fit                                :   chisq/gp =    1.605     0.311 %
+Model 25 curve (   4 pts)  Fasoli@a90.0-fit                                  :   chisq/gp =    1.248     0.138 %
+Model 26 curve (   6 pts)  Fiedler-Aint                                      :   chisq/gp =    2.292     0.381 %
+Model 27 curve (  13 pts)  Harrison@e2.400481089258699-fit                   :   chisq/gp =    1.899     0.683 %
+Model 28 curve (  13 pts)  Harrison@e2.6001319969742815-fit                  :   chisq/gp =    2.771     0.997 %
+Model 29 curve (  30 pts)  Ivanovic@a125.0-fit                               :   chisq/gp =    2.722     2.260 %
+Model 30 curve (  30 pts)  Ivanovic@a65.3-fit                                :   chisq/gp =    2.043     1.696 %
+Model 31 curve (  30 pts)  Ivanovic@a90.0-fit                                :   chisq/gp =    1.099     0.913 %
+Model 32 curve (   1 pts)  McCray@a109.87-fit                                :   chisq/gp =    8.974     0.248 %
+Model 33 curve (   8 pts)  McCray@a110.47-fit                                :   chisq/gp =    4.011     0.888 %
+Model 34 curve (  13 pts)  McCray@a110.8-fit                                 :   chisq/gp =    0.534     0.192 %
+Model 35 curve (   1 pts)  McCray@a125.27-fit                                :   chisq/gp =   20.529     0.568 %
+Model 36 curve (   8 pts)  McCray@a125.48-fit                                :   chisq/gp =    2.235     0.495 %
+Model 37 curve (  13 pts)  McCray@a126.1-fit                                 :   chisq/gp =    0.496     0.178 %
+Model 38 curve (   8 pts)  McCray@a140.03-fit                                :   chisq/gp =    1.645     0.364 %
+Model 39 curve (  13 pts)  McCray@a140.88-fit                                :   chisq/gp =    4.445     1.599 %
+Model 40 curve (   1 pts)  McCray@a146.77-fit                                :   chisq/gp =    7.172     0.198 %
+Model 41 curve (   1 pts)  McCray@a149.4-fit                                 :   chisq/gp =   10.758     0.298 %
+Model 42 curve (  14 pts)  McCray@a159.12-fit                                :   chisq/gp =    5.888     2.281 %
+Model 43 curve (   7 pts)  McCray@a159.53-fit                                :   chisq/gp =    1.912     0.370 %
+Model 44 curve (   1 pts)  McCray@a168.65-fit                                :   chisq/gp =    9.217     0.255 %
+Model 45 curve (  21 pts)  McCray@a70.68-fit                                 :   chisq/gp =    5.021     2.918 %
+Model 46 curve (   1 pts)  McCray@a90.0-fit                                  :   chisq/gp =   13.289     0.368 %
+Model 47 curve (   8 pts)  McCray@a90.7-fit                                  :   chisq/gp =    0.319     0.071 %
+Model 48 curve (  13 pts)  McCray@a90.75-fit                                 :   chisq/gp =    1.948     0.701 %
+Model 49 curve (  34 pts)  Spiger_3He3He@a106.4-fit                          :   chisq/gp =    1.846     1.737 %
+Model 50 curve (  35 pts)  Spiger_3He3He@a116.8-fit                          :   chisq/gp =    3.092     2.995 %
+Model 51 curve (  35 pts)  Spiger_3He3He@a125.2-fit                          :   chisq/gp =    3.202     3.102 %
+Model 52 curve (  35 pts)  Spiger_3He3He@a135.0-fit                          :   chisq/gp =   11.055    10.708 %
+Model 53 curve (  35 pts)  Spiger_3He3He@a39.2-fit                           :   chisq/gp =    1.002     0.970 %
+Model 54 curve (  35 pts)  Spiger_3He3He@a47.0-fit                           :   chisq/gp =    0.744     0.720 %
+Model 55 curve (  35 pts)  Spiger_3He3He@a54.7-fit                           :   chisq/gp =    4.859     4.707 %
+Model 56 curve (  34 pts)  Spiger_3He3He@a63.4-fit                           :   chisq/gp =    3.127     2.942 %
+Model 57 curve (  35 pts)  Spiger_3He3He@a70.1-fit                           :   chisq/gp =    1.642     1.590 %
+Model 58 curve (  35 pts)  Spiger_3He3He@a77.0-fit                           :   chisq/gp =    0.921     0.892 %
+Model 59 curve (  35 pts)  Spiger_3He3He@a80.0-fit                           :   chisq/gp =    1.894     1.835 %
+Model 60 curve (  35 pts)  Spiger_3He3He@a85.26-fit                          :   chisq/gp =    0.825     0.799 %
+Model 61 curve (  35 pts)  Spiger_3He3He@a90.0-fit                           :   chisq/gp =    1.144     1.108 %
+Model 62 curve (  35 pts)  Spiger_3He3He@a98.4-fit                           :   chisq/gp =    1.855     1.797 %
+Model 63 curve (   4 pts)  Spiger_3Hep@e10.03362512494994-fit                :   chisq/gp =    1.205     0.133 %
+Model 64 curve (   4 pts)  Spiger_3Hep@e10.13357560242672-fit                :   chisq/gp =    0.688     0.076 %
+Model 65 curve (   5 pts)  Spiger_3Hep@e10.233526079903504-fit               :   chisq/gp =    0.617     0.085 %
+Model 66 curve (   9 pts)  Spiger_3Hep@e10.335230074529-fit                  :   chisq/gp =    2.389     0.595 %
+Model 67 curve (  15 pts)  Spiger_3Hep@e10.435180552005782-fit               :   chisq/gp =    1.426     0.592 %
+Model 68 curve (   5 pts)  Spiger_3Hep@e10.685933504272096-fit               :   chisq/gp =    3.227     0.447 %
+Model 69 curve (   4 pts)  Spiger_3Hep@e10.840243013359057-fit               :   chisq/gp =    0.463     0.051 %
+Model 70 curve (   1 pts)  Spiger_3Hep@e7.804904828932572-fit                :   chisq/gp =    0.871     0.024 %
+Model 71 curve (   2 pts)  Spiger_3Hep@e8.171389913014107-fit                :   chisq/gp =    0.676     0.037 %
+Model 72 curve (   4 pts)  Spiger_3Hep@e8.311671284911345-fit                :   chisq/gp =    1.253     0.139 %
+Model 73 curve (   5 pts)  Spiger_3Hep@e8.422142865280419-fit                :   chisq/gp =    1.714     0.237 %
+Model 74 curve (   2 pts)  Spiger_3Hep@e8.523846859905916-fit                :   chisq/gp =    0.021     0.001 %
+Model 75 curve (   2 pts)  Spiger_3Hep@e8.6237973373827-fit                  :   chisq/gp =    0.222     0.012 %
+Model 76 curve (   2 pts)  Spiger_3Hep@e8.725501332008196-fit                :   chisq/gp =    0.638     0.035 %
+Model 77 curve (   4 pts)  Spiger_3Hep@e8.8166842237414-fit                  :   chisq/gp =    0.535     0.059 %
+Model 78 curve (   2 pts)  Spiger_3Hep@e8.825451809484978-fit                :   chisq/gp =    0.188     0.010 %
+Model 79 curve (   3 pts)  Spiger_3Hep@e8.92540228696176-fit                 :   chisq/gp =    1.434     0.119 %
+Model 80 curve (   3 pts)  Spiger_3Hep@e9.027106281587256-fit                :   chisq/gp =    0.152     0.013 %
+Model 81 curve (   3 pts)  Spiger_3Hep@e9.12705675906404-fit                 :   chisq/gp =    0.427     0.035 %
+Model 82 curve (   3 pts)  Spiger_3Hep@e9.228760753689537-fit                :   chisq/gp =    0.299     0.025 %
+Model 83 curve (   4 pts)  Spiger_3Hep@e9.323450679720173-fit                :   chisq/gp =    0.228     0.025 %
+Model 84 curve (   3 pts)  Spiger_3Hep@e9.32871123116632-fit                 :   chisq/gp =    0.684     0.057 %
+Model 85 curve (   3 pts)  Spiger_3Hep@e9.4286617086431-fit                  :   chisq/gp =    0.359     0.030 %
+Model 86 curve (   3 pts)  Spiger_3Hep@e9.530365703268597-fit                :   chisq/gp =    0.709     0.059 %
+Model 87 curve (   4 pts)  Spiger_3Hep@e9.63031618074538-fit                 :   chisq/gp =    1.747     0.193 %
+Model 88 curve (  10 pts)  Spiger_3Hep@e9.730266658222163-fit                :   chisq/gp =    0.377     0.104 %
+Model 89 curve (   4 pts)  Spiger_3Hep@e9.828463618550229-fit                :   chisq/gp =    0.194     0.021 %
+Model 90 curve (   3 pts)  Spiger_3Hep@e9.83197065284766-fit                 :   chisq/gp =    0.594     0.049 %
+Model 91 curve (   4 pts)  Spiger_3Hep@e9.931921130324442-fit                :   chisq/gp =   12.190     1.349 %
+Model 92 curve (  29 pts)  Tumino-Aint                                       :   chisq/gp =    0.615     0.494 %
+Norm scale     1.001051         r:Barnard                      ~    1.00000 :    chisq    =    0.000     0.000 %  
+Norm scale     1.097667         r:Elwyn                        ~    1.00000 :    chisq    =    1.178     0.033 %  
+Norm scale     1.088134         r:Elwyn_dXS                    ~    1.00000 :    chisq    =    0.959     0.027 %  
+Norm scale     0.984753         r:Fasoli                       ~    0.00000 :    chisq    =    0.000     0.000 %   shape
+Norm scale     1.486592         r:Fiedler                      ~    0.00000 :    chisq    =    0.000     0.000 %   shape
+Norm scale     1.201353         r:Harrison                     ~    0.00000 :    chisq    =    0.000     0.000 %   shape
+Norm scale     1.051466         r:Ivanovic                     ~    1.00000 :    chisq    =    1.059     0.029 %  
+Norm scale     1.131005         r:McCray                       ~    1.00000 :    chisq    =    6.865     0.190 %  
+Norm scale     0.924014         r:Spiger_3He3He                ~    1.00000 :    chisq    =   25.662     0.710 %  
+Norm scale     1.026973         r:Spiger_3Hep                  ~    1.00000 :    chisq    =    3.233     0.089 %  
+Norm scale     1.122914         r:Tumino                       ~    0.00000 :    chisq    =    0.000     0.000 %   shape
+
+ Last chisq/pt  =    1.92822 from 1874 points  so chisq/dof =    2.01758 (dof = 1791 )
+
+Data grouped by X4 subentry:
+Model  1  9 curves ( 810 pts)  Barnard@-fit                                      :   chisq/gp =    1.011    22.668 %
+Model  1  1 curves (  30 pts)  Elwyn-Aint@-fit                                   :   chisq/gp =    0.272     0.226 %
+Model  1  9 curves ( 110 pts)  Elwyn_dXS@-fit                                    :   chisq/gp =    4.418    13.450 %
+Model  1  6 curves (  33 pts)  Fasoli@-fit                                       :   chisq/gp =    2.895     2.644 %
+Model  1  1 curves (   6 pts)  Fiedler-Aint@-fit                                 :   chisq/gp =    2.292     0.381 %
+Model  1  2 curves (  26 pts)  Harrison@-fit                                     :   chisq/gp =    2.335     1.680 %
+Model  1  3 curves (  90 pts)  Ivanovic@-fit                                     :   chisq/gp =    1.955     4.868 %
+Model  1 17 curves ( 132 pts)  McCray@-fit                                       :   chisq/gp =    3.283    11.993 %
+Model  1 14 curves ( 488 pts)  Spiger_3He3He@-fit                                :   chisq/gp =    2.658    35.902 %
+Model  1 29 curves ( 120 pts)  Spiger_3Hep@-fit                                  :   chisq/gp =    1.390     4.616 %
+Model  1  1 curves (  29 pts)  Tumino-Aint@-fit                                  :   chisq/gp =    0.615     0.494 %
+Kept data in cm range [ 1.0 , 12.0 ] for projectile He3
+   Write h-002_He_004-tt3.xml+test2+C/Pole-energies.json with 1
+Norm scale     1.001051         r:Barnard                      ~    1.00000 :     chisq    =    0.000     0.000 % 
+Norm scale     1.097667         r:Elwyn                        ~    1.00000 :     chisq    =    1.178     0.033 % 
+Norm scale     1.088134         r:Elwyn_dXS                    ~    1.00000 :     chisq    =    0.959     0.027 % 
+Norm scale     0.984753         r:Fasoli                       ~    0.00000 :     chisq    =    0.000     0.000 %  shape
+Norm scale     1.486592         r:Fiedler                      ~    0.00000 :     chisq    =    0.000     0.000 %  shape
+Norm scale     1.201353         r:Harrison                     ~    0.00000 :     chisq    =    0.000     0.000 %  shape
+Norm scale     1.051466         r:Ivanovic                     ~    1.00000 :     chisq    =    1.059     0.029 % 
+Norm scale     1.131005         r:McCray                       ~    1.00000 :     chisq    =    6.865     0.190 % 
+Norm scale     0.924014         r:Spiger_3He3He                ~    1.00000 :     chisq    =   25.662     0.710 % 
+Norm scale     1.026973         r:Spiger_3Hep                  ~    1.00000 :     chisq    =    3.233     0.089 % 
+Norm scale     1.122914         r:Tumino                       ~    0.00000 :     chisq    =    0.000     0.000 %  shape
+
+Write Angle-integrals-*.json files in the lab frame of gnds projectile
+In: h from 0
+  Curve for h -> p
+  Curve for h tot
+   Write h-002_He_004-tt3.xml+test2+C/Angle-integrals-from-h.json with 0
+In: p from 1
+  Curve for p -> h
+    Curve 0 : Test2/Elwyn-Aint has 30 data points
+    Curve 1 : Test2/Fiedler-Aint has 6 data points
+    Curve 2 : Test2/Tumino-Aint has 29 data points
+  Curve for p tot
+   Write h-002_He_004-tt3.xml+test2+C/Angle-integrals-from-p.json with 1
+Write h-002_He_004-tt3.xml+test2+C/Angle-integrals-Global.json with 1
+------
+
+Worst fits:
+    Spiger_3He3He@a135.0                     contributes    10.708 %
+    Barnard@a116.617                         contributes     5.870 %
+    Spiger_3He3He@a54.7                      contributes     4.707 %
+    Elwyn_dXS@e0.2521906202723147            contributes     4.515 %
+    Barnard@a140.833                         contributes     3.408 %
+    Spiger_3He3He@a125.2                     contributes     3.102 %
+    Spiger_3He3He@a116.8                     contributes     2.995 %
+    Spiger_3He3He@a63.4                      contributes     2.942 %
+    McCray@a70.68                            contributes     2.918 %
+    Elwyn_dXS@e0.6876864599092285            contributes     2.304 %
+
+Unadjusted shape data:
+------
+
+*** chisq/pt =      1.92822, chisq/dof =      2.01758 with ww =      0.00000 so data Chisq/DOF =      2.01758 from dof = 1791
+
+Final rflow:  delta times: cpu = 37.82 s, wall = 26.92 s on Thu Oct 21 17:18:47 2021
+Target stdout: h-002_He_004-tt3.xml+test2+C.out
