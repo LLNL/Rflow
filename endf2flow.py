@@ -9,7 +9,7 @@
 # Exclude excited states for now.
 
 import sys
-from fudge.gnds import reactionSuite
+from fudge import reactionSuite
 
 Emin = 0.1 # MeV
 Emax = float(sys.argv[1])  # MeV

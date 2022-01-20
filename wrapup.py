@@ -57,7 +57,7 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
             if deckLabel not in deckLabels: break
         print('\nNew InputDeck is "%s" after' % deckLabel,deckLabels,'\n')
     else: 
-        computerCodeFit = computerCodeModule.ComputerCode( label = 'R-matrix fit', name = 'Rflow', version = '', date = now() )
+        computerCodeFit = computerCodeModule.ComputerCode( label = 'R-matrix fit', name = 'Rflow', version = '') #, date = now() )
         deckLabel = 'Fitted_data'
         
     inputDataSpecs = computerCodeModule.InputDeck( deckLabel , ('\n  %s\n' % now() )  + ('\n'.join( docLines ))+'\n' )

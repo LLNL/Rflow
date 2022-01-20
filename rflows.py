@@ -14,8 +14,8 @@ from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
 from xData.series1d  import Legendre
 
-from fudge.gnds import reactionSuite as reactionSuiteModule
-from fudge.gnds import styles        as stylesModule
+from fudge import reactionSuite as reactionSuiteModule
+from fudge import styles        as stylesModule
 from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
 from functools import singledispatch
@@ -358,8 +358,8 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                         bndx = None
                     elif bndx is not None:              # btype='B'
                         B = float(bndx)
-                    if ch.boundaryConditionOverride is not None:
-                        B = float(ch.boundaryConditionOverride)
+                    if ch.boundaryConditionValue is not None:
+                        B = float(ch.boundaryConditionValue)
 
                     DL = CF2_val[ie,pair,ch.L]
                     S = DL.real

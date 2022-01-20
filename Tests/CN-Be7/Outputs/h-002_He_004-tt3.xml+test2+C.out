@@ -23,7 +23,7 @@ Variable norms: 11  of which  7 constrained, 4 free, and 0  fixed ( 0 temporaril
 
 Energy limits:   Data min,max: None None .  Poles min,max: None None
 File base: h-002_He_004-tt3.xml+test2+C
-Finish setup:  delta times: cpu = 0.78 s, wall = 0.54 s on Thu Oct 21 17:18:21 2021 
+Finish setup:  delta times: cpu = 0.83 s, wall = 0.61 s on Wed Nov 24 14:41:51 2021 
 
 Partition 0 elim,label False He3 + He4
 Partition 1 elim,label False H1 + Li6
@@ -58,23 +58,23 @@ Searching on damping widths: [  ]
 L4 norm of widths: 34044.28710718078
 AAL, AA sizes/p= 0.003, 0.117 GB from 1809*(10*3^2)^2 reals
 Number of search parameters: 83
-To start tf:  delta times: cpu = 2.7600000000000002 s, wall = 2.56 s on Thu Oct 21 17:18:23 2021
+To start tf:  delta times: cpu = 2.95 s, wall = 2.77 s on Wed Nov 24 14:41:53 2021
 GPUs: []
 
 Tp_mat size 0.01079424 GB
 Search parameters : 83
 Data points: 1874 of which 1809 are for angles, 65 are for angle-integrals, and  0 are for totals. Dof= 1791
-First FitStatusTF:  delta times: cpu = 7.13 s, wall = 7.65 s on Thu Oct 21 17:18:28 2021
+First FitStatusTF:  delta times: cpu = 7.63 s, wall = 8.3 s on Wed Nov 24 14:41:59 2021
 
 First run chisq/pt: 1.9282181414517356 including ww/pt 0.0 : 1.9282181414517356 for data.
 
-Second FitStatusTF start:  delta times: cpu = 27.160000000000004 s, wall = 22.98 s on Thu Oct 21 17:18:44 2021
+Second FitStatusTF start:  delta times: cpu = 28.779999999999998 s, wall = 24.94 s on Wed Nov 24 14:42:15 2021
 chisq from FitStatusTF/pt: 1.9282181414517356  chisq/dof = 2.01757721780042
 TAp_mat size 0.01079424 GB
 TCp_mat size 0.01041984 GB
-First FitStatusTF:  delta times: cpu = 37.32 s, wall = 26.42 s on Thu Oct 21 17:18:47 2021 giving chisq/pt 1.9282181414517354
-Ending tf:  delta times: cpu = 37.32 s, wall = 26.42 s on Thu Oct 21 17:18:47 2021
-Finished tf:  delta times: cpu = 37.32 s, wall = 26.42 s on Thu Oct 21 17:18:47 2021
+First FitStatusTF:  delta times: cpu = 39.48 s, wall = 28.6 s on Wed Nov 24 14:42:19 2021 giving chisq/pt 1.9282181414517354
+Ending tf:  delta times: cpu = 39.48 s, wall = 28.6 s on Wed Nov 24 14:42:19 2021
+Finished tf:  delta times: cpu = 39.48 s, wall = 28.6 s on Wed Nov 24 14:42:19 2021
 
 R-matrix parameters:
 
@@ -375,5 +375,5 @@ Unadjusted shape data:
 
 *** chisq/pt =      1.92822, chisq/dof =      2.01758 with ww =      0.00000 so data Chisq/DOF =      2.01758 from dof = 1791
 
-Final rflow:  delta times: cpu = 37.82 s, wall = 26.92 s on Thu Oct 21 17:18:47 2021
+Final rflow:  delta times: cpu = 39.9 s, wall = 29.02 s on Wed Nov 24 14:42:19 2021
 Target stdout: h-002_He_004-tt3.xml+test2+C.out

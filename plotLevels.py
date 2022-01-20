@@ -3,7 +3,7 @@
 from nuclear import *
 import sys,os,math,argparse,numpy
 from PoPs import database as databaseModule
-from fudge.gnds import reactionSuite as reactionSuiteModule
+from fudge import reactionSuite as reactionSuiteModule
 from fudge.lib import GNDSType as GNDSTypeModule
 from PoPs.groups.misc import *
 

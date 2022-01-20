@@ -1,9 +1,9 @@
-<reactionSuite projectile="He3" target="He4" evaluation="fresco R-matrix fit mod" format="1.10" projectileFrame="lab" interaction="nuclear">
+<reactionSuite projectile="He3" target="He4" evaluation="fresco R-matrix fit mod mod" format="2.0.LLNL_4" projectileFrame="lab" interaction="nuclear">
   <styles>
     <evaluated label="eval" date="2020-12-07" library="from test2-vc1a-s2.sfrescoed" version="0.1.0">
       <temperature value="3e2" unit="K"/>
       <projectileEnergyDomain min="1" max="12" unit="MeV"/></evaluated></styles>
-  <PoPs name="fresco" version="1.0.0" format="0.1">
+  <PoPs name="protare_internal" version="1.0" format="2.0.LLNL_4">
     <chemicalElements>
       <chemicalElement symbol="H" Z="1" name="Hydrogen">
         <isotopes>
@@ -82,10 +82,10 @@
           <axis index="1" label="energy_in" unit="MeV"/>
           <axis index="0" label="radius" unit="fm"/></axes></constant1d></scatteringRadius>
     <resolved domainMin="1" domainMax="12" domainUnit="MeV">
-      <RMatrix label="eval" approximation="Full R-Matrix" boundaryCondition="-L" supportsAngularReconstruction="true" reducedWidthAmplitudes="true">
+      <RMatrix label="eval" approximation="Full R-Matrix" boundaryCondition="NegativeOrbitalMomentum" supportsAngularReconstruction="true" reducedWidthAmplitudes="true">
         <documentation>
           <computerCodes>
-            <computerCode label="R-matrix fit" name="sfrescox" version="7.1-6-gad5c8e" date="Mon Dec  7 20:54:03 2020">
+            <computerCode label="R-matrix fit" name="sfrescox" version="7.1-6-gad5c8e">
               <note><![CDATA[ 
 Converted from SFRESCO search file
    test2-vc1a-s2.sfrescoed
@@ -94,7 +94,7 @@ Thompson, Ian J.
  
  ]]></note>
               <inputDecks>
-                <inputDeck label="Fitted_data"><![CDATA[
+                <inputDeck label="Fitted_data" filename="None"><![CDATA[
 &variable name='r:Barnard ' kind=5 dataset=0, 0 reffile='Dataa/Barnard-c*', datanorm=1.0010511058042 step=0.01 ivar=73 /
 &variable name='r:Elwyn ' kind=5 dataset=0, 0 reffile='Dataa/Elwyn-Aint*', datanorm=1.09766707895025 step=0.01 ivar=74 /
 &variable name='r:Elwyn_dXS ' kind=5 dataset=0, 0 reffile='Dataa/Elwyn_dXS-c*', datanorm=1.08813392440759 step=0.01 ivar=75 /
@@ -125,7 +125,7 @@ Thompson, Ian J.
 &data type=6 reffile='Dataa/Spiger_3He3He-c*', value=1.0 error=0.015 abserr=T idat=17 kind=5 /
 &data type=6 reffile='Dataa/Spiger_3Hep-c*', value=1.0 error=0.015 abserr=T idat=18 kind=5 /
 ]]></inputDeck></inputDecks></computerCode>
-            <computerCode label="transform2" name="ferdinand" version="" date="Mon Dec  7 20:54:03 2020">
+            <computerCode label="transform2" name="ferdinand" version="">
               <note><![CDATA[
 
 Processed by Ferdinand:
@@ -135,6 +135,17 @@ Changing boundaryCondition from -L to -L
   amplitudes=True, 
 
 Mon Dec  7 20:54:03 2020
+
+]]></note></computerCode>
+            <computerCode label="transform3" name="ferdinand" version="">
+              <note><![CDATA[
+
+Processed by Ferdinand:
+Changing boundaryCondition from NegativeOrbitalMomentum to NegativeOrbitalMomentum 
+   by trans,std: False False ( Overrides=False)
+
+
+Wed Nov 24 14:27:26 2021
 
 ]]></note></computerCode></computerCodes></documentation>
         <resonanceReactions>
@@ -150,10 +161,10 @@ Mon Dec  7 20:54:03 2020
         <spinGroups>
           <spinGroup label="0" spin="3/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="1" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="1" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="1" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="3" columns="5">
                 <columnHeaders>
@@ -170,9 +181,9 @@ Mon Dec  7 20:54:03 2020
                        35.0703429743095      2.1473993870868     0.921923574598313   0.251536555544334    1.00040646433553</data></table></resonanceParameters></spinGroup>
           <spinGroup label="1" spin="1/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="1" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="1" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="3"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="1" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="3"></channel></channels>
             <resonanceParameters>
               <table rows="2" columns="4">
                 <columnHeaders>
@@ -187,10 +198,10 @@ Mon Dec  7 20:54:03 2020
                        35.0703429743095    1.72252142831061   0.0275473065459991   -1.71780819752287</data></table></resonanceParameters></spinGroup>
           <spinGroup label="2" spin="7/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="3" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="3" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="5" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="3" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="3" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="5" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="2" columns="5">
                 <columnHeaders>
@@ -206,10 +217,10 @@ Mon Dec  7 20:54:03 2020
                       35.0703429743095   3.74729756888083   -1.15101587634906   -4.90761140614277   0.239241918479116</data></table></resonanceParameters></spinGroup>
           <spinGroup label="3" spin="5/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="3" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="3" channelSpin="1/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="3" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="3" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="3" columns="5">
                 <columnHeaders>
@@ -226,9 +237,9 @@ Mon Dec  7 20:54:03 2020
                       35.0703429743095    -3.04521467183118   -0.0746852079858935   -3.59877663724651     1.97945691390763</data></table></resonanceParameters></spinGroup>
           <spinGroup label="4" spin="1/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="0" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="0" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="3"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="0" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="0" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="3"></channel></channels>
             <resonanceParameters>
               <table rows="1" columns="4">
                 <columnHeaders>
@@ -242,10 +253,10 @@ Mon Dec  7 20:54:03 2020
                       35.0703429743095   -4.0297556548219   -3.88860365189455   -1.79540491774369</data></table></resonanceParameters></spinGroup>
           <spinGroup label="5" spin="3/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="2" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="0" channelSpin="3/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="1/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="2" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="0" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="2" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="2" columns="5">
                 <columnHeaders>
@@ -261,10 +272,10 @@ Mon Dec  7 20:54:03 2020
                       35.0703429743095     2.36410925701916   -0.545561410082353    2.12503718459836   -1.15647507515023</data></table></resonanceParameters></spinGroup>
           <spinGroup label="6" spin="5/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="2" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="2" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="2" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="2" columns="5">
                 <columnHeaders>
@@ -280,10 +291,10 @@ Mon Dec  7 20:54:03 2020
                       35.0703429743095    -2.24798328145862   -1.60160423842477    0.140411656229192   0.166878907839739</data></table></resonanceParameters></spinGroup>
           <spinGroup label="7" spin="7/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="4" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="4" channelSpin="1/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="4" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="4" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="0" columns="5">
                 <columnHeaders>
@@ -295,10 +306,10 @@ Mon Dec  7 20:54:03 2020
                 <data/></table></resonanceParameters></spinGroup>
           <spinGroup label="8" spin="9/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="5" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="5" channelSpin="1/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="5" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="5" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="5" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="5" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="0" columns="5">
                 <columnHeaders>
@@ -310,10 +321,10 @@ Mon Dec  7 20:54:03 2020
                 <data/></table></resonanceParameters></spinGroup>
           <spinGroup label="9" spin="9/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="4" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="4" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="6" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="4" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="4" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="6" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="0" columns="5">
                 <columnHeaders>
@@ -334,9 +345,10 @@ Mon Dec  7 20:54:03 2020
                 <axes>
                   <axis index="1" label="energy_in" unit="MeV"/>
                   <axis index="0" label="crossSection" unit="b"/></axes>
-                <XYs1d index="0">
-                  <values>
-                    1.00000000e+00 0.00000000e+00 1.20000000e+01 0.00000000e+00</values></XYs1d></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
+                <function1ds>
+                  <XYs1d index="0">
+                    <values>
+                      1.00000000e+00 0.00000000e+00 1.20000000e+01 0.00000000e+00</values></XYs1d></function1ds></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
       <outputChannel genre="twoBody">
         <Q>
           <constant1d label="eval" value="0" domainMin="1" domainMax="12">
@@ -370,9 +382,10 @@ Mon Dec  7 20:54:03 2020
                 <axes>
                   <axis index="1" label="energy_in" unit="MeV"/>
                   <axis index="0" label="crossSection" unit="b"/></axes>
-                <XYs1d index="0">
-                  <values>
-                    1.00000000e+00 0.00000000e+00 1.20000000e+01 0.00000000e+00</values></XYs1d></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
+                <function1ds>
+                  <XYs1d index="0">
+                    <values>
+                      1.00000000e+00 0.00000000e+00 1.20000000e+01 0.00000000e+00</values></XYs1d></function1ds></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
       <outputChannel genre="twoBody">
         <Q>
           <constant1d label="eval" value="-4.0198" domainMin="1" domainMax="12">

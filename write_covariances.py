@@ -1,9 +1,9 @@
 
 import numpy
 
-import fudge.gnds.covariances.covarianceSuite as covarianceSuiteModule
-import fudge.gnds.covariances.section as covarianceSectionModule
-import fudge.gnds.covariances.modelParameters as covarianceModelParametersModule
+import fudge.covariances.covarianceSuite as covarianceSuiteModule
+import fudge.covariances.covarianceSection as covarianceSectionModule
+import fudge.covariances.modelParameters as covarianceModelParametersModule
 
 import xData.xDataArray as arrayModule
 

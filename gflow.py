@@ -16,6 +16,7 @@ from xData import date
 from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
 # from scipy import interpolate
+import fudge.resonances.resolved as resolvedResonanceModule
 
 # CONSTANTS: 
 hbc =   197.3269788e0             # hcross * c (MeV.fm)
@@ -56,9 +57,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     emin = PQUModule.PQU(rrr.domainMin,rrr.domainUnit).getValueAs('MeV')
     emax = PQUModule.PQU(rrr.domainMax,rrr.domainUnit).getValueAs('MeV')
     bndx = RMatrix.boundaryCondition
+    bndv = RMatrix.boundaryConditionValue
     IFG = RMatrix.reducedWidthAmplitudes
     Overrides = False
-    brune = bndx=='Brune'
+    brune = bndx==resolvedResonanceModule.BoundaryCondition.Brune
     if brune: LMatrix = True
 #     if brune and not LMatrix:
 #         print('Brune basis requires Level-matrix method')
@@ -382,18 +384,19 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     pin = data_p[ie,0]
                     pout= data_p[ie,1]
                     if pout == -1: pout = pin # to get total cross-section
-                    if bndx == 'L' or bndx == '-L':
+                    B = None
+                    if bndx == resolvedResonanceModule.BoundaryCondition.NegativeOrbitalMomentum:
                         B = -ch.L
-                    elif bndx == 'Brune':
-                        pass
-                    elif bndx == 'S' or bndx is None:
-                        bndx = None
-                    elif bndx is not None:              # btype='B'
-                        B = float(bndx)
-                    if ch.boundaryConditionOverride is not None:
-                        B = float(ch.boundaryConditionOverride)
+                    elif bndx == resolvedResonanceModule.BoundaryCondition.Brune:
+                        B = None
+                    elif bndx == resolvedResonanceModule.BoundaryCondition.EliminateShiftFunction:
+                        B = None
+                    elif bndx == resolvedResonanceModule.BoundaryCondition.Given:
+                        B = float(bndv)
+                    if ch.boundaryConditionValue is not None:
+                        B = float(ch.boundaryConditionValue)
                     
-                    if not( bndx is None or bndx == 'Brune'): B_val[pair,jset,c] = B
+                    if B is not None: B_val[pair,jset,c] = B
 
                     DL = CF2_val[ie,pair,ch.L]
                     S = DL.real
@@ -402,9 +405,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     Psr = math.sqrt(abs(P))
                     phi = - math.atan2(P, F - S)
                     Omega = cmath.exp(complex(0,phi))
-                    if bndx is None:
+                    if B is None:
                         L_diag[ie,jset,c]       = complex(0.,P)
-                    elif bndx == 'Brune':
+                    elif bndx == resolvedResonanceModule.BoundaryCondition.Brune:
                         L_diag[ie,jset,c]       = DL
                     else:
                         L_diag[ie,jset,c]       = DL - B
@@ -477,9 +480,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                         for c in range(nch[jset]):
                             if seg_val[jset,c] != pair: continue
                             DL = CF2_L[ L_val[jset,c] ] * rho
-                            if bndx is None:
+                            if B is None:
                                 DL       = complex(0.,DL.imag) # * rho
-                            elif bndx == 'Brune':
+                            elif bndx == resolvedResonanceModule.BoundaryCondition.Brune:
                                 pass
                             else:
                                 DL       = DL - B_val[pair,jset,c]
@@ -1199,7 +1202,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             if codeLabel not in codeLabels: break
         print('\nNew computerCode is "%s" after' % codeLabel,codeLabels,'\n')
 
-        computerCode = computerCodeModule.ComputerCode( label = codeLabel, name = 'Rflow', version = '', date = now() )
+        computerCode = computerCodeModule.ComputerCode( label = codeLabel, name = 'Rflow', version = '') #, evaluationDate = now() )
         computerCode.note.body = '\n'.join( docLines )
         RMatrix.documentation.computerCodes.add( computerCode )
 

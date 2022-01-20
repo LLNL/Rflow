@@ -1,7 +1,6 @@
 # <<BEGIN-copyright>>
 # <<END-copyright>>
 
-from __future__ import print_function
 import os, time
 timeIndicesNames = { 0 : 'user', 1 : 'sys', 2 : 'children', 3 : 'childrenSys', 4 : 'wall' }
 

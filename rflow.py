@@ -11,8 +11,8 @@ from gflow import Gflow
 from write_covariances import write_gnds_covariances
 from printExcitationFunctions import *
 
-from fudge.gnds import reactionSuite as reactionSuiteModule
-from fudge.gnds import styles        as stylesModule
+from fudge import reactionSuite as reactionSuiteModule
+from fudge import styles        as stylesModule
 from pqu import PQU as PQUModule
 
 REAL = numpy.double
