@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+##############################################
+#                                            #
+#    Rflow 0.10      Ian Thompson, LLNL      #
+#                                            #
+##############################################
+
 import math,numpy,cmath
 
 REAL = numpy.double

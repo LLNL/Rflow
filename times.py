@@ -1,6 +1,14 @@
 # <<BEGIN-copyright>>
 # <<END-copyright>>
 
+
+##############################################
+#                                            #
+#    Rflow 0.10      Ian Thompson, LLNL      #
+#                                            #
+##############################################
+
+
 import os, time
 timeIndicesNames = { 0 : 'user', 1 : 'sys', 2 : 'children', 3 : 'childrenSys', 4 : 'wall' }
 

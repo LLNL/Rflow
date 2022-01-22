@@ -1,4 +1,10 @@
 
+##############################################
+#                                            #
+#    Rflow 0.10      Ian Thompson, LLNL      #
+#                                            #
+##############################################
+
 import numpy,os,sys,math
 from CoulCF import Pole_Shifts
 

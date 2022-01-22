@@ -1,5 +1,12 @@
 #! /usr/bin/env python3
 
+##############################################
+#                                            #
+#    Rflow 0.10      Ian Thompson, LLNL      #
+#                                            #
+##############################################
+
+
 import os,sys,copy,csv,math
 import argparse
 from CoulCF import dSoP

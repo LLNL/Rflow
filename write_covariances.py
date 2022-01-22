@@ -1,4 +1,10 @@
 
+##############################################
+#                                            #
+#    Rflow 0.10      Ian Thompson, LLNL      #
+#                                            #
+##############################################
+
 import numpy
 
 import fudge.covariances.covarianceSuite as covarianceSuiteModule
