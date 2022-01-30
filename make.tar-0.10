@@ -1,4 +1,9 @@
-tar -cvf ../Rflow-0.10.tar --exclude OLD --exclude __pycache__ --exclude .git --no-mac-metadata --exclude .gitignore Tests \
+tar -cvf ../Rflow-0.10.tar --exclude OLD --exclude __pycache__ --exclude .git --no-mac-metadata --exclude .gitignore \
+Tests/plotjson \
+Tests/CN-Be7/test2* \
+Tests/CN-Be7/README.txt \
+Tests/CN-Be7/Outputs \
+Tests/CN-N15 \
 CoulCF.py  \
 data4rflows.py \
 endf2flow.py \

@@ -12,7 +12,6 @@ tim = times.times()
 import os,math,numpy,cmath,pwd,sys,time,json,re
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
-from wrapups import saveNorms2gnds
 from write_covariances import write_gnds_covariances
 
 from pqu import PQU as PQUModule
@@ -400,6 +399,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                         B = None
                     elif bndx == resolvedResonanceModule.BoundaryCondition.Given:
                         B = float(bndv)
+                    else:
+                        print('Boundary condition',bndx,'and value',bndv,'not recognized')
+                        sys.exit()
                     if ch.boundaryConditionValue is not None:
                         B = float(ch.boundaryConditionValue)
                     
@@ -412,10 +414,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     Psr = math.sqrt(abs(P))
                     phi = - math.atan2(P, F - S)
                     Omega = cmath.exp(complex(0,phi))
-                    if B is None:
-                        L_diag[ie,jset,c]       = complex(0.,P)
-                    elif bndx == resolvedResonanceModule.BoundaryCondition.Brune:
+                    if bndx == resolvedResonanceModule.BoundaryCondition.Brune:
                         L_diag[ie,jset,c]       = DL
+                    elif B is None:
+                        L_diag[ie,jset,c]       = complex(0.,P)
                     else:
                         L_diag[ie,jset,c]       = DL - B
 
@@ -487,10 +489,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                         for c in range(nch[jset]):
                             if seg_val[jset,c] != pair: continue
                             DL = CF2_L[ L_val[jset,c] ] * rho
-                            if B is None:
-                                DL       = complex(0.,DL.imag) # * rho
-                            elif bndx == resolvedResonanceModule.BoundaryCondition.Brune:
+                            if bndx == resolvedResonanceModule.BoundaryCondition.Brune:
                                 pass
+                            elif B is None:
+                                DL       = complex(0.,DL.imag)   # 'S' or 
                             else:
                                 DL       = DL - B_val[pair,jset,c]
                             L_poles[ie,jset,c,:] = (DL.real,DL.imag)
@@ -498,7 +500,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #             for jset in range(n_jsets):
 #                 for c in range(nch[jset]):
 #                     for ie in range(N_gridE):
-#                         if ie % 1000 == 1: print(jset,c,Egrid[ie],'L_poles[ie,jset,c,:]:',L_poles[ie,jset,c,:],(L_poles[ie,jset,c,0]-L_poles[ie-1,jset,c,0])/Grid )
+#                         if ie % 1000 == 1: print(jset,c,'%10.6f' % Egrid[ie],'L_poles[ie,jset,c,:]:',L_poles[ie,jset,c,:]) #,(L_poles[ie,jset,c,0]-L_poles[ie-1,jset,c,0])/Grid )
 #
     else:
         L_poles = None
@@ -951,14 +953,20 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             CoulombFunctions_poles = [L_poles,Lowest_pole_energy,Highest_pole_energy]      # L = S+iP on a regular grid
     else:
         CoulombFunctions_poles = [None,None,None] 
-    
+
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
     Logicals = [LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose]
-
     Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections]
 
     Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     
+#     print('Channels:',Channels)    
+#     print('CoulombFunctions_data:',CoulombFunctions_data)    
+#     print('CoulombFunctions_poles:',CoulombFunctions_poles)
+#     print('Dimensions:',Dimensions)
+#     print('Logicals:',Logicals)
+#     print('Search_Control:',Search_Control)
+#     print('other args:',Multi,ML,ComputerPrecisions,searchpars0,data_val)
 
     from evaluate import evaluate
     searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0, A_tF_n, XS_totals = evaluate(Multi,ML,ComputerPrecisions, Channels,
