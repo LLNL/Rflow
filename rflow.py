@@ -436,7 +436,7 @@ if __name__=='__main__':
     if args.Search:  
     
         print('Revised norms:',norm_val)
-        saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm_refs)
+        saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,args.inFile,n_norms,norm_val,norm_refs)
 
         info = '+S_' + args.tag
         newFitFile = base  + '-fit.xml'

@@ -47,7 +47,7 @@ def ts_float32(val):
     """Used if *val* is an instance of numpy.float32."""
     return numpy.float64(val)
 
-def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm_refs):
+def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,inFile,n_norms,norm_val,norm_refs):
 
     docLines = ['Rflow:']
     for n in range(n_norms):
@@ -67,7 +67,7 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,n_norms,norm_val,norm
         computerCodeFit = computerCodeModule.ComputerCode( label = 'R-matrix fit', name = 'Rflow', version = '') #, date = now() )
         deckLabel = 'Fitted_data'
         
-    inputDataSpecs = computerCodeModule.InputDeck( deckLabel , ('\n  %s\n' % now() )  + ('\n'.join( docLines ))+'\n' )
+    inputDataSpecs = computerCodeModule.InputDeck( deckLabel , inFile, ('\n  %s\n' % now() )  + ('\n'.join( docLines ))+'\n' )
     computerCodeFit.inputDecks.add( inputDataSpecs )
 
     if not previousFit: 
