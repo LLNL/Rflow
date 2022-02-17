@@ -19,10 +19,12 @@ from PoPs import database as databaseModule
 
 # BAD DATA:
 rescale_e3 = ['20920']  # Scobel data should be label b, not mb
+rescale_e3 = []  # now fixed
 
 excludeSE = ['F0005002','10547002','11182002','11164003','10755003']
 
 # excludeSE += ['F0397006']  # EN-MIN but no EN-MAX
+excludeSE += ['41704003']  # this is supposed to be just thermal
 
 
 
@@ -545,6 +547,7 @@ if __name__ == "__main__":
                                 print(10*' ',' Has "times 4 pi", so divide by 4pi')
                                 data_scale /= (4*pi)
                             if e in rescale_e3: data_scale *= 1e3
+                            if debug: print('From units', Data_units.lower(),' data_scale=',data_scale,'for barns & MeV')
                         
                             if S_factor:
                                 if Data_units.lower() in ['mb*mev']: data_scale = 1e-3

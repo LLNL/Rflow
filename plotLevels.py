@@ -53,7 +53,7 @@ for file in  args.Files:
         stuffs.append(['pops',pops,file,name])
     
     if type=='reactionSuite':
-        gnd=reactionSuiteModule.readXML( file )
+        gnd=reactionSuiteModule.ReactionSuite.readXML_file( file )
         name = gnd.evaluation
         p,t = gnd.projectile,gnd.target
         PoPs = gnd.PoPs

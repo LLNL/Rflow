@@ -217,8 +217,10 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
                     S_poles = L_poles[js,:p,:m,0] + tf.reshape(E_rpoles[js,:p]-EO_poles[js,:p],[-1,1]) * dLdE_poles[js,:p,:m,0]
                 else:  # interpolate on regular grid L_poles
                     Elow, Ehigh = dLdE_poles,EO_poles
-                    S_poles = tfp.math.interp_regular_1d_grid(E_rpoles[js,:p], Elow, Ehigh, L_poles[:,js,:m,0], axis=0)  # want final dimensions SE_poles[:p,:m]
-#                     print('\nSE_poles',SE_poles.dtype,SE_poles.get_shape(),'for p,m=',p,m,'\n')
+
+                    with tf.device('/cpu:0'):  # no GPU implementation in M1 metal
+                        S_poles = tfp.math.interp_regular_1d_grid(E_rpoles[js,:p], Elow, Ehigh, L_poles[:,js,:m,0], axis=0)  # want final dimensions SE_poles[:p,:m]
+#                     print('\nS_poles',S_poles.dtype,S_poles.get_shape(),'for p,m=',p,m,'\n')
                     
 #                 POLES_L = tf.reshape(E_poles[js,:p], [1,p,1,1])  # same for all energies and channel matrix
 #                 POLES_R = tf.reshape(E_poles[js,:p], [1,1,p,1])  # same for all energies and channel matrix

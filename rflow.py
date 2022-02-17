@@ -125,7 +125,7 @@ if __name__=='__main__':
         realSize = 4  # bytes
     ComputerPrecisions = (REAL, CMPLX, INT, realSize)
 
-    gnd=reactionSuiteModule.readXML(args.inFile)
+    gnd=reactionSuiteModule.ReactionSuite.readXML_file(args.inFile)
     p,t = gnd.projectile,gnd.target
     PoPs = gnd.PoPs
     projectile = PoPs[p];
@@ -138,7 +138,7 @@ if __name__=='__main__':
     emax = PQUModule.PQU(rrr.domainMax,rrr.domainUnit).getValueAs('MeV')
     if args.emin is not None: emin = args.emin
     if args.EMAX is not None: emax = args.EMAX
-    print(' Trim incoming data within [',emin,',',emax,'] in lab MeV for projectile',p)
+    print(' Trim incoming data within [',emin,',',emax,'] in cm MeV for projectile',p)
             
 # Previous fitted norms:
 # any variable or data namelists in the documentation?
@@ -193,6 +193,9 @@ if __name__=='__main__':
             Qvalued = QI
         if p == projectile.id:
             Qvaluei = QI
+    if lab2cmd is None: 
+       print('Error: Projectile not valid for from data file. Found:',projectile4LabEnergies)
+       sys.exit()
             
             
 #     print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
@@ -466,7 +469,7 @@ if __name__=='__main__':
         plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, 
             chisq,ww,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
             groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, args.TransitionMatrix,
-            args.XCLUDE,projectile4LabEnergies,data_lines,args.dataFile,
+            args.XCLUDE,p,projectile4LabEnergies,data_lines,args.dataFile,
             EIndex,totals,pname,tname,args.datasize,ipair,cm2lab, emin,emax,pnin,gnd,cmd )
     
     print('\n*** chisq/pt = %12.5f, chisq/dof = %12.5f with ww = %12.5f so data Chisq/DOF = %12.5f from dof = %i\n' % (chisq/n_data,chisq/n_dof,ww/n_dof,(chisq-ww)/n_dof, n_dof) )   

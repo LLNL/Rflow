@@ -7,7 +7,7 @@
 
 import numpy
 lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
-from PoPs.groups.misc import *
+from PoPs.chemicalElements.misc import *
 
 def nuclIDs (nucl):
     datas = chemicalElementALevelIDsAndAnti(nucl)

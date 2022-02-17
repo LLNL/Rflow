@@ -19,7 +19,7 @@ plsymbol = {0:".", 1:"o", 2:"s", 3: "D", 4:"^", 5:"<", 6: "v", 7:">",
 
 lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
-from PoPs.groups.misc import *
+from PoPs.chemicalElements import *
 from xData import date
 
 def now():
@@ -78,7 +78,7 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,inFile,n_norms,norm_v
 def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, 
     chisqTOT,ww,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
     groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, TransitionMatrix,
-    XCLUDE,projectile4LabEnergies,data_lines,dataFile,
+    XCLUDE,p,projectile4LabEnergies,data_lines,dataFile,
     EIndex,totals,pname,tname,datasize, ipair,cm2lab, emin,emax,pnin,gnd,cmd ):
 
     print('\nExperimental data groups, by energy or angle groups if simpler:\n')
@@ -233,6 +233,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
         GraphList = []
         DataLines = []
         ModelLines = []
+        xlabel = 'Energy [MeV, lab]'  # default
         ng = 0
         
         curves = set()
@@ -293,6 +294,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
                 chi = (xsc[id]/fac/ex2cm-data_val[id,2])/data_val[id,3] 
                 
                 cluster = cluster_list[id]
+                xlabel = 'Incident %s energy [MeV, lab]' % p if cluster in ['E','I'] else 'Scattering angle [deg, lab]'
                 Ein = Ein_list[id]
                 Aex = Aex_list[id]
                 if args.Cross_Sections:
@@ -370,7 +372,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
             if '/' in j_out: j_out = j_out.split('/')[1].replace('/','+')
             j_out = dataDir + '/' + j_out
             with open(j_out,'w') as ofile:
-               json.dump([1,1,cmd,GraphList],ofile, default=to_serializable)
+               json.dump([1,1,[cmd,xlabel],GraphList],ofile, default=to_serializable)
                
             plot_cmd += '\t             json2pyplot.py -w 10,8 %s' % j_out
             plot_cmds.append(plot_cmd)
@@ -433,7 +435,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
     if totals is not None: p_out = dataDir + '/' + p_out  # put in subdirectory if it exists
     print('   Write',p_out,'with',1)
     with open(p_out,'w') as ofile:
-       json.dump([1,1,cmd,PoleGraphList],ofile, default=to_serializable)
+       json.dump([1,1,[cmd,xlabel],PoleGraphList],ofile, default=to_serializable)
             
 # chi from norm_vals themselves:
     for ni in range(n_norms):
@@ -579,7 +581,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
                 j_out = dataDir + '/' + j_out
 #                 print('Write',j_out,'with',SinglengraphAll)
                 with open(j_out,'w') as ofile:
-                   json.dump([SinglengraphAll,1,cmd,SingleGraphList],ofile, default=to_serializable)
+                   json.dump([SinglengraphAll,1,[cmd,xlabel],SingleGraphList],ofile, default=to_serializable)
                 Singleplot_cmds +=  ' ' + j_out
         
             j_out = 'Angle-integrals-from-%s.json' % (pn)
@@ -587,7 +589,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
             j_out = dataDir + '/' + j_out
             print('   Write',j_out,'with',ngraphAll)
             with open(j_out,'w') as ofile:
-               json.dump([ngraphAll,1,cmd,GraphList],ofile, default=to_serializable)
+               json.dump([ngraphAll,1,[cmd,xlabel],GraphList],ofile, default=to_serializable)
             plot_cmds += ' ' + j_out
         
         j_out = 'Angle-integrals-Global.json' 
@@ -595,7 +597,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
         j_out = dataDir + '/' + j_out
         print('Write',j_out,'with',GlobalngraphAll)
         with open(j_out,'w') as ofile:
-           json.dump([GlobalngraphAll,1,cmd,GlobalGraphList],ofile, default=to_serializable)
+           json.dump([GlobalngraphAll,1,[cmd,xlabel],GlobalGraphList],ofile, default=to_serializable)
         Globalplot_cmds +=  ' ' + j_out
         
         print('------')

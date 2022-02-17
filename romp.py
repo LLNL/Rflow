@@ -69,7 +69,7 @@ if __name__=='__main__':
         realSize = 4  # bytes
     ComputerPrecisions = (REAL, CMPLX, INT, realSize)
 
-    gnds=reactionSuiteModule.readXML(args.inFile)
+    gnds=reactionSuiteModule.ReactionSuite.readXML_file(args.inFile)
     p,t = gnds.projectile,gnds.target        
     rrr = gnds.resonances.resolved
     eminG = PQUModule.PQU(rrr.domainMin,rrr.domainUnit).getValueAs('MeV')

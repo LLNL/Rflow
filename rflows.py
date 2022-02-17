@@ -1016,7 +1016,7 @@ if __name__=='__main__':
     args.TransitionMatrix = 1
     
 
-    gnd=reactionSuiteModule.readXML(args.inFile)
+    gnd=reactionSuiteModule.ReactionSuite.readXML_file(args.inFile)
     p,t = gnd.projectile,gnd.target
     PoPs = gnd.PoPs
     projectile = PoPs[p];

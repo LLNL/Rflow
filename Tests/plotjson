@@ -67,7 +67,7 @@ for plotFile in args.plotFile:
         traceFileName = 'Pyplot-%s+%ix%i.pydata'% (plotFile.replace('/','_'),rows,cols)
         pyplot_trace = open(traceFileName, 'w')
     fig,axes = pl.subplots(rows,cols, figsize=(width,height) )
-    axes.tick_params(direction = 'in', labelsize=20.)
+    # axes.tick_params(direction = 'in', labelsize=20.)
     axes.set_xlabel('Neutron energy [MeV, lab]')
     axes.set_ylabel('Cross section [mb]')
     i = 0

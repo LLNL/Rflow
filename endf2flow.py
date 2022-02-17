@@ -29,7 +29,7 @@ for gndFile in sys.argv[3:] :
     dataFile = open(gndFile.replace('.xml','_'+sys.argv[2]+'.data'),'w')
     normFile = open(gndFile.replace('.xml','_'+sys.argv[2]+'.norms'),'w')
     
-    gnd = reactionSuite.readXML( gndFile )
+    gnd = reactionSuite.ReactionSuite.readXML_file( gndFile )
     gnd.convertUnits( {'eV':'MeV'} )
     p = gnd.projectile; t = gnd.target; incoming = p + ' + ' +t
     print(p,' : projectile defining the lab energy in first column', file=dataFile)
