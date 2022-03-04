@@ -8,7 +8,7 @@ import argparse
 
 from xData import formatVersion as formatVersionModule
 from PoPs import database as databaseModule
-from LUPY import GNDSType as GNDSTypeModule
+from fudge import GNDS_file as GNDSTypeModule
 from pqu import PQU as PQUModule
 
 extensionDefault = '.gm'
