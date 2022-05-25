@@ -39,8 +39,6 @@ pi = 3.1415926536
 #   Secondary emission expts
 #   Relativistic kinematics
 #   Give full covariance matrix (add missing blocks to GNDS somehow)
-#   Adding new poles
-#   Removing old poles
 #   Add new J/pi set (empty initially)
 #   Try fits for values in lists of alternate J/pi 
 
@@ -51,6 +49,7 @@ pi = 3.1415926536
 #   Fit specific Legendre orders
 
 # Doing:
+#   Adding / removing poles: use gnds_mod.py or gnds_merge.y
 
 
 
@@ -389,7 +388,7 @@ if __name__=='__main__':
     print('Energy limits:   Data min,max:',args.emin,args.EMAX,'.  Poles min,max:',args.pmin,args.PMAX)
 
     finalStyleName = 'fitted'
-    fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
+    fitStyle = stylesModule.CrossSectionReconstructed( finalStyleName,
             derivedFrom=gnd.styles.getEvaluatedStyle().label )
     if args.Averaging  > 0.0: print('Energy-averaged scattering with width %s MeV' % args.Averaging)
     

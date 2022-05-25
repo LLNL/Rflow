@@ -7,7 +7,7 @@
 
 import math,sys
 
-from xData import XYs as XYs1dModule
+from xData import XYs1d as XYs1dModule
 
 pi = 3.1415926536
 

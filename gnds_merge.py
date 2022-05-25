@@ -6,7 +6,7 @@
 import os,numpy
 import argparse,sys
 
-from xData import formatVersion as formatVersionModule
+from fudge import GNDS_formatVersion as formatVersionModule
 from PoPs import database as databaseModule
 from fudge import GNDS_file as GNDSTypeModule
 from pqu import PQU as PQUModule

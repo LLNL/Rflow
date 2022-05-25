@@ -17,11 +17,12 @@ from levelDensities import leveldensity
 from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
 from xData.series1d  import Legendre
-from xData import XYs
-from PoPs.groups.misc import *
+from xData import XYs1d as XYs
+from PoPs.chemicalElements.misc import *
 
 from xData.Documentation import documentation as documentationModule
 from xData.Documentation import computerCode  as computerCodeModule
+from fudge.reactionData import crossSection as crossSectionModule
 # from scipy import interpolate
 
 REAL = numpy.double
@@ -38,6 +39,10 @@ fmscal = 2e0 * amu / hbc**2
 etacns = coulcn * math.sqrt(fmscal) * 0.5e0
 pi = 4.*math.atan(1.0)
 rsqr4pi = 1.0/(4*pi)**0.5
+
+crossSectionUnit = 'mb'
+crossSectionAxes = crossSectionModule.defaultAxes( 'MeV' )
+crossSectionAxes.axes[0].unit = crossSectionUnit
 
 def nuclIDs (nucl):
     datas = chemicalElementALevelIDsAndAnti(nucl)
@@ -419,7 +424,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
 
         widths = [R.getColumn( col.name, 'MeV' ) for col in R.columns if col.name != 'energy']
         
-#         if verbose:  print("\n".join(R.toXMLList()))       
+#         if verbose:  print(R.toXML()))       
         n = None
         c = 0
         for pair in range(npairs):
@@ -600,7 +605,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
                         R.data[pole][1] = D_poles[jset,pole]
                 for c in range(cols):
                     R.data[pole][c+c_start] = g_poles[jset,pole,c]
-    #                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", "\n".join(R.toXMLList()))
+    #                 if verbose: print('\nJ,pi =',J_set[jset],parity,"revised R-matrix table:", R.toXML() )
 
             nopts = len(discreteLevels[jpi])
             if Dspacing is not None: nopts = N_opts
@@ -777,7 +782,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
                         XS += Gfac * 2*pi * O_width[jset,p,cin] / Pspacing * 10.
                     XSr.append([Elab,XS])
                 XSr.append([Elab+.1,0.])  # zero to terminate domain
-                XSEC = XYs.XYs1d(data=XSr, dataForm="XYs"  )
+                XSEC = XYs.XYs1d(data=XSr, dataForm="XYs"  , axes = crossSectionAxes)
                 XSreac = XSEC if jset==0 else XSreac + XSEC
                 jset += 1
 #                 print('# points in SLBW:',len(XSEC),len(XSreac))
@@ -837,12 +842,12 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
 
                                 XSp_mat += ( ampl * ampl.conjugate() ).real    *  gfac[ie,jset,cin] 
                                                                           
-                            XSc_coh +=  ( amc_coh * amc_coh.conjugate() ).real *  gfac[ie,jset,cin] 
                             XSa_coh +=  ( ama_coh * ama_coh.conjugate() ).real *  gfac[ie,jset,cin] 
+                            XSc_coh +=  ( amc_coh * amc_coh.conjugate() ).real *  gfac[ie,jset,cin] 
 
                 x = XSp_mat * 10.   # SLBW  decoherent
-                xc = XSc_coh * 10.  # MLBW  fixed G
                 xa = XSa_coh * 10.  # NLBW  scaled G
+                xc = XSc_coh * 10.  # MLBW  fixed G
                 Elab = E * cm2lab[pin]   # Elab for incoming channel (pair, not ipair)
                 Eo = E_scat[ie]*lab2cm if Global else Elab
                 Ex[ie] = Eo

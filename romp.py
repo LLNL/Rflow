@@ -148,7 +148,7 @@ if __name__=='__main__':
     
     if NewLevels:
         newFitFile = base  + '-opt.xml'
-        open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnds.toXMLList( ) )
+        open( newFitFile, mode='w' ).writelines( gnds.toXML( ) )
         print('Written new gnds file:',newFitFile)
     
 

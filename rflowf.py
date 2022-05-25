@@ -1316,7 +1316,7 @@ if __name__=='__main__':
     print('Energy limits.   Data min,max:',args.emin,args.EMAX,'.  Poles min,max:',args.pmin,args.PMAX)
 
     finalStyleName = 'fitted'
-    fitStyle = stylesModule.crossSectionReconstructed( finalStyleName,
+    fitStyle = stylesModule.CrossSectionReconstructed( finalStyleName,
             derivedFrom=gnd.styles.getEvaluatedStyle().label )
 
 # parameter input for computer method

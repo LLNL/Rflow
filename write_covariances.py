@@ -38,7 +38,7 @@ def write_gnds_covariances(gnds,searchpars,inverse_hessian,GNDS_loc,POLE_details
 
 
  # store into GNDS (need links to each spinGroup)
-    parameters = covarianceModelParametersModule.parameters()
+    parameters = covarianceModelParametersModule.Parameters()
     startIndex = 0
     for spinGroup in gnds.resonances.resolved.evaluated:
         nParams = spinGroup.resonanceParameters.table.nColumns * spinGroup.resonanceParameters.table.nRows

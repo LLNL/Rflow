@@ -6,10 +6,13 @@
 import os,numpy
 import argparse
 
-from xData import formatVersion as formatVersionModule
+from fudge import GNDS_formatVersion as formatVersionModule
+import fudge.resonances.scatteringRadius as scatteringRadiusModule
 from PoPs import database as databaseModule
 from fudge import GNDS_file as GNDSTypeModule
 from pqu import PQU as PQUModule
+import xData.constant as constantModule
+import xData.axes as axesModule
 
 extensionDefault = '.gm'
 
@@ -29,6 +32,7 @@ parser.add_argument( '-p', '--path', default = None,                            
 parser.add_argument( '-s', '--scale', default = None, type=float,                       help = 'Scale all widths !' )
 parser.add_argument( '-E', '--ETRIM', default = None, type=float,nargs=2,               help = 'Remove all poles with energies between ETRIM[0] and ETRIM[1] for all spin groups')
 parser.add_argument( '-t', '--trim', default = None, type=int, nargs=3,                 help = 'Cut numbered trim[0]-trim[1] poles from spingroup trim[2].' )
+parser.add_argument( '-r', '--radii', default = None, type=float, nargs='+',              help = 'Reset channel radii to this sequence of projectiles.' )
 
 parser.add_argument( '--skipCovariances', action = 'store_true',                        help = 'If present, any covariance files in are not written.' )
 parser.add_argument( '--formatVersion', default = formatVersionModule.default, choices = formatVersionModule.allowed,
@@ -39,18 +43,19 @@ if( __name__ == '__main__' ) :
     args = parser.parse_args( )
 
     fileName = args.input
+    gnds = GNDSTypeModule.read( fileName )
 
     covariances = []
-    name, dummy = GNDSTypeModule.type( fileName )
-    if( name == databaseModule.database.moniker ) :
-        gnds = GNDSTypeModule.read( fileName )
-    else :
-        gnds = GNDSTypeModule.read( fileName )
-        if not args.skipCovariances:
-            try:
-                if hasattr(gnds, 'loadCovariances'): covariances = gnds.loadCovariances()
-            except:
-                print('WARNING: could not load covariance file(s).')
+#   name, dummy = GNDSTypeModule.type( fileName )
+#   if( name == databaseModule.database.moniker ) :
+#       gnds = GNDSTypeModule.read( fileName )
+#   else :
+#       gnds = GNDSTypeModule.read( fileName )
+#       if not args.skipCovariances:
+#           try:
+#               if hasattr(gnds, 'loadCovariances'): covariances = gnds.loadCovariances()
+#           except:
+#               print('WARNING: could not load covariance file(s).')
 
     if( args.energyUnit is not None ) :
         gnds.convertUnits( { 'MeV' : args.energyUnit, 'eV' : args.energyUnit } )
@@ -81,6 +86,9 @@ if( __name__ == '__main__' ) :
     bndv = RMatrix.boundaryConditionValue
     IFG = RMatrix.reducedWidthAmplitudes
     
+    if args.radii is not None:
+        newRadii = args.radii
+        changedRadii = len(newRadii)
 
     channels = {}
     pair = 0
@@ -88,6 +96,9 @@ if( __name__ == '__main__' ) :
     ReichMoore = False
     damping = 0
     print('\nChannels:')
+    Rm_Radius = gnds.resonances.scatteringRadius
+    
+    Ejectiles = []
     for partition in RMatrix.resonanceReactions:
         kp = partition.label
         if partition.eliminated: # no two-body kinematics
@@ -96,8 +107,26 @@ if( __name__ == '__main__' ) :
             damping = 1
             continue
         channels[pair] = kp
+        prmax = Rm_Radius
+        if partition.scatteringRadius is not None:
+            prmax =  partition.scatteringRadius.getValueAs('fm')
+
+        changed = ''
+        if args.radii is not None:
+            ejectile = partition.ejectile
+            if ejectile not in Ejectiles:
+                Ejectiles.append(ejectile)
+            index = Ejectiles.index(ejectile)
+            if index < changedRadii: 
+                newR = newRadii[index]
+                newRadius = scatteringRadiusModule.ScatteringRadius(
+                        constantModule.Constant1d(newR, domainMin=emin, domainMax=emax,
+                            axes=axesModule.Axes( labelsUnits={1: ('energy_in', 'MeV'), 0: ('radius', 'fm')})) )
+                partition.scatteringRadius = newRadius
+                changed = ' changed to %s' % newR
+
         pair += 1
-        print('  reaction "%s"' % kp,' (eliminated)' if partition.eliminated else '')
+        print('  reaction "%s"' % kp,' (eliminated)' if partition.eliminated else '','R =',prmax,changed)
         
     print('\nPoles:')
     jset = 0

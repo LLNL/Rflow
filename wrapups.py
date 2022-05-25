@@ -12,7 +12,7 @@ plsymbol = {0:".", 1:"o", 2:"s", 3: "D", 4:"^", 5:"<", 6: "v", 7:">",
 
 lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
-from PoPs.groups.misc import *
+from PoPs.chemicalElements.misc import *
 
 def nuclIDs (nucl):
     datas = chemicalElementALevelIDsAndAnti(nucl)
