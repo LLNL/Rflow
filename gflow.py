@@ -117,7 +117,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             partitions[kp] = None
             continue
         channels[pair] = kp
-        reaction = partition.reactionLink.link
+        reaction = partition.link.link
         p,t = partition.ejectile,partition.residual
         pname[pair] = p
         tname[pair] = t

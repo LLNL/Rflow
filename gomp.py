@@ -200,7 +200,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
             partitions[kp] = None
             continue
         channels[pair] = kp
-        reaction = partition.reactionLink.link
+        reaction = partition.link.link
         p,t = partition.ejectile,partition.residual
         pname[pair] = p
         tname[pair] = t

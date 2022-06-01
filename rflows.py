@@ -144,7 +144,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             partitions[kp] = None
             continue
         channels[pair] = kp
-        reaction = partition.reactionLink.link
+        reaction = partition.link.link
         p,t = partition.ejectile,partition.residual
         pname[pair] = p
         tname[pair] = t
@@ -1072,7 +1072,7 @@ if __name__=='__main__':
     projectile4LabEnergies =f.readline().split()[0]
     lab2cmd = None
     for partition in RMatrix.resonanceReactions:
-        reaction = partition.reactionLink.link
+        reaction = partition.link.link
         p,t = partition.ejectile,partition.residual
         if partition.Q is not None:
             QI = partition.Q.getConstantAs('MeV')

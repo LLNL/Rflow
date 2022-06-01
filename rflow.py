@@ -180,7 +180,7 @@ if __name__=='__main__':
     projectile4LabEnergies =f.readline().split()[0]
     lab2cmd = None
     for partition in RMatrix.resonanceReactions:
-        reaction = partition.reactionLink.link
+        reaction = partition.link.link
         p,t = partition.ejectile,partition.residual
         if partition.Q is not None:
             QI = partition.Q.getConstantAs('MeV')
