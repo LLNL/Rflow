@@ -48,7 +48,7 @@ args = parser.parse_args()
 print('Command:',' '.join(sys.argv[:]) ,'\n')
 
 
-pops = databaseModule.database.readFile( args.pops )
+pops = databaseModule.Database.read( args.pops )
 CN = args.CN
 
 

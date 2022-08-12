@@ -43,7 +43,7 @@ def write_gnds_covariances(gnds,searchpars,inverse_hessian,GNDS_loc,POLE_details
     for spinGroup in gnds.resonances.resolved.evaluated:
         nParams = spinGroup.resonanceParameters.table.nColumns * spinGroup.resonanceParameters.table.nRows
         if nParams == 0: continue
-        parameters.add( covarianceModelParametersModule.parameterLink(
+        parameters.add( covarianceModelParametersModule.ParameterLink(
             label = spinGroup.label, link = spinGroup.resonanceParameters.table, root="$reactions",
             matrixStartIndex=startIndex, nParameters=nParams
         ))
@@ -91,18 +91,18 @@ def write_gnds_covariances(gnds,searchpars,inverse_hessian,GNDS_loc,POLE_details
         else:
             print("Correlation eivenvalues:\n",numpy.array_repr(numpy.flip(eigval[:]),max_line_width=100,precision=3))
 
-    GNDSmatrix = arrayModule.flattened.fromNumpyArray(matrix, symmetry=arrayModule.symmetryLowerToken)
+    GNDSmatrix = arrayModule.Flattened.fromNumpyArray(matrix, symmetry=arrayModule.Symmetry.lower)
     # print GNDSmatrix.toXML()
     Type="absoluteCovariance"
-    covmatrix = covarianceModelParametersModule.parameterCovarianceMatrix('eval', GNDSmatrix,
+    covmatrix = covarianceModelParametersModule.ParameterCovarianceMatrix('eval', GNDSmatrix,
         parameters, type=Type )
     if verbose: print(covmatrix.toXML())
-    rowData = covarianceSectionModule.rowData(gnds.resonances.resolved.evaluated,
+    rowData = covarianceSectionModule.RowData(gnds.resonances.resolved.evaluated,
             root='')
-    parameterSection = covarianceModelParametersModule.parameterCovariance("resolved resonances", rowData)
+    parameterSection = covarianceModelParametersModule.ParameterCovariance("resolved resonances", rowData)
     parameterSection.add(covmatrix)
 
-    covarianceSuite = covarianceSuiteModule.covarianceSuite(  gnds.projectile, gnds.target, 'Rflow R-matrix covariances' )
+    covarianceSuite = covarianceSuiteModule.CovarianceSuite(  gnds.projectile, gnds.target, 'Rflow R-matrix covariances' )
     covarianceSuite.parameterCovariances.add(parameterSection)
 
     if debug: print(covarianceSuite.toXMLList())
