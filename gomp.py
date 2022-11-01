@@ -230,7 +230,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
         else:
             QI[pair] = reaction.getQ('MeV')
         if partition.scatteringRadius is not None:
-            prmax[pair] =  partition.scatteringRadius.getValueAs('fm')
+            prmax[pair] =  partition.getScatteringRadius().getValueAs('fm')
         else:
             prmax[pair] = Rm_global
 

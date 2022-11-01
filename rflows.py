@@ -163,7 +163,7 @@ def Rflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         else:
             QI[pair] = reaction.getQ('MeV')
         if partition.scatteringRadius is not None:
-            prmax[pair] =  partition.scatteringRadius.getValueAs('fm')
+            prmax[pair] =  partition.getScatteringRadius().getValueAs('fm')
         else:
             prmax[pair] = Rm_global
 

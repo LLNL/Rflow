@@ -109,7 +109,7 @@ if( __name__ == '__main__' ) :
         channels[pair] = kp
         prmax = Rm_Radius
         if partition.scatteringRadius is not None:
-            prmax =  partition.scatteringRadius.getValueAs('fm')
+            prmax =  partition.getScatteringRadius().getValueAs('fm')
 
         changed = ''
         if args.radii is not None:
