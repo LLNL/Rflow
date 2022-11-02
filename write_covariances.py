@@ -10,6 +10,7 @@ import numpy
 import fudge.covariances.covarianceSuite as covarianceSuiteModule
 import fudge.covariances.covarianceSection as covarianceSectionModule
 import fudge.covariances.modelParameters as covarianceModelParametersModule
+import fudge.covariances.enums as covarianceEnumsModule
 
 import xData.xDataArray as arrayModule
 
@@ -93,7 +94,7 @@ def write_gnds_covariances(gnds,searchpars,inverse_hessian,GNDS_loc,POLE_details
 
     GNDSmatrix = arrayModule.Flattened.fromNumpyArray(matrix, symmetry=arrayModule.Symmetry.lower)
     # print GNDSmatrix.toXML()
-    Type="absoluteCovariance"
+    Type=covarianceEnumsModule.Type.absolute
     covmatrix = covarianceModelParametersModule.ParameterCovarianceMatrix('eval', GNDSmatrix,
         parameters, type=Type )
     if verbose: print(covmatrix.toXML())
