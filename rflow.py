@@ -442,12 +442,14 @@ if __name__=='__main__':
 
         info = '+S_' + args.tag
         newFitFile = base  + '-fit.xml'
-        open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
+#       open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
+        gnd.saveToFile( newFitFile )
         print('Written new fit file:',newFitFile)
         
         if cov is not None:
             newCovFile = base  + '-fit_covs.xml'
-            open( newCovFile, mode='w' ).writelines( line+'\n' for line in cov.toXMLList( ) )            
+#           open( newCovFile, mode='w' ).writelines( line+'\n' for line in cov.toXMLList( ) )            
+            cov.saveToFile( newCovFile )
     else:
         info = '' 
 

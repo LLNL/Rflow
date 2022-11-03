@@ -106,7 +106,10 @@ def write_gnds_covariances(gnds,searchpars,inverse_hessian,GNDS_loc,POLE_details
     covarianceSuite = covarianceSuiteModule.CovarianceSuite(  gnds.projectile, gnds.target, 'Rflow R-matrix covariances' )
     covarianceSuite.parameterCovariances.add(parameterSection)
 
-    if debug: print(covarianceSuite.toXMLList())
+#   if debug: print(covarianceSuite.toXMLList())
+    if debug: 
+        print('Write covariances to CovariancesSuite.xml')
+        covarianceSuite.saveToFile('CovariancesSuite.xml')
 #     if verbose: 
 #   covarianceSuite.saveToFile('CovariancesSuite.xml')
     
