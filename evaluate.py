@@ -27,15 +27,10 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
     tf.enable_v2_behavior()
     # tf.compat.v1.disable_eager_execution()
     tf.config.run_functions_eagerly(False)
-
-    if ML is not None:
-        from tensorflow.python.compiler.mlcompute import mlcompute
-        mlcompute.set_mlc_device(device_name=ML)
-        print('mlcompute set to',ML)
         
     try:
       physical_devices = tf.config.list_physical_devices('GPU')
-      print("GPUs:",physical_devices)
+      print("GPUs:",physical_devices,'with TF:',tf.__version__)
       for device in physical_devices:
           tf.config.experimental.set_memory_growth(device, True)
     except:
@@ -43,16 +38,6 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
       pass
     # tf.logging.set_verbosity(tf.logging.ERROR)
 
-    if Multi > 1:
-        strategy = tf.distribute.MirroredStrategy()
-        npal = strategy.num_replicas_in_sync
-        print('Parallel with',npal)
-    elif Multi == 1:
-        strategy = tf.distribute.OneDeviceStrategy()
-        npal = strategy.num_replicas_in_sync
-        print('Parallel with',npal)    
-    else:
-        strategy = tf.distribute.get_strategy()
 
 #     ComputerPrecisions = (REAL, CMPLX, INT, realSize)
 #     Logicals = (LMatrix,brune,Lambda,EBU,chargedElastic, debug,verbose)
@@ -374,214 +359,135 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
             tf.print(chisq/n_data, ww/n_data, (chisq-ww)/n_data, searchpars,  summarize=-1,   output_stream=snap)
     
         return(chisq, tf.gradients(chisq, searchpars)[0] )
-    
 
-    with strategy.scope():
-        
-        searchpars = tf.Variable(searchpars0)
+    searchpars = tf.Variable(searchpars0)
+
+    if Search:
+        os.system("rm -f %s/bfgs_min.trace" % (base) )
+        os.system("rm -f %s/bfgs_min.snap" % (base) )
+        trace = "file://%s/bfgs_min.trace" % (base)
+        snap = "file://%s/bfgs_min.snap"  % (base)
+
+    print("First FitStatusTF: ",tim.toString( ))
+          
+    zero = tf.constant(0.0, dtype = REAL)
             
-        if Search:
-            os.system("rm -f %s/bfgs_min.trace" % (base) ) 
-            os.system("rm -f %s/bfgs_min.snap" % (base) )
-            trace = "file://%s/bfgs_min.trace" % (base)
-            snap = "file://%s/bfgs_min.snap"  % (base) 
+    chisq0,Grads = FitMeasureTF(searchpars)
+
+    chisq0_n = chisq0.numpy()
+    grad0 = Grads.numpy()
+    
+    ww = ( tf.reduce_sum(searchpars[border[1]:border[2]]**4) * widthWeight ).numpy()
+    print('\nFirst run chisq/pt:',chisq0_n/n_data,'including ww/pt',ww/n_data,':',(chisq0_n-ww)/n_data ,'for data.\n') 
+     
+    if verbose: print('Grads:',grad0)
+    sys.stdout.flush()
+
+    if Search:
+
+        print('Start search'); sys.stdout.flush()
+        optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
+                            max_iterations=Iterations, tolerance=float(Search))
                         
-        print("First FitStatusTF: ",tim.toString( ))
+        last_cppt = optim_results.objective_value.numpy()/n_data
+        searchpars = optim_results.position
         
-        
-        if Multi > 0:
-            dataset1a= tf.data.Dataset.from_tensor_slices ( (InterferenceAmpl,CSp_diag_in,CSp_diag_out))
-            dataset2a= tf.data.Dataset.from_tensor_slices ( (Rutherford, Gfacc))  
-            dataset3a = tf.data.Dataset.from_tensor_slices ( [ AA[jl] for jl in range(n_jsets) ] )
-            print('dataset1a:\n',dataset1a)
-            print('dataset2a:\n',dataset2a)
-            print('dataset3a:\n',dataset3a)
-    #         dataset_23a = dataset2a.concatenate(dataset3a)
-    #         print('dataset_23a:\n',dataset_23a)
-        
-            dataset1t= tf.data.Dataset.from_tensor_slices ( (data_val,effect_norm,gfac) )
-            dataset2t= tf.data.Dataset.from_tensor_slices ( (POm_diag,L_diag))
-            dataset3t= tf.data.Dataset.from_tensor_slices ( Om2_mat )
-            print('dataset1t:\n',dataset1t)
-            print('dataset2t:\n',dataset2t)
-            print('dataset3t:\n',dataset3t)
-    #         dataset_23t = dataset2t.concatenate(dataset3t)
-    #         print('dataset_23t:\n',dataset_23t)
-        
-                
-            dataset_t = dataset1t.concatenate(dataset2t)
-            print('dataset5:\n',dataset5)
-
-            print('dataset0:\n',dataset0)
-
-# dataset1a:
-#  <TensorSliceDataset shapes: ((10, 3), (10, 3), (10, 3)), types: (tf.complex128, tf.complex128, tf.complex128)>
-# dataset2a:
-#  <TensorSliceDataset shapes: ((), ()), types: (tf.float64, tf.float64)>
-# dataset3a:
-#  <TensorSliceDataset shapes: (1809, 3, 3, 10, 3, 3), types: tf.float64>
-# dataset1t:
-#  <TensorSliceDataset shapes: ((5,), (11,), (10,)), types: (tf.float64, tf.float64, tf.float64)>
-# dataset2t:
-#  <TensorSliceDataset shapes: ((10, 4), (10, 4)), types: (tf.complex128, tf.complex128)>
-# dataset3t:
-#  <TensorSliceDataset shapes: (10, 4, 4), types: tf.complex128>
-# 
-#     dataset_t = dataset1t.concatenate(dataset2t)
-# TypeError: Two datasets to concatenate have different types (tf.float64, tf.float64, tf.float64) and (tf.complex128, tf.complex128)
-        
-            def split_data_model(n):
-                AAn = [ AA[jl][n::npal,...]  for jl in range(n_jsets)]
-                datas = (data_val[n::npal,:],effect_norm[n::npal,:],gfac[n::npal,:],
-                        Rutherford[n::npal],InterferenceAmpl[n::npal,:,:],Gfacc[n::npal], AAn, 
-                        CSp_diag_in[n::npal,:,:],CSp_diag_out[n::npal,:,:],Om2_mat[n::npal,:,:,:],POm_diag[n::npal,:,:],
-                        L_diag[n::npal,:,:]  )
-                model = (n,npal, n_angles_n,n_angle_integrals_n,n_data_n, n_jsets,n_poles,n_chans,maxpc,npairs,nch,npl,
-                         LMatrix,brune,chargedElastic,
-                         searchloc,border,E_poles_fixed_v,g_poles_fixed_v,fixed_norms,norm_info,
-                         L_poles,dLdE_poles,EO_poles )
-                this_part = (datas,model)
-                return this_part
-    #         dist_dataset = my_strategy.experimental_distribute_dataset(dataset)   HOW FOR MY DATA??
-            
-            n_angles_n = stride_size(0,n_angles, npal)
-            n_angle_integrals_n = stride_size(n_angles,n_angles+n_angle_integrals ,npal)
-            n_data_n = stride_size(0,n_data, npal)
-        
-            tot_chisq, tot_Grads = 0.0, tf.zeros_like(searchpars)
-            for n in range(npal):
-                this_part = split_data_model(n)
-        
-                per_replica_chisq = strategy.run( FitMeasureTF, args=(searchpars,this_part[0],this_part[1]) )
-    #             tf.print('per_replica_chisq:',per_replica_chisq)
-    #             tf.print('per_replica_chisq[1]:',per_replica_chisq[1])
-                chisq_n = strategy.reduce( tf.distribute.ReduceOp.SUM,  per_replica_chisq[0], axis = None)
-                Grads_n = strategy.reduce( tf.distribute.ReduceOp.SUM,  per_replica_chisq[1], axis = None)
-    #             tf.print('Grads_n:',Grads_n)
-                tot_chisq += chisq_n
-                tot_Grads += Grads_n 
-            chisq0,Grads = tot_chisq, tot_Grads 
-    #         tf.print('Grads:',Grads)
-   
-        zero = tf.constant(0.0, dtype = REAL)
-                
-        chisq0,Grads = FitMeasureTF(searchpars)
-
-        chisq0_n = chisq0.numpy()
-        grad0 = Grads.numpy()
-        
-        ww = ( tf.reduce_sum(searchpars[border[1]:border[2]]**4) * widthWeight ).numpy()
-        print('\nFirst run chisq/pt:',chisq0_n/n_data,'including ww/pt',ww/n_data,':',(chisq0_n-ww)/n_data ,'for data.\n') 
-         
-        if verbose: print('Grads:',grad0)
-        sys.stdout.flush()
-
-        if Search:
-    
-            print('Start search'); sys.stdout.flush()
-            optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
-                                max_iterations=Iterations, tolerance=float(Search))
-                            
-            last_cppt = optim_results.objective_value.numpy()/n_data
-            searchpars = optim_results.position
-            
-            for restart in range(restarts):
-                searchpars_n = searchpars.numpy()
-
-                print('More pole energies:',searchpars_n[border[0]:border[1]])
-                print('Before restart',restart,' objective chisq/pt',last_cppt)
-                print('And objective FitMeasureTF =',FitMeasureTF(searchpars)[0].numpy()/n_data )
-            
-                if brune and Grid == 0.0:
-                    E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,   searchpars[border[0]:border[1]], [n_jsets*n_poles] )
-                    g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,   searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
-                    norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
-                    D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
-
-                    E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
-                    E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2
-                    g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
-                    E_cscat  = tf.complex(data_val[:,0],tf.constant(Averaging*0.5, dtype=REAL)) 
-                    norm_val =                       (norm_valv+ fixed_norms)**2
-
-                    EOO_poles = EO_poles.copy()
-                    SOO_poles = L_poles.copy()
-                    for ip in range(border[0],border[1]): #### Extract parameters after previous search:
-                        i = searchloc[ip,0]
-                        jset = i//n_poles;  n = i%n_poles
-                        EO_poles[jset,n] = searchpars_n[ip]
-                        
-                    # Re-evaluate pole shifts
-                    Pole_Shifts(L_poles,dLdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
-                
-                    if debug:                         # Print out differences in shifts:
-                        for jset in range(n_jsets):
-                            for n in range(n_poles):
-                                print('j/n=',jset,n,' E old,new:',EOO_poles[jset,n],EO_poles[jset,n])
-                                for c in range(n_chans):
-                                     print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],L_poles[jset,n,c],
-                                             100*dLdE_poles[jset,n,c].real*(EO_poles[jset,n]-EOO_poles[jset,n])/ (L_poles[jset,n,c] - SOO_poles[jset,n,c])))
-                    
-                    Tp_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,0.0,L_poles,dLdE_poles,EO_poles ) 
-
-                    XSp_mat,XSp_tot  = T2X_transformsTF(Tp_mat,gfac, n_jsets,n_chans,npairs,maxpc)
-        
-                # multiply left and right by Coulomb phases:
-                    TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat[:n_angles,...] * tf.expand_dims(CSp_diag_in,2)
-                            
-                    Ax  = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles)
-                    AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
-                    
-                    AxI = XSp_mat[n_angle_integrals0:n_totals0] 
-                    AxT = XSp_tot[n_totals0:n_data] 
-                    
-                    A_t = tf.concat([AxA, AxI, AxT], 0) 
-    
-                    chisq = ChiSqTF(A_t, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
-                    print('  After pole shifts: ChiSqTF =',chisq.numpy()/n_data )
-                    sys.stdout.flush()
-                
-                optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
-                        max_iterations=Iterations, tolerance=float(Search))
-                searchpars = optim_results.position
-                new_cppt = optim_results.objective_value.numpy()/n_data
-#               if new_cppt >= last_cppt: break
-                last_cppt = new_cppt
-                      
-            print('\nResults:')
-            print('Converged:',optim_results.converged.numpy(), 'Failed:',optim_results.failed.numpy())
-            print('Num_iterations:',optim_results.num_iterations.numpy(), 'Num_objective_evaluations:',optim_results.num_objective_evaluations.numpy())
-            
-            chisqF = optim_results.objective_value
-            chisqF_n = chisqF.numpy()
-            print('Objective_value:',chisqF_n, 'Objective chisq/pt',chisqF_n/n_data)
-            
-            searchpars = optim_results.position
+        for restart in range(restarts):
             searchpars_n = searchpars.numpy()
-#             print('position:\n',searchpars_n)
+
+            print('More pole energies:',searchpars_n[border[0]:border[1]])
+            print('Before restart',restart,' objective chisq/pt',last_cppt)
+            print('And objective FitMeasureTF =',FitMeasureTF(searchpars)[0].numpy()/n_data )
+        
+            if brune and Grid == 0.0:
+                E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,   searchpars[border[0]:border[1]], [n_jsets*n_poles] )
+                g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,   searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
+                norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
+                D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
+
+                E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
+                E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2
+                g_cpoles = tf.complex(tf.reshape(g_pole_v+g_poles_fixed_v,[n_jsets,n_poles,n_chans]),tf.constant(0., dtype=REAL))
+                E_cscat  = tf.complex(data_val[:,0],tf.constant(Averaging*0.5, dtype=REAL)) 
+                norm_val =                       (norm_valv+ fixed_norms)**2
+
+                EOO_poles = EO_poles.copy()
+                SOO_poles = L_poles.copy()
+                for ip in range(border[0],border[1]): #### Extract parameters after previous search:
+                    i = searchloc[ip,0]
+                    jset = i//n_poles;  n = i%n_poles
+                    EO_poles[jset,n] = searchpars_n[ip]
+                    
+                # Re-evaluate pole shifts
+                Pole_Shifts(L_poles,dLdE_poles, EO_poles,has_widths, seg_val,1./cm2lab[ipair],QI,fmscal,rmass,prmax, etacns,za,zb,L_val) 
             
-            inverse_hessian = optim_results.inverse_hessian_estimate.numpy()
-            print('inverse_hessian shape=',inverse_hessian.shape ,'\ndiagonal:',['%6.4f,' % inverse_hessian[i,i] for i in range(n_pars)] )
-#             print(dir(optim_results))
+                if debug:                         # Print out differences in shifts:
+                    for jset in range(n_jsets):
+                        for n in range(n_poles):
+                            print('j/n=',jset,n,' E old,new:',EOO_poles[jset,n],EO_poles[jset,n])
+                            for c in range(n_chans):
+                                 print('      S old,new %10.6f, %10.6f, expected %5.2f %%' % (SOO_poles[jset,n,c],L_poles[jset,n,c],
+                                         100*dLdE_poles[jset,n,c].real*(EO_poles[jset,n]-EOO_poles[jset,n])/ (L_poles[jset,n,c] - SOO_poles[jset,n,c])))
+                
+                Tp_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,0.0,L_poles,dLdE_poles,EO_poles ) 
+
+                XSp_mat,XSp_tot  = T2X_transformsTF(Tp_mat,gfac, n_jsets,n_chans,npairs,maxpc)
+    
+            # multiply left and right by Coulomb phases:
+                TCp_mat = tf.expand_dims(CSp_diag_out,3) * Tp_mat[:n_angles,...] * tf.expand_dims(CSp_diag_in,2)
+                        
+                Ax  = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles)
+                AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
+                
+                AxI = XSp_mat[n_angle_integrals0:n_totals0] 
+                AxT = XSp_tot[n_totals0:n_data] 
+                
+                A_t = tf.concat([AxA, AxI, AxT], 0) 
+
+                chisq = ChiSqTF(A_t, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
+                print('  After pole shifts: ChiSqTF =',chisq.numpy()/n_data )
+                sys.stdout.flush()
+            
+            optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
+                    max_iterations=Iterations, tolerance=float(Search))
+            searchpars = optim_results.position
+            new_cppt = optim_results.objective_value.numpy()/n_data
+#               if new_cppt >= last_cppt: break
+            last_cppt = new_cppt
+                  
+        print('\nResults:')
+        print('Converged:',optim_results.converged.numpy(), 'Failed:',optim_results.failed.numpy())
+        print('Num_iterations:',optim_results.num_iterations.numpy(), 'Num_objective_evaluations:',optim_results.num_objective_evaluations.numpy())
         
-        else:
-            inverse_hessian = None
-            searchpars_n = searchpars0
-        
-        print("Second FitStatusTF start: ",tim.toString( ))
-        sys.stdout.flush()
-        
-        chisqF,Grads = FitMeasureTF(searchpars)
-        grad1 = Grads.numpy()
+        chisqF = optim_results.objective_value
         chisqF_n = chisqF.numpy()
-        chisqpptF_n = chisqF_n/n_data
-        chisqpdofF_n = chisqF_n/n_dof
-        print(  'chisq from FitStatusTF/pt:',chisqpptF_n,' chisq/dof =',chisqpdofF_n)
-        if verbose: print('Grads:',grad1)
-#  END OF STRATEGY
+        print('Objective_value:',chisqF_n, 'Objective chisq/pt',chisqF_n/n_data)
+        
+        searchpars = optim_results.position
+        searchpars_n = searchpars.numpy()
+#             print('position:\n',searchpars_n)
+        
+        inverse_hessian = optim_results.inverse_hessian_estimate.numpy()
+        print('inverse_hessian shape=',inverse_hessian.shape ,'\ndiagonal:',['%6.4f,' % inverse_hessian[i,i] for i in range(n_pars)] )
+#             print(dir(optim_results))
+    
+    else:
+        inverse_hessian = None
+        searchpars_n = searchpars0
+    
+    print("Second FitStatusTF start: ",tim.toString( ))
+    sys.stdout.flush()
+    
+    chisqF,Grads = FitMeasureTF(searchpars)
+    grad1 = Grads.numpy()
+    chisqF_n = chisqF.numpy()
+    chisqpptF_n = chisqF_n/n_data
+    chisqpdofF_n = chisqF_n/n_dof
+    print(  'chisq from FitStatusTF/pt:',chisqpptF_n,' chisq/dof =',chisqpdofF_n)
+    if verbose: print('Grads:',grad1)
+
 
     if Cross_Sections:
-        strategy = tf.distribute.get_strategy()   # default and simplest
     
         Tind = None; Mind = None
         TAind = numpy.zeros([n_data,n_jsets,npairs,maxpc,npairs,maxpc,2], dtype=INT) 
@@ -646,46 +552,45 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
 
             return(XSp_mat,XSp_tot,XSp_cap) 
 
-        with strategy.scope():
 
-            E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,      searchpars[border[0]:border[1]], [n_jsets*n_poles] )
-            g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,      searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
-            norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
-            D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
+        E_pole_v = tf.scatter_nd (searchloc[border[0]:border[1],:] ,      searchpars[border[0]:border[1]], [n_jsets*n_poles] )
+        g_pole_v = tf.scatter_nd (searchloc[border[1]:border[2],:] ,      searchpars[border[1]:border[2]], [n_jsets*n_poles*n_chans] )
+        norm_valv= tf.scatter_nd (searchloc[border[2]:border[3],:] ,   searchpars[border[2]:border[3]], [n_norms] )
+        D_pole_v = tf.scatter_nd (searchloc[border[3]:border[4],:] ,   searchpars[border[3]:border[4]], [n_jsets*n_poles] )
 
-            E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
-            E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2
-            g_poles  = tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]) 
-            g_cpoles = tf.complex(g_poles,tf.constant(0., dtype=REAL))
-            norm_val =                       (norm_valv+ fixed_norms)**2
-            E_cscat  = tf.complex(data_val[:,0],tf.constant(Averaging*0.5, dtype=REAL)) 
+        E_rpoles =         tf.reshape(E_pole_v+E_poles_fixed_v,[n_jsets,n_poles])
+        E_ipoles =  -0.5 * tf.reshape(D_pole_v+D_poles_fixed_v,[n_jsets,n_poles])**2
+        g_poles  = tf.reshape(g_pole_v + g_poles_fixed_v,[n_jsets,n_poles,n_chans]) 
+        g_cpoles = tf.complex(g_poles,tf.constant(0., dtype=REAL))
+        norm_val =                       (norm_valv+ fixed_norms)**2
+        E_cscat  = tf.complex(data_val[:,0],tf.constant(Averaging*0.5, dtype=REAL)) 
 
-            if not LMatrix:
-                 T_mat =  R2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
-            else:
-                 T_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,Grid,L_poles,dLdE_poles,EO_poles) 
-                 
-            TAp_mat,TCp_mat = T_convert_s(T_mat)
-    
-            Ax = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles)
+        if not LMatrix:
+             T_mat =  R2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans ) 
+        else:
+             T_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,Grid,L_poles,dLdE_poles,EO_poles) 
+             
+        TAp_mat,TCp_mat = T_convert_s(T_mat)
 
-            if chargedElastic:                          
-                AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
-            else:
-                AxA = Ax * Gfacc
-            
-            XSp_mat,XSp_tot,XSp_cap  = T2X_transforms_s(TAp_mat,CS_diag,gfac_s,p_mask, n_jsets,n_chans,npairs,maxpc)
-            
-            AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
-            AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
+        Ax = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles)
 
-            A_tF = tf.concat([AxA,AxI,AxT], 0)
-            chisq = ChiSqTF(A_tF, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
+        if chargedElastic:                          
+            AxA = AddCoulombsTF(Ax,  Rutherford, InterferenceAmpl, TCp_mat[:,:,:,:], Gfacc, n_angles)
+        else:
+            AxA = Ax * Gfacc
+        
+        XSp_mat,XSp_tot,XSp_cap  = T2X_transforms_s(TAp_mat,CS_diag,gfac_s,p_mask, n_jsets,n_chans,npairs,maxpc)
+        
+        AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
+        AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
 
-            print("First FitStatusTF: ",tim.toString( ),'giving chisq/pt',chisq.numpy()/n_data)
-    
-            A_tF_n = A_tF.numpy()
-            XS_totals = [XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy()]
+        A_tF = tf.concat([AxA,AxI,AxT], 0)
+        chisq = ChiSqTF(A_tF, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
+
+        print("First FitStatusTF: ",tim.toString( ),'giving chisq/pt',chisq.numpy()/n_data)
+
+        A_tF_n = A_tF.numpy()
+        XS_totals = [XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy()]
     
     else:
         A_tF_n, XS_totals = None, None
