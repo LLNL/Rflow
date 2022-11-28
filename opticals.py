@@ -249,6 +249,7 @@ def Li_t(proj,Z,A,E):    # for H3
     diff = (N - Z)/A
     
     ed = E
+    ee = E
     e  = Z
     an = diff
 
