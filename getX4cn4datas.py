@@ -58,7 +58,7 @@ parser.add_argument("-t", "--tolerance", type=float,  default="0.1", help="Print
 args = parser.parse_args()
 
 
-pops = databaseModule.database.readFile( args.pops )
+pops = databaseModule.Database.read( args.pops )
 CN = args.CN
 ElabMin = args.EnergyMin
 ElabMax = args.EnergyMax

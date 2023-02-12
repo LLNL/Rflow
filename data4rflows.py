@@ -44,7 +44,7 @@ NAMELIST
 def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Projectiles,EminCN,EmaxCN,emin,emax,
         Rmatrix_radius,jdef,pidef,widef,Term0,gammas,ReichMoore,outbase,MaxPars,FormalWidths):
 
-#     pops = databaseModule.database.readFile(popsicles[0])
+#     pops = databaseModule.Database.read(popsicles[0])
 #     for p in popsicles[1:]:
 #         print('read further pops file',p)
 #         pops.addFile(p)
@@ -407,7 +407,7 @@ os.system('mkdir '+Dir)
 EmaxCN = args.EmaxCN
 Projectiles = args.Projectiles
 LevelsMax = args.LevelsMax
-pops = databaseModule.database.readFile( args.pops )
+pops = databaseModule.Database.read( args.pops )
 if args.pops2 is not None: pops.addFile( args.pops2 , replace=True)
     
 scales = {-1: "nodim", 0: "fm^2", 1: "b", 2:"mb", 3:"mic-b"}
