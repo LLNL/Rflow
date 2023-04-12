@@ -5,7 +5,7 @@ from PoPs import database
 import sys
 
 print('Read',sys.argv[1])
-pops = database.database.readFile(sys.argv[1])
+pops = database.Database.read(sys.argv[1])
 for p in sys.argv[2:]:
     print('Read',p)
     pops.addFile(p)
