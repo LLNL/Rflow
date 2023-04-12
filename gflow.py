@@ -769,13 +769,19 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             pout= data_p[ie,1]
             if pin==pout:
                 mu = mu_val[ie]
+                if mu>1.:
+                    print("Error: mu",mu)
                 shthsq = (1-mu) * 0.5
                 jproj = jp[pin]
                 jtarg = jt[pin]
                 denom = (2.*jproj+1.) * (2.*jtarg+1)
                 eta = eta_val[ie,pin].real
-                Coulmod  = eta.real * rsqr4pi / shthsq
-                CoulAmpl = Coulmod * cmath.exp(complex(0., - eta*math.log(shthsq) ))
+                if eta !=0:
+                    Coulmod  = eta.real * rsqr4pi / shthsq
+                    CoulAmpl = Coulmod * cmath.exp(complex(0., - eta*math.log(shthsq) ))
+                else:
+                    Coulmod = 0.0
+                    CoulAmpl = 0.0
                 Rutherford[ie] = denom * Coulmod**2
             
                 for jset in range(n_jsets):
