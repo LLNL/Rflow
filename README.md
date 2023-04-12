@@ -1,35 +1,39 @@
-Rflow
+# Rflow
+	 Version 0.10
+	 Release: LLNL-CODE-000000
+###  Ian Thompson
 
-R-matrix fitting EXFOR data using tensorflow
-
+	 Email: thompson97@llnl.gov
+	   
+## R-matrix fitting EXFOR data using tensorflow
+```
 usage: rflow.py [-h] [-x [EXCL [EXCL ...]]] [-1] [-F [FIXED [FIXED ...]]] [-n]
                 [-r RESTARTS] [-B BACKGROUND] [--BG] [-R] [--LMatrix]
                 [--groupAngles GROUPANGLES] [-a ANGLESDATA] [-m MAXDATA]
                 [-e EMIN] [-E EMAX] [-p PMIN] [-P PMAX] [-d DMIN] [-D DMAX]
                 [-N NLMAX] [-L LAMBDA] [--ABES] [-G GRID] [-S SEARCH]
                 [-I ITERATIONS] [-i INIT INIT] [-A AVERAGING] [-w WIDTHWEIGHT]
-                [-X XCLUDE] [--Large LARGE] [-C] [-c] [-T TRANSITIONMATRIX]
-                [-s] [-M MULTI] [--ML ML] [--datasize size] [-l LOGS] [-t TAG]
-                [-v] [-g]
+                [-X XCLUDE] [--Large LARGE] [-C] [-c] [-T TRANSITIONMATRIX] [-s]
+                [-M MULTI] [--ML ML] [--datasize size] [-l LOGS] [-t TAG] [-v]
+                [-g]
                 inFile dataFile normFile
+```
+## Compare R-matrix Cross sections with Data
 
-Compare R-matrix Cross sections with Data
+### positional arguments:
+	  inFile                The intial gnds R-matrix set
+	  dataFile              Experimental data to fit
+	  normFile              Experimental norms for fitting
 
-positional arguments:
-  inFile                The intial gnds R-matrix set
-  dataFile              Experimental data to fit
-  normFile              Experimental norms for fitting
-
-optional arguments:
+### optional arguments:
+```
   -h, --help            show this help message and exit
   -x [EXCL [EXCL ...]], --exclude [EXCL [EXCL ...]]
                         Substrings to exclude if any string within group name
   -1, --norm1           Start with all norms=1
   -F [FIXED [FIXED ...]], --Fixed [FIXED [FIXED ...]]
-                        Names of variables (as regex) to keep fixed in
-                        searches
-  -n, --normsfixed      Fix all physical experimental norms (but not free
-                        norms)
+                        Names of variables (as regex) to keep fixed in searches
+  -n, --normsfixed      Fix all physical experimental norms (but not free norms)
   -r RESTARTS, --restarts RESTARTS
                         max restarts for search
   -B BACKGROUND, --Background BACKGROUND
@@ -39,12 +43,11 @@ optional arguments:
   -R, --ReichMoore      Include Reich-Moore damping widths in search
   --LMatrix             Use level matrix method if not already Brune basis
   --groupAngles GROUPANGLES
-                        Unused. Number of energy batches for T2B transforms,
-                        aka batches
+                        Unused. Number of energy batches for T2B transforms, aka
+                        batches
   -a ANGLESDATA, --anglesData ANGLESDATA
                         Max number of angular data points to use (to make
-                        smaller search). Pos: random selection. Neg: first
-                        block
+                        smaller search). Pos: random selection. Neg: first block
   -m MAXDATA, --maxData MAXDATA
                         Max number of data points to use (to make smaller
                         search). Pos: random selection. Neg: first block
@@ -52,8 +55,7 @@ optional arguments:
   -E EMAX, --EMAX EMAX  Max cm energy for gnds projectile.
   -p PMIN, --pmin PMIN  Min energy of R-matrix pole to fit, in gnds cm energy
                         frame. Overrides --Fixed.
-  -P PMAX, --PMAX PMAX  Max energy of R-matrix pole to fit. If p>P, create
-                        gap.
+  -P PMAX, --PMAX PMAX  Max energy of R-matrix pole to fit. If p>P, create gap.
   -d DMIN, --dmin DMIN  Min energy of R-matrix pole to fit damping, in gnds cm
                         energy frame.
   -D DMAX, --DMAX DMAX  Max energy of R-matrix pole to fit damping. If d>D,
@@ -76,8 +78,7 @@ optional arguments:
                         Averaging width to all scattering: imaginary =
                         Average/2.
   -w WIDTHWEIGHT, --widthWeight WIDTHWEIGHT
-                        Add widthWeight*vary_widths**2 to chisq during
-                        searches
+                        Add widthWeight*vary_widths**2 to chisq during searches
   -X XCLUDE, --XCLUDE XCLUDE
                         Make dataset*3 with data chi < X (e.g. X=3). Needs -C
                         data.
@@ -97,3 +98,44 @@ optional arguments:
   -t TAG, --tag TAG     Tag identifier for this run
   -v, --verbose         Verbose output
   -g, --debug           Debugging output (more than verbose)
+```
+
+## Data preparation codes
+### getX4cn4datas.py
+```
+	Extract EXFOR data using x4i calls.
+
+usage: getX4cn4datas.py [-h] [-E ENERGYMAX] [-e ENERGYMIN] [-p PROJECTILES]
+                        [-n NAT] [-d DIR] [-i [INCL [INCL ...]]]
+                        [-x [EXCL [EXCL ...]]] [--pops POPS] [--allowNeg]
+                        [-t TOLERANCE]
+                        CN
+
+```
+### data4rflows.py
+	Prepare data for Rflow
+```	
+usage: data4rflows.py [-h] [-P PROJECTILES [PROJECTILES ...]]
+                      [-L LEVELSMAX [LEVELSMAX ...]] [-B EMINCN]
+                      [-C EMAXCN] [-J JMAX] [-e EMINP] [-E EMAXP]
+                      [-r RMATRIX_RADIUS] [-G] [-R] [-j JDEF] [-p PIDEF]
+                      [-w WIDEF] [-F] [-I INFILES [INFILES ...]]
+                      [-s SCALEFACTORS] [--pops POPS] [--pops2 POPS2]
+                      [-d DIR] [-o OUT] [-n NORMS] [-S] [--SF] [-T TERM0]
+                      [-M MAXPARS] [--CSV CSV] [-a ADJUSTS] [-f FITS]
+```
+See README files in subfolders of Tests for examples of using these codes.
+
+## Other standalone codes
+```
+descending.py:		order chisq trace data in descending order
+endf2flow.py:		make Rflow input data directly from an ENDF evaluation
+gnds_merge.py: 		merge parts of two R-matrix parameter sets
+gnds_mod.py:		modify an R-matrix parameter set
+plotLevels.py:		plot compound nucleus levels from R-matrix levels
+pops-read.py:		list numbers of nuclear levels in a PoPs file
+sketchChannels.py:	plot levels for multiple mass partitions of a nuclide.
+snapnorm.py:		plot largest search parameters from a snap file.
+romp.py				make a R-matrix parameter set from YAHFC level densities
+						 and optical potentials.
+```
