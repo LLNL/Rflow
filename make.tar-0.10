@@ -1,25 +1,28 @@
 tar -cvf ../Rflow-0.10.tar --exclude OLD --exclude __pycache__ --exclude .git --no-mac-metadata --exclude .gitignore \
 Tests/plotjson \
-Tests/CN-Be7/test2* \
 Tests/CN-Be7/README.txt \
 Tests/CN-Be7/Outputs \
 Tests/CN-N15 \
-CoulCF.py  \
+CoulCF.py \
 data4rflows.py \
+descending.py \
 endf2flow.py \
 evaluate.py \
 getX4cn4datas.py \
 gflow.py \
+gnds_merge.py \
+gnds_mod.py \
+gomp.py \
 levelDensities.py \
+nuclear.py \
 opticals.py \
 plotLevels.py \
+pops-read.py \
 printExcitationFunctions.py \
 rflow.py \
 romp.py \
-snapnorm.py \
+sketchChannels.py \
 times.py \
 wrapup.py \
-write_covariances.py 
-
-# descending.py \
-# gomp.py \
+wrapups.py \
+write_covariances.py
