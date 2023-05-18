@@ -74,6 +74,7 @@ if __name__=='__main__':
     parser.add_argument("-1", "--norm1", action="store_true", help="Start with all norms=1")
     parser.add_argument("-F", "--Fixed", type=str, nargs="*", help="Names of variables (as regex) to keep fixed in searches")
     parser.add_argument("-n", "--normsfixed", action="store_true",  help="Fix all physical experimental norms (but not free norms)")
+    parser.add_argument(      "--nonzero", type=float, help="Replace zero widths by this value.")
 
     parser.add_argument("-r", "--restarts", type=int, default=0, help="max restarts for search")
     parser.add_argument("-B", "--Background", type=float, default="25",  help="Pole energy (lab) above which are all distant poles. Fixed in  searches.")
@@ -108,7 +109,6 @@ if __name__=='__main__':
 
     parser.add_argument("-s", "--single", action="store_true", help="Single precision: float32, complex64")
     parser.add_argument("-M", "--Multi", type=int, default=0, help="Which Mirrored Strategy in TF")
-    parser.add_argument(      "--ML", type=str, help="MLcompute device for Macs")
 
     parser.add_argument(      "--datasize", type=float,  metavar="size", default="0.2", help="Font size for experiment symbols. Default=0.2")
     parser.add_argument("-l", "--logs", type=str, default='', help="none, x, y or xy for plots")
@@ -404,6 +404,7 @@ if __name__=='__main__':
     if args.NLMAX       is not None: base += '-N%s' % args.NLMAX
     if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('.*','@').replace('[',':').replace(']',':')
     if args.normsfixed            : base += '+n' 
+    if args.nonzero    is not None: base += '-nz%s' % args.nonzero
     if args.pmin       is not None: base += '-p%s' % args.pmin
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
     if args.dmin       is not None: base += '-d%s' % args.dmin
@@ -426,8 +427,8 @@ if __name__=='__main__':
     print("Finish setup: ",tim.toString( ),'\n')
  
     chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
-                        gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
-                        Ein_list,args.Fixed,args.NLMAX,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Averaging, args.Multi,args.ML,args.ABES,args.Grid,
+                        gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,args.nonzero,
+                        Ein_list,args.Fixed,args.NLMAX,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Averaging, args.Multi,args.ABES,args.Grid,
                         norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
                         args.Cross_Sections,args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large,ComputerPrecisions,tim)

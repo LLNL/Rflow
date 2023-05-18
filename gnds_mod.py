@@ -16,9 +16,7 @@ import xData.axes as axesModule
 
 extensionDefault = '.gm'
 
-description1 = """Read a GNDS file into Fudge, then write back to the GNDS/xml format with extension added.  
-Optional in-situ modifications are performed.
-"""
+description1 = "Read a GNDS file into Fudge, then write back to the GNDS/xml format with extension added."
 
 __doc__ = description1
 
@@ -28,8 +26,8 @@ parser.add_argument( 'output', nargs = '?', default = None,                     
 parser.add_argument( '--energyUnit', type = str, default = None,                        help = 'Convert all energies in the gnds file to this unit.' )
 parser.add_argument( '-e', '--extension', default = extensionDefault,                   help = 'The file extension to add to the output file. Default = "%s"' % extensionDefault )
 parser.add_argument( '-p', '--path', default = None,                                    help = 'Path to write the file to. If absent, sent to same location as input.' )
-
-parser.add_argument( '-s', '--scale', default = None, type=float,                       help = 'Scale all widths !' )
+parser.add_argument( '-s', '--scale', default = None, type=float,                       help = 'Scale all widths.' )
+parser.add_argument( '-z', '--zeros', default = None, type=float,                       help = 'Change zeros to this value.' )
 parser.add_argument( '-E', '--ETRIM', default = None, type=float,nargs=2,               help = 'Remove all poles with energies between ETRIM[0] and ETRIM[1] for all spin groups')
 parser.add_argument( '-t', '--trim', default = None, type=int, nargs=3,                 help = 'Cut numbered trim[0]-trim[1] poles from spingroup trim[2].' )
 parser.add_argument( '-r', '--radii', default = None, type=float, nargs='+',              help = 'Reset channel radii to this sequence of projectiles.' )
@@ -152,6 +150,13 @@ if( __name__ == '__main__' ) :
                    R.data[n][1+damping+c] = newwidths[c]                
                 print('    New: E= %8.5f, D = %4.1e,' % (E,D),newwidths)
                 extension = '.s%s' % args.scale 
+            if args.zeros is not None:
+                newwidths = []
+                for c in range(cols-1-damping):
+                   newwidths.append(widths[c] if abs(widths[c])>1e-20 else  args.zeros )              
+                   R.data[n][1+damping+c] = newwidths[c]                
+                print('    New: E= %8.5f, D = %4.1e,' % (E,D),newwidths)
+                extension = '.z%s' % args.zeros 
         if args.ETRIM is not None:
             emin, emax = args.ETRIM 
             extension = '.E%s-%s' % (emin, emax ) 

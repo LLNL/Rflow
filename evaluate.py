@@ -19,7 +19,7 @@ pi = 3.1415926536
 rsqr4pi = 1.0/(4*pi)**0.5
 
 
-def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
+def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
                  Search_Control,Data_Control, searchpars0, data_val,tim):
                  
     # import tensorflow as tf
