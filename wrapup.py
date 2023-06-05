@@ -260,7 +260,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
                 if not args.norm1:
                     for ni in range(n_norms):
                         fac += (norm_val[ni]-1.) * effect_norm[id,ni]
-                        shape = shape or norm_val[ni,1]==0.0
+                        shape = shape or norm_info[ni,1]==0.0
                 lfac = (fac-1)*100
                 curves.add((curve,fac,lfac,shape,pin,pout,reaction))
      
@@ -524,7 +524,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
                             if not args.norm1:
                                 for ni in range(n_norms):
                                     fac += (norm_val[ni]-1.) * effect_norm[id,ni]
-                                    shape = shape or norm_val[ni,1]==0.0
+                                    shape = shape or norm_info[ni,1]==0.0
                             lfac = (fac-1)*100
                             curves.add((curve,fac,lfac,shape,pin,pout,reaction))
 #                     if len(curves)>0: print('\nGroup',group,'has curves:',curves)     

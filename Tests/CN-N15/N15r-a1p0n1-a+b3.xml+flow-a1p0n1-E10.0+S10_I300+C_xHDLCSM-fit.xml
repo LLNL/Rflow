@@ -1,0 +1,1943 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<reactionSuite projectile="He4" target="B11" evaluation="fresco R-matrix fit mod mod" format="2.0" projectileFrame="lab" interaction="nuclear">
+  <styles>
+    <evaluated label="eval" date="2021-01-10" library="from Fitted-gnds1.xml+-a1p0n1.sfresco" version="0.1.0">
+      <temperature value="3e2" unit="K"/>
+      <projectileEnergyDomain min="1e-2" max="10" unit="MeV"/></evaluated></styles>
+  <PoPs name="protare_internal" version="1.0" format="2.0">
+    <baryons>
+      <baryon id="n">
+        <mass>
+          <double label="default" value="1.00866491588" unit="amu"/></mass>
+        <spin>
+          <fraction label="default" value="1/2" unit="hbar"/></spin>
+        <parity>
+          <integer label="default" value="1"/></parity>
+        <charge>
+          <integer label="default" value="0" unit="e"/></charge></baryon></baryons>
+    <chemicalElements>
+      <chemicalElement symbol="H" Z="1" name="Hydrogen">
+        <isotopes>
+          <isotope symbol="H1" A="1">
+            <nuclides>
+              <nuclide id="H1">
+                <mass>
+                  <double label="default" value="1.00782503207" unit="amu"/></mass>
+                <charge>
+                  <integer label="default" value="0" unit="e"/></charge>
+                <nucleus id="h1" index="0">
+                  <spin>
+                    <fraction label="default" value="1/2" unit="hbar"/></spin>
+                  <parity>
+                    <integer label="default" value="1"/></parity>
+                  <charge>
+                    <integer label="default" value="1" unit="e"/></charge>
+                  <energy>
+                    <double label="default" value="0." unit="MeV"/></energy></nucleus></nuclide></nuclides></isotope></isotopes></chemicalElement>
+      <chemicalElement symbol="He" Z="2" name="Helium">
+        <isotopes>
+          <isotope symbol="He4" A="4">
+            <nuclides>
+              <nuclide id="He4">
+                <mass>
+                  <double label="default" value="4.00260325415" unit="amu"/></mass>
+                <charge>
+                  <integer label="default" value="0" unit="e"/></charge>
+                <nucleus id="he4" index="0">
+                  <spin>
+                    <fraction label="default" value="0" unit="hbar"/></spin>
+                  <parity>
+                    <integer label="default" value="1"/></parity>
+                  <charge>
+                    <integer label="default" value="2" unit="e"/></charge>
+                  <energy>
+                    <double label="default" value="0." unit="MeV"/></energy></nucleus></nuclide></nuclides></isotope></isotopes></chemicalElement>
+      <chemicalElement symbol="B" Z="5" name="Boron">
+        <isotopes>
+          <isotope symbol="B11" A="11">
+            <nuclides>
+              <nuclide id="B11">
+                <mass>
+                  <double label="default" value="11.009305406" unit="amu"/></mass>
+                <charge>
+                  <integer label="default" value="0" unit="e"/></charge>
+                <nucleus id="b11" index="0">
+                  <spin>
+                    <fraction label="default" value="3/2" unit="hbar"/></spin>
+                  <parity>
+                    <integer label="default" value="-1"/></parity>
+                  <charge>
+                    <integer label="default" value="5" unit="e"/></charge>
+                  <energy>
+                    <double label="default" value="0." unit="MeV"/></energy></nucleus></nuclide>
+              <nuclide id="B11_e1">
+                <mass>
+                  <double label="default" value="11.009305406" unit="amu"/></mass>
+                <charge>
+                  <integer label="default" value="0" unit="e"/></charge>
+                <nucleus id="b11_e1" index="1">
+                  <spin>
+                    <fraction label="default" value="1/2" unit="hbar"/></spin>
+                  <parity>
+                    <integer label="default" value="-1"/></parity>
+                  <charge>
+                    <integer label="default" value="5" unit="e"/></charge>
+                  <energy>
+                    <double label="default" value="2.124693" unit="MeV"/></energy></nucleus></nuclide></nuclides></isotope></isotopes></chemicalElement>
+      <chemicalElement symbol="C" Z="6" name="Carbon">
+        <isotopes>
+          <isotope symbol="C14" A="14">
+            <nuclides>
+              <nuclide id="C14">
+                <mass>
+                  <double label="default" value="14.0032419887" unit="amu"/></mass>
+                <charge>
+                  <integer label="default" value="0" unit="e"/></charge>
+                <nucleus id="c14" index="0">
+                  <spin>
+                    <fraction label="default" value="0" unit="hbar"/></spin>
+                  <parity>
+                    <integer label="default" value="1"/></parity>
+                  <charge>
+                    <integer label="default" value="6" unit="e"/></charge>
+                  <energy>
+                    <double label="default" value="0." unit="MeV"/></energy></nucleus></nuclide></nuclides></isotope></isotopes></chemicalElement>
+      <chemicalElement symbol="N" Z="7" name="Nitrogen">
+        <isotopes>
+          <isotope symbol="N14" A="14">
+            <nuclides>
+              <nuclide id="N14">
+                <mass>
+                  <double label="default" value="14.0030740048" unit="amu"/></mass>
+                <charge>
+                  <integer label="default" value="0" unit="e"/></charge>
+                <nucleus id="n14" index="0">
+                  <spin>
+                    <fraction label="default" value="1" unit="hbar"/></spin>
+                  <parity>
+                    <integer label="default" value="1"/></parity>
+                  <charge>
+                    <integer label="default" value="7" unit="e"/></charge>
+                  <energy>
+                    <double label="default" value="0." unit="MeV"/></energy></nucleus></nuclide>
+              <nuclide id="N14_e1">
+                <mass>
+                  <double label="default" value="14.0030740048" unit="amu"/></mass>
+                <charge>
+                  <integer label="default" value="0" unit="e"/></charge>
+                <nucleus id="n14_e1" index="1">
+                  <spin>
+                    <fraction label="default" value="0" unit="hbar"/></spin>
+                  <parity>
+                    <integer label="default" value="1"/></parity>
+                  <charge>
+                    <integer label="default" value="7" unit="e"/></charge>
+                  <energy>
+                    <double label="default" value="2.312798" unit="MeV"/></energy></nucleus></nuclide></nuclides></isotope>
+          <isotope symbol="N15" A="15">
+            <nuclides>
+              <nuclide id="N15">
+                <mass>
+                  <double label="default" value="15.0001088982" unit="amu"/></mass>
+                <charge>
+                  <integer label="default" value="0" unit="e"/></charge>
+                <nucleus id="n15" index="0">
+                  <charge>
+                    <integer label="default" value="7" unit="e"/></charge>
+                  <energy>
+                    <double label="default" value="0." unit="MeV"/></energy></nucleus></nuclide></nuclides></isotope></isotopes></chemicalElement></chemicalElements></PoPs>
+  <resonances>
+    <scatteringRadius>
+      <constant1d value="5" domainMin="1e-2" domainMax="10">
+        <axes>
+          <axis index="1" label="energy_in" unit="MeV"/>
+          <axis index="0" label="radius" unit="fm"/></axes></constant1d></scatteringRadius>
+    <resolved domainMin="1e-2" domainMax="10" domainUnit="MeV">
+      <RMatrix label="eval" approximation="Full R-Matrix" boundaryCondition="Brune" supportsAngularReconstruction="true" reducedWidthAmplitudes="true">
+        <documentation>
+          <computerCodes>
+            <computerCode label="R-matrix fit" name="sfrescox" version="7.1-6-gad5c8e">
+              <note><![CDATA[ 
+Converted from SFRESCO search file Fitted-gnds1.xml+-a1p0n1.sfresco
+Sun Jan 10 18:27:10 2021
+Thompson, Ian J.
+ 
+ ]]></note>
+              <inputDecks>
+                <inputDeck label="Fitted_data 1"><![CDATA[
+  Sun Jan 10 18:27:10 2021
+&variable name='endf8.n+N14' kind=5 dataset=0, 0 datanorm=1.0 step=0.01 reffile='endf8.xml' /
+&variable name='endf8.H1+C14' kind=5 dataset=0, 0 datanorm=1.0 step=0.01 reffile='endf8.xml' /
+&variable name='endf8.He4+B11' kind=5 dataset=0, 0 datanorm=1.0 step=0.01 reffile='endf8.xml' /
+&variable name='endf8.total' kind=5 dataset=0, 0 datanorm=1.0 step=0.01 reffile='endf8.xml' /
+]]></inputDeck>
+                <inputDeck label="Fitted_data 2" filename="N15r-a1p0n1-a+z0.1.xml"><![CDATA[
+  2023-05-11T18:53:24
+Rflow:
+&variable name='r:Anderson-11339002' kind=5 dataset=0, 0 datanorm= 8.62129e-01 step=0.01, reffile='Data_X4s/Anderson-11339002-Aint*'/
+&variable name='r:Anli-13979004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Anli-13979004@e*'/
+&variable name='r:Baba-21984077' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Baba-21984077@e*'/
+&variable name='r:Bachinger-20064002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bachinger-20064002@e*'/
+&variable name='r:Bachinger-20064003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bachinger-20064003_e1@e*'/
+&variable name='r:Barschall-14523002' kind=5 dataset=0, 0 datanorm= 1.36435e+00 step=0.01, reffile='Data_X4s/Barschall-14523002-Aint*'/
+&variable name='r:Barschall-14523003' kind=5 dataset=0, 0 datanorm= 9.62997e-01 step=0.01, reffile='Data_X4s/Barschall-14523003-Aint*'/
+&variable name='r:Bauer-11346005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bauer-11346005@e*'/
+&variable name='r:Bauer-11346006_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bauer-11346006_e1@e*'/
+&variable name='r:Bauer-11347002' kind=5 dataset=0, 0 datanorm= 1.48301e+00 step=0.01, reffile='Data_X4s/Bauer-11347002-Aint*'/
+&variable name='r:Bauer-11347003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bauer-11347003@a*'/
+&variable name='r:Beach-11271002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Beach-11271002@e*'/
+&variable name='r:Becker-11093007' kind=5 dataset=0, 0 datanorm= 9.77623e-01 step=0.01, reffile='Data_X4s/Becker-11093007-Aint*'/
+&variable name='r:Bernard-10437003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bernard-10437003@e*'/
+&variable name='r:Bernard-10437004_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bernard-10437004_e1@e*'/
+&variable name='r:Bilpuch-11011005' kind=5 dataset=0, 0 datanorm= 1.13842e+00 step=0.01, reffile='Data_X4s/Bilpuch-11011005-Aint*'/
+&variable name='r:Bilpuch-11011009' kind=5 dataset=0, 0 datanorm= 9.38750e-01 step=0.01, reffile='Data_X4s/Bilpuch-11011009-Aint*'/
+&variable name='r:Bilpuch-11266002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bilpuch-11266002-Aint*'/
+&variable name='r:Bobyr'-40792004_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bobyr'-40792004_e1@e*'/
+&variable name='r:Bollmann-21169003' kind=5 dataset=0, 0 datanorm= 1.44893e+00 step=0.01, reffile='Data_X4s/Bollmann-21169003-Aint*'/
+&variable name='r:Bommer-20662002' kind=5 dataset=0, 0 datanorm= 1.00948e+00 step=0.01, reffile='Data_X4s/Bommer-20662002-Aint*'/
+&variable name='r:Bonetti-A0216002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bonetti-A0216002@e*'/
+&variable name='r:Bonetti-A0216003' kind=5 dataset=0, 0 datanorm= 1.27612e+00 step=0.01, reffile='Data_X4s/Bonetti-A0216003-Aint*'/
+&variable name='r:Bormann-20475005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bormann-20475005@e*'/
+&variable name='r:Bostrom-11357002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bostrom-11357002@e*'/
+&variable name='r:Bostrom-11357003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bostrom-11357003@e*'/
+&variable name='r:Bostrom-11357004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bostrom-11357004@e*'/
+&variable name='r:Bostrom-11357005' kind=5 dataset=0, 0 datanorm= 1.02950e+00 step=0.01, reffile='Data_X4s/Bostrom-11357005-Aint*'/
+&variable name='r:Bostrom-11358002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bostrom-11358002_e1@a*'/
+&variable name='r:Bucher-10331003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bucher-10331003@e*'/
+&variable name='r:Burzynski-30476002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476002@e*'/
+&variable name='r:Burzynski-30476002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476002_e1@e*'/
+&variable name='r:Burzynski-30476003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476003@e*'/
+&variable name='r:Burzynski-30476003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476003_e1@e*'/
+&variable name='r:Burzynski-30476004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476004@e*'/
+&variable name='r:Burzynski-30476004_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476004_e1@e*'/
+&variable name='r:Calvert-F0972002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Calvert-F0972002@e*'/
+&variable name='r:Carlson-10011004' kind=5 dataset=0, 0 datanorm= 1.09279e+00 step=0.01, reffile='Data_X4s/Carlson-10011004-Aint*'/
+&variable name='r:Chardine-22081002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081002@e*'/
+&variable name='r:Chardine-22081003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081003@e*'/
+&variable name='r:Chardine-22081004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081004@e*'/
+&variable name='r:Chardine-22081005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081005@e*'/
+&variable name='r:Chardine-22081006' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081006@e*'/
+&variable name='r:Chardine-22081007' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081007@e*'/
+&variable name='r:Chardine-22081008' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081008@e*'/
+&variable name='r:Chardine-22081009' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081009@e*'/
+&variable name='r:Chardine-22081010' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081010@e*'/
+&variable name='r:Chardine-22081011' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081011@e*'/
+&variable name='r:Chardine-22081012_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081012_e1@e*'/
+&variable name='r:Chardine-22081013_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081013_e1@e*'/
+&variable name='r:Chardine-22081014_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081014_e1@e*'/
+&variable name='r:Chardine-22081015_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081015_e1@e*'/
+&variable name='r:Chardine-22081083' kind=5 dataset=0, 0 datanorm= 1.49443e+00 step=0.01, reffile='Data_X4s/Chardine-22081083-Aint*'/
+&variable name='r:Chardine-22081084_e1' kind=5 dataset=0, 0 datanorm= 9.92712e-01 step=0.01, reffile='Data_X4s/Chardine-22081084_e1-Aint*'/
+&variable name='r:Chase_Jr-11350002' kind=5 dataset=0, 0 datanorm= 1.13377e+00 step=0.01, reffile='Data_X4s/Chase_Jr-11350002-Aint*'/
+&variable name='r:Chase_Jr-11350004' kind=5 dataset=0, 0 datanorm= 1.01211e+00 step=0.01, reffile='Data_X4s/Chase_Jr-11350004-Aint*'/
+&variable name='r:Chase_Jr-11350005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chase_Jr-11350005@e*'/
+&variable name='r:Clayeux-21677003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Clayeux-21677003_e1@a*'/
+&variable name='r:Csikai-30070003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Csikai-30070003@e*'/
+&variable name='r:Curtis-D5055002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Curtis-D5055002@e*'/
+&variable name='r:Dayras-F0380002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Dayras-F0380002@e*'/
+&variable name='r:Finlay-13569004' kind=5 dataset=0, 0 datanorm= 1.09525e+00 step=0.01, reffile='Data_X4s/Finlay-13569004-Aint*'/
+&variable name='r:Foster_Jr-10047010' kind=5 dataset=0, 0 datanorm= 1.10129e+00 step=0.01, reffile='Data_X4s/Foster_Jr-10047010-Aint*'/
+&variable name='r:Fowler-11280002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Fowler-11280002@e*'/
+&variable name='r:Fowler-11314002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Fowler-11314002@e*'/
+&variable name='r:Gabbard-11281007' kind=5 dataset=0, 0 datanorm= 9.54041e-01 step=0.01, reffile='Data_X4s/Gabbard-11281007-Aint*'/
+&variable name='r:Gabbard-11281008' kind=5 dataset=0, 0 datanorm= 9.29691e-01 step=0.01, reffile='Data_X4s/Gabbard-11281008-Aint*'/
+&variable name='r:Gabbard-11281016' kind=5 dataset=0, 0 datanorm= 9.57320e-01 step=0.01, reffile='Data_X4s/Gabbard-11281016-Aint*'/
+&variable name='r:Gabbard-11281017_e1' kind=5 dataset=0, 0 datanorm= 1.07544e+00 step=0.01, reffile='Data_X4s/Gabbard-11281017_e1-Aint*'/
+&variable name='r:Gibbons-11100003' kind=5 dataset=0, 0 datanorm= 1.24669e+00 step=0.01, reffile='Data_X4s/Gibbons-11100003-Aint*'/
+&variable name='r:Gibbons-T0010011' kind=5 dataset=0, 0 datanorm= 1.20240e+00 step=0.01, reffile='Data_X4s/Gibbons-T0010011-Aint*'/
+&variable name='r:Giorginis-O0815004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Giorginis-O0815004@a*'/
+&variable name='r:Harvey-13728002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728002-Aint*'/
+&variable name='r:Harvey-13728003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728003-Aint*'/
+&variable name='r:Harvey-13728004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728004@a*'/
+&variable name='r:Harvey-13728005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728005@a*'/
+&variable name='r:Harvey-13728006' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728006@a*'/
+&variable name='r:Heaton_Ii-10068002' kind=5 dataset=0, 0 datanorm= 1.09925e+00 step=0.01, reffile='Data_X4s/Heaton_Ii-10068002-Aint*'/
+&variable name='r:Hinchey-11299002' kind=5 dataset=0, 0 datanorm= 1.06203e+00 step=0.01, reffile='Data_X4s/Hinchey-11299002-Aint*'/
+&variable name='r:Hinchey-11299003' kind=5 dataset=0, 0 datanorm= 1.07781e+00 step=0.01, reffile='Data_X4s/Hinchey-11299003-Aint*'/
+&variable name='r:Hou-B0133002' kind=5 dataset=0, 0 datanorm= 1.99335e-01 step=0.01, reffile='Data_X4s/Hou-B0133002-Aint*'/
+&variable name='r:Hsu-30027002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hsu-30027002@e*'/
+&variable name='r:Hsu-30027003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hsu-30027003_e1@e*'/
+&variable name='r:Hsu-30027007' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hsu-30027007-Aint*'/
+&variable name='r:Hsu-30027007_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hsu-30027007_e1-Aint*'/
+&variable name='r:Hyakutake-20273002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hyakutake-20273002@e*'/
+&variable name='r:Hyakutake-20273003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hyakutake-20273003_e1@e*'/
+&variable name='r:Hyakutake-20273004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hyakutake-20273004@e*'/
+&variable name='r:Johnson-11292002' kind=5 dataset=0, 0 datanorm= 1.02680e+00 step=0.01, reffile='Data_X4s/Johnson-11292002-Aint*'/
+&variable name='r:Johnson-11296002' kind=5 dataset=0, 0 datanorm= 9.12339e-01 step=0.01, reffile='Data_X4s/Johnson-11296002-Aint*'/
+&variable name='r:Johnson-11296003' kind=5 dataset=0, 0 datanorm= 1.23195e+00 step=0.01, reffile='Data_X4s/Johnson-11296003-Aint*'/
+&variable name='r:Johnson-14122002' kind=5 dataset=0, 0 datanorm= 1.01845e+00 step=0.01, reffile='Data_X4s/Johnson-14122002-Aint*'/
+&variable name='r:Khryachkov-41492002_e1' kind=5 dataset=0, 0 datanorm= 9.89689e-01 step=0.01, reffile='Data_X4s/Khryachkov-41492002_e1-Aint*'/
+&variable name='r:Khryachkov-41492003_e1' kind=5 dataset=0, 0 datanorm= 9.93172e-01 step=0.01, reffile='Data_X4s/Khryachkov-41492003_e1-Aint*'/
+&variable name='r:Khryachkov-41575003' kind=5 dataset=0, 0 datanorm= 1.26117e+00 step=0.01, reffile='Data_X4s/Khryachkov-41575003-Aint*'/
+&variable name='r:Khryachkov-41575009_e1' kind=5 dataset=0, 0 datanorm= 1.31980e+00 step=0.01, reffile='Data_X4s/Khryachkov-41575009_e1-Aint*'/
+&variable name='r:Kjellman-F0469002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Kjellman-F0469002@e*'/
+&variable name='r:Kjellman-F0469003' kind=5 dataset=0, 0 datanorm= 1.04599e+00 step=0.01, reffile='Data_X4s/Kjellman-F0469003-Aint*'/
+&variable name='r:Koehler-13164002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Koehler-13164002-Aint*'/
+&variable name='r:Koester-22105005' kind=5 dataset=0, 0 datanorm= 1.00192e+00 step=0.01, reffile='Data_X4s/Koester-22105005-Aint*'/
+&variable name='r:Lee_Jr-F0229002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Lee_Jr-F0229002@a*'/
+&variable name='r:Lee_Jr-F0229003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Lee_Jr-F0229003-Aint*'/
+&variable name='r:Liu-C0887002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Liu-C0887002@a*'/
+&variable name='r:Lundberg-20163003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Lundberg-20163003@e*'/
+&variable name='r:Macphail-14675007' kind=5 dataset=0, 0 datanorm= 1.08733e+00 step=0.01, reffile='Data_X4s/Macphail-14675007-Aint*'/
+&variable name='r:Mani-F0428002' kind=5 dataset=0, 0 datanorm= 7.72102e-01 step=0.01, reffile='Data_X4s/Mani-F0428002-Aint*'/
+&variable name='r:Mani-F0465002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Mani-F0465002@a*'/
+&variable name='r:Mani-F0465002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Mani-F0465002_e1@a*'/
+&variable name='r:Maxson-11348002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Maxson-11348002@e*'/
+&variable name='r:Maxson-11348003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Maxson-11348003_e1@e*'/
+&variable name='r:Mcintyre_Jr-C0090003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Mcintyre_Jr-C0090003@a*'/
+&variable name='r:Meier-21042002' kind=5 dataset=0, 0 datanorm= 1.03126e+00 step=0.01, reffile='Data_X4s/Meier-21042002-Aint*'/
+&variable name='r:Melkonian-11150004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Melkonian-11150004-Aint*'/
+&variable name='r:Moncoffre-F1195002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Moncoffre-F1195002@a*'/
+&variable name='r:Morgan-10789002' kind=5 dataset=0, 0 datanorm= 1.12825e+00 step=0.01, reffile='Data_X4s/Morgan-10789002-Aint*'/
+&variable name='r:Morgan-10789003' kind=5 dataset=0, 0 datanorm= 1.16048e+00 step=0.01, reffile='Data_X4s/Morgan-10789003-Aint*'/
+&variable name='r:Morgan-10789004_e1' kind=5 dataset=0, 0 datanorm= 8.09864e-01 step=0.01, reffile='Data_X4s/Morgan-10789004_e1-Aint*'/
+&variable name='r:Morgan-10789005' kind=5 dataset=0, 0 datanorm= 8.34996e-01 step=0.01, reffile='Data_X4s/Morgan-10789005-Aint*'/
+&variable name='r:Morgan-12695004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Morgan-12695004@a*'/
+&variable name='r:Morgan-12695004_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Morgan-12695004_e1@a*'/
+&variable name='r:Murillo-C1876002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Murillo-C1876002@a*'/
+&variable name='r:Murillo-C1876003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Murillo-C1876003@a*'/
+&variable name='r:Murillo-C1876004-1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Murillo-C1876004-1@a*'/
+&variable name='r:Nereson-11308002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nereson-11308002-Aint*'/
+&variable name='r:Nereson-11308026' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nereson-11308026-Aint*'/
+&variable name='r:Niecke-F0480002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Niecke-F0480002@e*'/
+&variable name='r:Niecke-F0480005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Niecke-F0480005@e*'/
+&variable name='r:Nyberg-Ponnert-20245002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nyberg-Ponnert-20245002@a*'/
+&variable name='r:Nyberg-Ponnert-20245002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nyberg-Ponnert-20245002_e1@a*'/
+&variable name='r:Nystroem-20249002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nystroem-20249002@a*'/
+&variable name='r:Nystroem-20249002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nystroem-20249002_e1@a*'/
+&variable name='r:Nystroem-20249003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nystroem-20249003@e*'/
+&variable name='r:Nystroem-20249003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nystroem-20249003_e1@e*'/
+&variable name='r:Nystroem-20249006_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nystroem-20249006_e1@a*'/
+&variable name='r:Nystroem-20249007' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nystroem-20249007@e*'/
+&variable name='r:Ott-C0754002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ott-C0754002@a*'/
+&variable name='r:Ott-C0754003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ott-C0754003@a*'/
+&variable name='r:Ott-C0754004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ott-C0754004@a*'/
+&variable name='r:Ott-C0754005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ott-C0754005@a*'/
+&variable name='r:Ott-C0754006' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ott-C0754006@e*'/
+&variable name='r:Ott-C0754007' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ott-C0754007@e*'/
+&variable name='r:Ott-C0754008' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ott-C0754008@e*'/
+&variable name='r:Ott-C0754009' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ott-C0754009@e*'/
+&variable name='r:Perey-10283002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Perey-10283002@e*'/
+&variable name='r:Perey-10283011' kind=5 dataset=0, 0 datanorm= 1.35322e+00 step=0.01, reffile='Data_X4s/Perey-10283011-Aint*'/
+&variable name='r:Perkin-20941002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Perkin-20941002@a*'/
+&variable name='r:Peterson-11108008' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Peterson-11108008-Aint*'/
+&variable name='r:Phillips-11207007' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Phillips-11207007@e*'/
+&variable name='r:Ramirez-T0090002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090002@a*'/
+&variable name='r:Ramirez-T0090003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090003@a*'/
+&variable name='r:Ramirez-T0090004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090004@a*'/
+&variable name='r:Ramirez-T0090004_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090004_e1@a*'/
+&variable name='r:Ramirez-T0090005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090005@e*'/
+&variable name='r:Ramirez-T0090006' kind=5 dataset=0, 0 datanorm= 1.19446e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090006-Aint*'/
+&variable name='r:Ramirez-T0090006_e1' kind=5 dataset=0, 0 datanorm= 8.68857e-01 step=0.01, reffile='Data_X4s/Ramirez-T0090006_e1-Aint*'/
+&variable name='r:Ramirez-T0090009' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090009@a*'/
+&variable name='r:Ramirez-T0090010' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090010@e*'/
+&variable name='r:Ramirez-T0090011' kind=5 dataset=0, 0 datanorm= 7.66264e-01 step=0.01, reffile='Data_X4s/Ramirez-T0090011-Aint*'/
+&variable name='r:Salathe-20517003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Salathe-20517003@a*'/
+&variable name='r:Salathe-20517003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Salathe-20517003_e1@a*'/
+&variable name='r:Sanders-C1880005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Sanders-C1880005@a*'/
+&variable name='r:Schmidt-22806002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Schmidt-22806002@e*'/
+&variable name='r:Schmidt-22806003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Schmidt-22806003_e1@e*'/
+&variable name='r:Schmidt-22806020' kind=5 dataset=0, 0 datanorm= 1.44396e+00 step=0.01, reffile='Data_X4s/Schmidt-22806020-Aint*'/
+&variable name='r:Schmidt-22806021_e1' kind=5 dataset=0, 0 datanorm= 1.18000e+00 step=0.01, reffile='Data_X4s/Schmidt-22806021_e1-Aint*'/
+&variable name='r:Scobel-20920002' kind=5 dataset=0, 0 datanorm= 1.08461e+00 step=0.01, reffile='Data_X4s/Scobel-20920002-Aint*'/
+&variable name='r:Scobel-20920003_e1' kind=5 dataset=0, 0 datanorm= 1.11835e+00 step=0.01, reffile='Data_X4s/Scobel-20920003_e1-Aint*'/
+&variable name='r:Spassky-F0478002' kind=5 dataset=0, 0 datanorm= 1.17985e+00 step=0.01, reffile='Data_X4s/Spassky-F0478002-Aint*'/
+&variable name='r:Spassky-F0478003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Spassky-F0478003@a*'/
+&variable name='r:Spassky-F0478004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Spassky-F0478004@e*'/
+&variable name='r:Spassky-F0478005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Spassky-F0478005@e*'/
+&variable name='r:Staples-13697002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Staples-13697002_e1@e*'/
+&variable name='r:Staples-13697003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Staples-13697003_e1@a*'/
+&variable name='r:Staudt-20546006' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Staudt-20546006@e*'/
+&variable name='r:Staudt-20546007_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Staudt-20546007_e1@e*'/
+&variable name='r:Strizhak-40793003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Strizhak-40793003@e*'/
+&variable name='r:Sukhanov-40041002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Sukhanov-40041002_e1@a*'/
+&variable name='r:Templon-12939002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Templon-12939002@e*'/
+&variable name='r:Templon-12939003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Templon-12939003-Aint*'/
+&variable name='r:Tucker-12696002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Tucker-12696002@a*'/
+&variable name='r:Tucker-12696002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Tucker-12696002_e1@a*'/
+&variable name='r:Van_Der_Zwan-C1630002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630002@a*'/
+&variable name='r:Van_Der_Zwan-C1630003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630003_e1@a*'/
+&variable name='r:Van_Der_Zwan-C1630006' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630006@e*'/
+&variable name='r:Van_Der_Zwan-C1630007' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630007@e*'/
+&variable name='r:Van_Der_Zwan-C1630008' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630008@e*'/
+&variable name='r:Van_Der_Zwan-C1630009' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630009@e*'/
+&variable name='r:Van_Der_Zwan-C1630010' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630010@e*'/
+&variable name='r:Van_Der_Zwan-C1630011' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630011@e*'/
+&variable name='r:Van_Der_Zwan-C1630012' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630012@e*'/
+&variable name='r:Van_Der_Zwan-C1630013' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630013@e*'/
+&variable name='r:Van_Der_Zwan-C1630014' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630014@e*'/
+&variable name='r:Van_Der_Zwan-C1630015' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630015@e*'/
+&variable name='r:Van_Der_Zwan-C1630016' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630016@e*'/
+&variable name='r:Van_Der_Zwan-C1630017' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630017@e*'/
+&variable name='r:Van_Der_Zwan-C1630018' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630018@e*'/
+&variable name='r:Van_Der_Zwan-C1630019' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630019@e*'/
+&variable name='r:Van_Der_Zwan-C1630020' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630020@e*'/
+&variable name='r:Van_Der_Zwan-C1630021' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630021@e*'/
+&variable name='r:Van_Der_Zwan-C1630022' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630022@e*'/
+&variable name='r:Van_Der_Zwan-C1630023' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630023@e*'/
+&variable name='r:Van_Der_Zwan-C1630024' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630024@e*'/
+&variable name='r:Van_Der_Zwan-C1630025' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630025@e*'/
+&variable name='r:Van_Der_Zwan-C1630026' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630026@e*'/
+&variable name='r:Van_Der_Zwan-C1630027' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630027@e*'/
+&variable name='r:Van_Der_Zwan-C1630028' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630028@e*'/
+&variable name='r:Van_Der_Zwan-C1630029' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630029@e*'/
+&variable name='r:Van_Der_Zwan-C1630030' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630030@e*'/
+&variable name='r:Van_Der_Zwan-C1630031' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630031@e*'/
+&variable name='r:Van_Der_Zwan-C1630032' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630032@e*'/
+&variable name='r:Van_Der_Zwan-C1630033' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630033@e*'/
+&variable name='r:Van_Der_Zwan-C1630034' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630034@e*'/
+&variable name='r:Van_Der_Zwan-C1630035' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630035@e*'/
+&variable name='r:Van_Der_Zwan-C1630036' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630036@e*'/
+&variable name='r:Van_Der_Zwan-C1630037' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630037@e*'/
+&variable name='r:Van_Der_Zwan-C1630038' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630038@e*'/
+&variable name='r:Van_Der_Zwan-C1630039' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630039@e*'/
+&variable name='r:Van_Der_Zwan-C1630040' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630040@e*'/
+&variable name='r:Van_Der_Zwan-C1630041' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630041@e*'/
+&variable name='r:Van_Der_Zwan-C1630042' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630042@e*'/
+&variable name='r:Van_Der_Zwan-C1630043' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630043@e*'/
+&variable name='r:Van_Der_Zwan-C1630044' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630044@e*'/
+&variable name='r:Van_Der_Zwan-C1630045' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630045@e*'/
+&variable name='r:Van_Der_Zwan-C1630046' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630046@e*'/
+&variable name='r:Van_Der_Zwan-C1630047' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630047@e*'/
+&variable name='r:Van_Der_Zwan-C1630048' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630048@e*'/
+&variable name='r:Van_Der_Zwan-C1630049' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630049@e*'/
+&variable name='r:Van_Der_Zwan-C1630050' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630050@e*'/
+&variable name='r:Van_Der_Zwan-C1630051' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630051@e*'/
+&variable name='r:Van_Der_Zwan-C1630052' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630052@e*'/
+&variable name='r:Van_Der_Zwan-C1630053' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630053@e*'/
+&variable name='r:Van_Der_Zwan-C1630054_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630054_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630055_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630055_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630056_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630056_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630057_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630057_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630058_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630058_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630059_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630059_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630060_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630060_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630061_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630061_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630062_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630062_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630063_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630063_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630064_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630064_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630065_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630065_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630066_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630066_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630067_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630067_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630068_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630068_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630069_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630069_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630070_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630070_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630071_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630071_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630072_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630072_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630073_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630073_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630074_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630074_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630075_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630075_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630076_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630076_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630077_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630077_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630078_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630078_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630079_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630079_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630080_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630080_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630081_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630081_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630082_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630082_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630083_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630083_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630084_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630084_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630085_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630085_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630086_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630086_e1@e*'/
+&variable name='r:Wetteland-C2103003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Wetteland-C2103003@a*'/
+&variable name='r:Wong-C2615004_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Wong-C2615004_e1@e*'/
+&variable name='r:Wong-C2615006' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Wong-C2615006@e*'/
+
+
+
+]]></inputDeck>
+                <inputDeck label="Fitted_data 3" filename="N15r-a1p0n1-a+b3.xml"><![CDATA[
+  2023-05-24T02:08:38
+Rflow:
+&variable name='r:Anderson-11339002' kind=5 dataset=0, 0 datanorm= 1.12131e+00 step=0.01, reffile='Data_X4s/Anderson-11339002-Aint*'/
+&variable name='r:Anli-13979004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Anli-13979004@e*'/
+&variable name='r:Baba-21984077' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Baba-21984077@e*'/
+&variable name='r:Bachinger-20064002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bachinger-20064002@e*'/
+&variable name='r:Bachinger-20064003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bachinger-20064003_e1@e*'/
+&variable name='r:Barschall-14523002' kind=5 dataset=0, 0 datanorm= 1.33419e+00 step=0.01, reffile='Data_X4s/Barschall-14523002-Aint*'/
+&variable name='r:Barschall-14523003' kind=5 dataset=0, 0 datanorm= 9.63987e-01 step=0.01, reffile='Data_X4s/Barschall-14523003-Aint*'/
+&variable name='r:Bauer-11346005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bauer-11346005@e*'/
+&variable name='r:Bauer-11346006_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bauer-11346006_e1@e*'/
+&variable name='r:Bauer-11347002' kind=5 dataset=0, 0 datanorm= 1.36763e+00 step=0.01, reffile='Data_X4s/Bauer-11347002-Aint*'/
+&variable name='r:Bauer-11347003' kind=5 dataset=0, 0 datanorm= 1.64848e+00 step=0.01, reffile='Data_X4s/Bauer-11347003@a*'/
+&variable name='r:Beach-11271002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Beach-11271002@e*'/
+&variable name='r:Becker-11093007' kind=5 dataset=0, 0 datanorm= 9.30756e-01 step=0.01, reffile='Data_X4s/Becker-11093007-Aint*'/
+&variable name='r:Bernard-10437003' kind=5 dataset=0, 0 datanorm= 1.71796e+00 step=0.01, reffile='Data_X4s/Bernard-10437003@e*'/
+&variable name='r:Bernard-10437004_e1' kind=5 dataset=0, 0 datanorm= 7.16361e-01 step=0.01, reffile='Data_X4s/Bernard-10437004_e1@e*'/
+&variable name='r:Bilpuch-11011005' kind=5 dataset=0, 0 datanorm= 1.10443e+00 step=0.01, reffile='Data_X4s/Bilpuch-11011005-Aint*'/
+&variable name='r:Bilpuch-11011009' kind=5 dataset=0, 0 datanorm= 9.18063e-01 step=0.01, reffile='Data_X4s/Bilpuch-11011009-Aint*'/
+&variable name='r:Bilpuch-11266002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bilpuch-11266002-Aint*'/
+&variable name='r:Bobyr'-40792004_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bobyr'-40792004_e1@e*'/
+&variable name='r:Bollmann-21169003' kind=5 dataset=0, 0 datanorm= 1.93424e+00 step=0.01, reffile='Data_X4s/Bollmann-21169003-Aint*'/
+&variable name='r:Bommer-20662002' kind=5 dataset=0, 0 datanorm= 9.78820e-01 step=0.01, reffile='Data_X4s/Bommer-20662002-Aint*'/
+&variable name='r:Bonetti-A0216002' kind=5 dataset=0, 0 datanorm= 1.08798e+00 step=0.01, reffile='Data_X4s/Bonetti-A0216002@e*'/
+&variable name='r:Bonetti-A0216003' kind=5 dataset=0, 0 datanorm= 1.83471e+00 step=0.01, reffile='Data_X4s/Bonetti-A0216003-Aint*'/
+&variable name='r:Bormann-20475005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Bormann-20475005@e*'/
+&variable name='r:Bostrom-11357002' kind=5 dataset=0, 0 datanorm= 1.05708e+00 step=0.01, reffile='Data_X4s/Bostrom-11357002@e*'/
+&variable name='r:Bostrom-11357003' kind=5 dataset=0, 0 datanorm= 1.16891e+00 step=0.01, reffile='Data_X4s/Bostrom-11357003@e*'/
+&variable name='r:Bostrom-11357004' kind=5 dataset=0, 0 datanorm= 9.25423e-01 step=0.01, reffile='Data_X4s/Bostrom-11357004@e*'/
+&variable name='r:Bostrom-11357005' kind=5 dataset=0, 0 datanorm= 9.81913e-01 step=0.01, reffile='Data_X4s/Bostrom-11357005-Aint*'/
+&variable name='r:Bostrom-11358002_e1' kind=5 dataset=0, 0 datanorm= 1.25341e-01 step=0.01, reffile='Data_X4s/Bostrom-11358002_e1@a*'/
+&variable name='r:Bucher-10331003' kind=5 dataset=0, 0 datanorm= 1.64987e+00 step=0.01, reffile='Data_X4s/Bucher-10331003@e*'/
+&variable name='r:Burzynski-30476002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476002@e*'/
+&variable name='r:Burzynski-30476002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476002_e1@e*'/
+&variable name='r:Burzynski-30476003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476003@e*'/
+&variable name='r:Burzynski-30476003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476003_e1@e*'/
+&variable name='r:Burzynski-30476004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476004@e*'/
+&variable name='r:Burzynski-30476004_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Burzynski-30476004_e1@e*'/
+&variable name='r:Calvert-F0972002' kind=5 dataset=0, 0 datanorm= 7.55738e-03 step=0.01, reffile='Data_X4s/Calvert-F0972002@e*'/
+&variable name='r:Carlson-10011004' kind=5 dataset=0, 0 datanorm= 1.05523e+00 step=0.01, reffile='Data_X4s/Carlson-10011004-Aint*'/
+&variable name='r:Chardine-22081002' kind=5 dataset=0, 0 datanorm= 1.11959e+00 step=0.01, reffile='Data_X4s/Chardine-22081002@e*'/
+&variable name='r:Chardine-22081003' kind=5 dataset=0, 0 datanorm= 1.11484e+00 step=0.01, reffile='Data_X4s/Chardine-22081003@e*'/
+&variable name='r:Chardine-22081004' kind=5 dataset=0, 0 datanorm= 1.25210e+00 step=0.01, reffile='Data_X4s/Chardine-22081004@e*'/
+&variable name='r:Chardine-22081005' kind=5 dataset=0, 0 datanorm= 1.21428e+00 step=0.01, reffile='Data_X4s/Chardine-22081005@e*'/
+&variable name='r:Chardine-22081006' kind=5 dataset=0, 0 datanorm= 1.22472e+00 step=0.01, reffile='Data_X4s/Chardine-22081006@e*'/
+&variable name='r:Chardine-22081007' kind=5 dataset=0, 0 datanorm= 1.35593e+00 step=0.01, reffile='Data_X4s/Chardine-22081007@e*'/
+&variable name='r:Chardine-22081008' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081008@e*'/
+&variable name='r:Chardine-22081009' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081009@e*'/
+&variable name='r:Chardine-22081010' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081010@e*'/
+&variable name='r:Chardine-22081011' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081011@e*'/
+&variable name='r:Chardine-22081012_e1' kind=5 dataset=0, 0 datanorm= 1.02087e+00 step=0.01, reffile='Data_X4s/Chardine-22081012_e1@e*'/
+&variable name='r:Chardine-22081013_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081013_e1@e*'/
+&variable name='r:Chardine-22081014_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081014_e1@e*'/
+&variable name='r:Chardine-22081015_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Chardine-22081015_e1@e*'/
+&variable name='r:Chardine-22081083' kind=5 dataset=0, 0 datanorm= 1.30338e+00 step=0.01, reffile='Data_X4s/Chardine-22081083-Aint*'/
+&variable name='r:Chardine-22081084_e1' kind=5 dataset=0, 0 datanorm= 9.08370e-01 step=0.01, reffile='Data_X4s/Chardine-22081084_e1-Aint*'/
+&variable name='r:Chase_Jr-11350002' kind=5 dataset=0, 0 datanorm= 1.10630e+00 step=0.01, reffile='Data_X4s/Chase_Jr-11350002-Aint*'/
+&variable name='r:Chase_Jr-11350004' kind=5 dataset=0, 0 datanorm= 1.00868e+00 step=0.01, reffile='Data_X4s/Chase_Jr-11350004-Aint*'/
+&variable name='r:Chase_Jr-11350005' kind=5 dataset=0, 0 datanorm= 1.19706e+00 step=0.01, reffile='Data_X4s/Chase_Jr-11350005@e*'/
+&variable name='r:Clayeux-21677003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Clayeux-21677003_e1@a*'/
+&variable name='r:Csikai-30070003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Csikai-30070003@e*'/
+&variable name='r:Curtis-D5055002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Curtis-D5055002@e*'/
+&variable name='r:Dayras-F0380002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Dayras-F0380002@e*'/
+&variable name='r:Finlay-13569004' kind=5 dataset=0, 0 datanorm= 1.01014e+00 step=0.01, reffile='Data_X4s/Finlay-13569004-Aint*'/
+&variable name='r:Foster_Jr-10047010' kind=5 dataset=0, 0 datanorm= 1.04937e+00 step=0.01, reffile='Data_X4s/Foster_Jr-10047010-Aint*'/
+&variable name='r:Fowler-11280002' kind=5 dataset=0, 0 datanorm= 9.94398e-01 step=0.01, reffile='Data_X4s/Fowler-11280002@e*'/
+&variable name='r:Fowler-11314002' kind=5 dataset=0, 0 datanorm= 1.16186e+00 step=0.01, reffile='Data_X4s/Fowler-11314002@e*'/
+&variable name='r:Gabbard-11281007' kind=5 dataset=0, 0 datanorm= 1.06080e+00 step=0.01, reffile='Data_X4s/Gabbard-11281007-Aint*'/
+&variable name='r:Gabbard-11281008' kind=5 dataset=0, 0 datanorm= 1.00538e+00 step=0.01, reffile='Data_X4s/Gabbard-11281008-Aint*'/
+&variable name='r:Gabbard-11281016' kind=5 dataset=0, 0 datanorm= 1.13734e+00 step=0.01, reffile='Data_X4s/Gabbard-11281016-Aint*'/
+&variable name='r:Gabbard-11281017_e1' kind=5 dataset=0, 0 datanorm= 1.33108e+00 step=0.01, reffile='Data_X4s/Gabbard-11281017_e1-Aint*'/
+&variable name='r:Gibbons-11100003' kind=5 dataset=0, 0 datanorm= 1.33399e+00 step=0.01, reffile='Data_X4s/Gibbons-11100003-Aint*'/
+&variable name='r:Gibbons-T0010011' kind=5 dataset=0, 0 datanorm= 1.46177e+00 step=0.01, reffile='Data_X4s/Gibbons-T0010011-Aint*'/
+&variable name='r:Giorginis-O0815004' kind=5 dataset=0, 0 datanorm= 1.16689e+00 step=0.01, reffile='Data_X4s/Giorginis-O0815004@a*'/
+&variable name='r:Harvey-13728002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728002-Aint*'/
+&variable name='r:Harvey-13728003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728003-Aint*'/
+&variable name='r:Harvey-13728004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728004@a*'/
+&variable name='r:Harvey-13728005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728005@a*'/
+&variable name='r:Harvey-13728006' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Harvey-13728006@a*'/
+&variable name='r:Heaton_Ii-10068002' kind=5 dataset=0, 0 datanorm= 1.05778e+00 step=0.01, reffile='Data_X4s/Heaton_Ii-10068002-Aint*'/
+&variable name='r:Hinchey-11299002' kind=5 dataset=0, 0 datanorm= 1.02630e+00 step=0.01, reffile='Data_X4s/Hinchey-11299002-Aint*'/
+&variable name='r:Hinchey-11299003' kind=5 dataset=0, 0 datanorm= 1.02343e+00 step=0.01, reffile='Data_X4s/Hinchey-11299003-Aint*'/
+&variable name='r:Hou-B0133002' kind=5 dataset=0, 0 datanorm= 3.20291e-01 step=0.01, reffile='Data_X4s/Hou-B0133002-Aint*'/
+&variable name='r:Hsu-30027002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hsu-30027002@e*'/
+&variable name='r:Hsu-30027003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hsu-30027003_e1@e*'/
+&variable name='r:Hsu-30027007' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hsu-30027007-Aint*'/
+&variable name='r:Hsu-30027007_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hsu-30027007_e1-Aint*'/
+&variable name='r:Hyakutake-20273002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hyakutake-20273002@e*'/
+&variable name='r:Hyakutake-20273003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hyakutake-20273003_e1@e*'/
+&variable name='r:Hyakutake-20273004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Hyakutake-20273004@e*'/
+&variable name='r:Johnson-11292002' kind=5 dataset=0, 0 datanorm= 1.03115e+00 step=0.01, reffile='Data_X4s/Johnson-11292002-Aint*'/
+&variable name='r:Johnson-11296002' kind=5 dataset=0, 0 datanorm= 1.24461e+00 step=0.01, reffile='Data_X4s/Johnson-11296002-Aint*'/
+&variable name='r:Johnson-11296003' kind=5 dataset=0, 0 datanorm= 1.28592e+00 step=0.01, reffile='Data_X4s/Johnson-11296003-Aint*'/
+&variable name='r:Johnson-14122002' kind=5 dataset=0, 0 datanorm= 9.92823e-01 step=0.01, reffile='Data_X4s/Johnson-14122002-Aint*'/
+&variable name='r:Khryachkov-41492002_e1' kind=5 dataset=0, 0 datanorm= 1.29853e+00 step=0.01, reffile='Data_X4s/Khryachkov-41492002_e1-Aint*'/
+&variable name='r:Khryachkov-41492003_e1' kind=5 dataset=0, 0 datanorm= 1.21199e+00 step=0.01, reffile='Data_X4s/Khryachkov-41492003_e1-Aint*'/
+&variable name='r:Khryachkov-41575003' kind=5 dataset=0, 0 datanorm= 1.68771e+00 step=0.01, reffile='Data_X4s/Khryachkov-41575003-Aint*'/
+&variable name='r:Khryachkov-41575009_e1' kind=5 dataset=0, 0 datanorm= 1.75358e+00 step=0.01, reffile='Data_X4s/Khryachkov-41575009_e1-Aint*'/
+&variable name='r:Kjellman-F0469002' kind=5 dataset=0, 0 datanorm= 1.48835e+00 step=0.01, reffile='Data_X4s/Kjellman-F0469002@e*'/
+&variable name='r:Kjellman-F0469003' kind=5 dataset=0, 0 datanorm= 1.26106e+00 step=0.01, reffile='Data_X4s/Kjellman-F0469003-Aint*'/
+&variable name='r:Koehler-13164002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Koehler-13164002-Aint*'/
+&variable name='r:Koester-22105005' kind=5 dataset=0, 0 datanorm= 9.99564e-01 step=0.01, reffile='Data_X4s/Koester-22105005-Aint*'/
+&variable name='r:Lee_Jr-F0229002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Lee_Jr-F0229002@a*'/
+&variable name='r:Lee_Jr-F0229003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Lee_Jr-F0229003-Aint*'/
+&variable name='r:Liu-C0887002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Liu-C0887002@a*'/
+&variable name='r:Lundberg-20163003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Lundberg-20163003@e*'/
+&variable name='r:Macphail-14675007' kind=5 dataset=0, 0 datanorm= 1.03666e+00 step=0.01, reffile='Data_X4s/Macphail-14675007-Aint*'/
+&variable name='r:Mani-F0428002' kind=5 dataset=0, 0 datanorm= 1.11501e+00 step=0.01, reffile='Data_X4s/Mani-F0428002-Aint*'/
+&variable name='r:Mani-F0465002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Mani-F0465002@a*'/
+&variable name='r:Mani-F0465002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Mani-F0465002_e1@a*'/
+&variable name='r:Maxson-11348002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Maxson-11348002@e*'/
+&variable name='r:Maxson-11348003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Maxson-11348003_e1@e*'/
+&variable name='r:Mcintyre_Jr-C0090003' kind=5 dataset=0, 0 datanorm= 1.43905e+00 step=0.01, reffile='Data_X4s/Mcintyre_Jr-C0090003@a*'/
+&variable name='r:Meier-21042002' kind=5 dataset=0, 0 datanorm= 1.01418e+00 step=0.01, reffile='Data_X4s/Meier-21042002-Aint*'/
+&variable name='r:Melkonian-11150004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Melkonian-11150004-Aint*'/
+&variable name='r:Moncoffre-F1195002' kind=5 dataset=0, 0 datanorm= 2.36379e-01 step=0.01, reffile='Data_X4s/Moncoffre-F1195002@a*'/
+&variable name='r:Morgan-10789002' kind=5 dataset=0, 0 datanorm= 1.26558e+00 step=0.01, reffile='Data_X4s/Morgan-10789002-Aint*'/
+&variable name='r:Morgan-10789003' kind=5 dataset=0, 0 datanorm= 1.30878e+00 step=0.01, reffile='Data_X4s/Morgan-10789003-Aint*'/
+&variable name='r:Morgan-10789004_e1' kind=5 dataset=0, 0 datanorm= 1.10738e+00 step=0.01, reffile='Data_X4s/Morgan-10789004_e1-Aint*'/
+&variable name='r:Morgan-10789005' kind=5 dataset=0, 0 datanorm= 1.08803e+00 step=0.01, reffile='Data_X4s/Morgan-10789005-Aint*'/
+&variable name='r:Morgan-12695004' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Morgan-12695004@a*'/
+&variable name='r:Morgan-12695004_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Morgan-12695004_e1@a*'/
+&variable name='r:Murillo-C1876002' kind=5 dataset=0, 0 datanorm= 1.47634e+00 step=0.01, reffile='Data_X4s/Murillo-C1876002@a*'/
+&variable name='r:Murillo-C1876003' kind=5 dataset=0, 0 datanorm= 1.51080e+00 step=0.01, reffile='Data_X4s/Murillo-C1876003@a*'/
+&variable name='r:Murillo-C1876004-1' kind=5 dataset=0, 0 datanorm= 2.47448e+00 step=0.01, reffile='Data_X4s/Murillo-C1876004-1@a*'/
+&variable name='r:Nereson-11308002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nereson-11308002-Aint*'/
+&variable name='r:Nereson-11308026' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nereson-11308026-Aint*'/
+&variable name='r:Niecke-F0480002' kind=5 dataset=0, 0 datanorm= 1.11459e+00 step=0.01, reffile='Data_X4s/Niecke-F0480002@e*'/
+&variable name='r:Niecke-F0480005' kind=5 dataset=0, 0 datanorm= 9.86174e-01 step=0.01, reffile='Data_X4s/Niecke-F0480005@e*'/
+&variable name='r:Nyberg-Ponnert-20245002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nyberg-Ponnert-20245002@a*'/
+&variable name='r:Nyberg-Ponnert-20245002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Nyberg-Ponnert-20245002_e1@a*'/
+&variable name='r:Nystroem-20249002' kind=5 dataset=0, 0 datanorm= 2.08673e+00 step=0.01, reffile='Data_X4s/Nystroem-20249002@a*'/
+&variable name='r:Nystroem-20249002_e1' kind=5 dataset=0, 0 datanorm= 1.09728e+00 step=0.01, reffile='Data_X4s/Nystroem-20249002_e1@a*'/
+&variable name='r:Nystroem-20249003' kind=5 dataset=0, 0 datanorm= 9.66933e-02 step=0.01, reffile='Data_X4s/Nystroem-20249003@e*'/
+&variable name='r:Nystroem-20249003_e1' kind=5 dataset=0, 0 datanorm= 1.09571e-03 step=0.01, reffile='Data_X4s/Nystroem-20249003_e1@e*'/
+&variable name='r:Nystroem-20249006_e1' kind=5 dataset=0, 0 datanorm= 1.11662e+00 step=0.01, reffile='Data_X4s/Nystroem-20249006_e1@a*'/
+&variable name='r:Nystroem-20249007' kind=5 dataset=0, 0 datanorm= 7.23184e-01 step=0.01, reffile='Data_X4s/Nystroem-20249007@e*'/
+&variable name='r:Ott-C0754002' kind=5 dataset=0, 0 datanorm= 1.79648e+00 step=0.01, reffile='Data_X4s/Ott-C0754002@a*'/
+&variable name='r:Ott-C0754003' kind=5 dataset=0, 0 datanorm= 1.27592e+00 step=0.01, reffile='Data_X4s/Ott-C0754003@a*'/
+&variable name='r:Ott-C0754004' kind=5 dataset=0, 0 datanorm= 1.80658e+00 step=0.01, reffile='Data_X4s/Ott-C0754004@a*'/
+&variable name='r:Ott-C0754005' kind=5 dataset=0, 0 datanorm= 1.43289e+00 step=0.01, reffile='Data_X4s/Ott-C0754005@a*'/
+&variable name='r:Ott-C0754006' kind=5 dataset=0, 0 datanorm= 1.54959e+00 step=0.01, reffile='Data_X4s/Ott-C0754006@e*'/
+&variable name='r:Ott-C0754007' kind=5 dataset=0, 0 datanorm= 1.48851e+00 step=0.01, reffile='Data_X4s/Ott-C0754007@e*'/
+&variable name='r:Ott-C0754008' kind=5 dataset=0, 0 datanorm= 1.44115e+00 step=0.01, reffile='Data_X4s/Ott-C0754008@e*'/
+&variable name='r:Ott-C0754009' kind=5 dataset=0, 0 datanorm= 1.18534e+00 step=0.01, reffile='Data_X4s/Ott-C0754009@e*'/
+&variable name='r:Perey-10283002' kind=5 dataset=0, 0 datanorm= 1.32167e+00 step=0.01, reffile='Data_X4s/Perey-10283002@e*'/
+&variable name='r:Perey-10283011' kind=5 dataset=0, 0 datanorm= 1.24388e+00 step=0.01, reffile='Data_X4s/Perey-10283011-Aint*'/
+&variable name='r:Perkin-20941002' kind=5 dataset=0, 0 datanorm= 2.25246e+00 step=0.01, reffile='Data_X4s/Perkin-20941002@a*'/
+&variable name='r:Peterson-11108008' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Peterson-11108008-Aint*'/
+&variable name='r:Phillips-11207007' kind=5 dataset=0, 0 datanorm= 1.27527e+00 step=0.01, reffile='Data_X4s/Phillips-11207007@e*'/
+&variable name='r:Ramirez-T0090002' kind=5 dataset=0, 0 datanorm= 9.59608e-01 step=0.01, reffile='Data_X4s/Ramirez-T0090002@a*'/
+&variable name='r:Ramirez-T0090003' kind=5 dataset=0, 0 datanorm= 1.00030e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090003@a*'/
+&variable name='r:Ramirez-T0090004' kind=5 dataset=0, 0 datanorm= 1.14482e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090004@a*'/
+&variable name='r:Ramirez-T0090004_e1' kind=5 dataset=0, 0 datanorm= 1.17413e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090004_e1@a*'/
+&variable name='r:Ramirez-T0090005' kind=5 dataset=0, 0 datanorm= 7.93918e-01 step=0.01, reffile='Data_X4s/Ramirez-T0090005@e*'/
+&variable name='r:Ramirez-T0090006' kind=5 dataset=0, 0 datanorm= 1.59412e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090006-Aint*'/
+&variable name='r:Ramirez-T0090006_e1' kind=5 dataset=0, 0 datanorm= 1.22159e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090006_e1-Aint*'/
+&variable name='r:Ramirez-T0090009' kind=5 dataset=0, 0 datanorm= 1.24599e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090009@a*'/
+&variable name='r:Ramirez-T0090010' kind=5 dataset=0, 0 datanorm= 1.19493e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090010@e*'/
+&variable name='r:Ramirez-T0090011' kind=5 dataset=0, 0 datanorm= 1.10728e+00 step=0.01, reffile='Data_X4s/Ramirez-T0090011-Aint*'/
+&variable name='r:Salathe-20517003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Salathe-20517003@a*'/
+&variable name='r:Salathe-20517003_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Salathe-20517003_e1@a*'/
+&variable name='r:Sanders-C1880005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Sanders-C1880005@a*'/
+&variable name='r:Schmidt-22806002' kind=5 dataset=0, 0 datanorm= 1.30513e+00 step=0.01, reffile='Data_X4s/Schmidt-22806002@e*'/
+&variable name='r:Schmidt-22806003_e1' kind=5 dataset=0, 0 datanorm= 1.29140e+00 step=0.01, reffile='Data_X4s/Schmidt-22806003_e1@e*'/
+&variable name='r:Schmidt-22806020' kind=5 dataset=0, 0 datanorm= 1.26105e+00 step=0.01, reffile='Data_X4s/Schmidt-22806020-Aint*'/
+&variable name='r:Schmidt-22806021_e1' kind=5 dataset=0, 0 datanorm= 1.14146e+00 step=0.01, reffile='Data_X4s/Schmidt-22806021_e1-Aint*'/
+&variable name='r:Scobel-20920002' kind=5 dataset=0, 0 datanorm= 1.30525e+00 step=0.01, reffile='Data_X4s/Scobel-20920002-Aint*'/
+&variable name='r:Scobel-20920003_e1' kind=5 dataset=0, 0 datanorm= 1.31071e+00 step=0.01, reffile='Data_X4s/Scobel-20920003_e1-Aint*'/
+&variable name='r:Spassky-F0478002' kind=5 dataset=0, 0 datanorm= 1.01545e+00 step=0.01, reffile='Data_X4s/Spassky-F0478002-Aint*'/
+&variable name='r:Spassky-F0478003' kind=5 dataset=0, 0 datanorm= 1.35936e+00 step=0.01, reffile='Data_X4s/Spassky-F0478003@a*'/
+&variable name='r:Spassky-F0478004' kind=5 dataset=0, 0 datanorm= 1.34509e+00 step=0.01, reffile='Data_X4s/Spassky-F0478004@e*'/
+&variable name='r:Spassky-F0478005' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Spassky-F0478005@e*'/
+&variable name='r:Staples-13697002_e1' kind=5 dataset=0, 0 datanorm= 1.71549e+00 step=0.01, reffile='Data_X4s/Staples-13697002_e1@e*'/
+&variable name='r:Staples-13697003_e1' kind=5 dataset=0, 0 datanorm= 1.49055e+00 step=0.01, reffile='Data_X4s/Staples-13697003_e1@a*'/
+&variable name='r:Staudt-20546006' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Staudt-20546006@e*'/
+&variable name='r:Staudt-20546007_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Staudt-20546007_e1@e*'/
+&variable name='r:Strizhak-40793003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Strizhak-40793003@e*'/
+&variable name='r:Sukhanov-40041002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Sukhanov-40041002_e1@a*'/
+&variable name='r:Templon-12939002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Templon-12939002@e*'/
+&variable name='r:Templon-12939003' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Templon-12939003-Aint*'/
+&variable name='r:Tucker-12696002' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Tucker-12696002@a*'/
+&variable name='r:Tucker-12696002_e1' kind=5 dataset=0, 0 datanorm= 1.00000e+00 step=0.01, reffile='Data_X4s/Tucker-12696002_e1@a*'/
+&variable name='r:Van_Der_Zwan-C1630002' kind=5 dataset=0, 0 datanorm= 9.80205e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630002@a*'/
+&variable name='r:Van_Der_Zwan-C1630003_e1' kind=5 dataset=0, 0 datanorm= 8.13884e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630003_e1@a*'/
+&variable name='r:Van_Der_Zwan-C1630006' kind=5 dataset=0, 0 datanorm= 7.82616e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630006@e*'/
+&variable name='r:Van_Der_Zwan-C1630007' kind=5 dataset=0, 0 datanorm= 7.65833e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630007@e*'/
+&variable name='r:Van_Der_Zwan-C1630008' kind=5 dataset=0, 0 datanorm= 9.46228e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630008@e*'/
+&variable name='r:Van_Der_Zwan-C1630009' kind=5 dataset=0, 0 datanorm= 9.91915e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630009@e*'/
+&variable name='r:Van_Der_Zwan-C1630010' kind=5 dataset=0, 0 datanorm= 8.99948e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630010@e*'/
+&variable name='r:Van_Der_Zwan-C1630011' kind=5 dataset=0, 0 datanorm= 9.47398e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630011@e*'/
+&variable name='r:Van_Der_Zwan-C1630012' kind=5 dataset=0, 0 datanorm= 1.08094e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630012@e*'/
+&variable name='r:Van_Der_Zwan-C1630013' kind=5 dataset=0, 0 datanorm= 8.79090e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630013@e*'/
+&variable name='r:Van_Der_Zwan-C1630014' kind=5 dataset=0, 0 datanorm= 1.16492e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630014@e*'/
+&variable name='r:Van_Der_Zwan-C1630015' kind=5 dataset=0, 0 datanorm= 9.69694e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630015@e*'/
+&variable name='r:Van_Der_Zwan-C1630016' kind=5 dataset=0, 0 datanorm= 1.13251e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630016@e*'/
+&variable name='r:Van_Der_Zwan-C1630017' kind=5 dataset=0, 0 datanorm= 1.15712e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630017@e*'/
+&variable name='r:Van_Der_Zwan-C1630018' kind=5 dataset=0, 0 datanorm= 1.07676e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630018@e*'/
+&variable name='r:Van_Der_Zwan-C1630019' kind=5 dataset=0, 0 datanorm= 1.01761e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630019@e*'/
+&variable name='r:Van_Der_Zwan-C1630020' kind=5 dataset=0, 0 datanorm= 9.69448e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630020@e*'/
+&variable name='r:Van_Der_Zwan-C1630021' kind=5 dataset=0, 0 datanorm= 9.88217e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630021@e*'/
+&variable name='r:Van_Der_Zwan-C1630022' kind=5 dataset=0, 0 datanorm= 8.85416e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630022@e*'/
+&variable name='r:Van_Der_Zwan-C1630023' kind=5 dataset=0, 0 datanorm= 1.03428e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630023@e*'/
+&variable name='r:Van_Der_Zwan-C1630024' kind=5 dataset=0, 0 datanorm= 1.15748e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630024@e*'/
+&variable name='r:Van_Der_Zwan-C1630025' kind=5 dataset=0, 0 datanorm= 1.08710e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630025@e*'/
+&variable name='r:Van_Der_Zwan-C1630026' kind=5 dataset=0, 0 datanorm= 1.24197e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630026@e*'/
+&variable name='r:Van_Der_Zwan-C1630027' kind=5 dataset=0, 0 datanorm= 1.06509e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630027@e*'/
+&variable name='r:Van_Der_Zwan-C1630028' kind=5 dataset=0, 0 datanorm= 8.61155e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630028@e*'/
+&variable name='r:Van_Der_Zwan-C1630029' kind=5 dataset=0, 0 datanorm= 1.06463e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630029@e*'/
+&variable name='r:Van_Der_Zwan-C1630030' kind=5 dataset=0, 0 datanorm= 8.46106e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630030@e*'/
+&variable name='r:Van_Der_Zwan-C1630031' kind=5 dataset=0, 0 datanorm= 9.29239e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630031@e*'/
+&variable name='r:Van_Der_Zwan-C1630032' kind=5 dataset=0, 0 datanorm= 8.06018e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630032@e*'/
+&variable name='r:Van_Der_Zwan-C1630033' kind=5 dataset=0, 0 datanorm= 7.05452e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630033@e*'/
+&variable name='r:Van_Der_Zwan-C1630034' kind=5 dataset=0, 0 datanorm= 8.90037e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630034@e*'/
+&variable name='r:Van_Der_Zwan-C1630035' kind=5 dataset=0, 0 datanorm= 1.06429e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630035@e*'/
+&variable name='r:Van_Der_Zwan-C1630036' kind=5 dataset=0, 0 datanorm= 8.64806e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630036@e*'/
+&variable name='r:Van_Der_Zwan-C1630037' kind=5 dataset=0, 0 datanorm= 6.28332e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630037@e*'/
+&variable name='r:Van_Der_Zwan-C1630038' kind=5 dataset=0, 0 datanorm= 6.21431e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630038@e*'/
+&variable name='r:Van_Der_Zwan-C1630039' kind=5 dataset=0, 0 datanorm= 6.08618e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630039@e*'/
+&variable name='r:Van_Der_Zwan-C1630040' kind=5 dataset=0, 0 datanorm= 8.07225e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630040@e*'/
+&variable name='r:Van_Der_Zwan-C1630041' kind=5 dataset=0, 0 datanorm= 1.40341e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630041@e*'/
+&variable name='r:Van_Der_Zwan-C1630042' kind=5 dataset=0, 0 datanorm= 1.16473e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630042@e*'/
+&variable name='r:Van_Der_Zwan-C1630043' kind=5 dataset=0, 0 datanorm= 9.33079e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630043@e*'/
+&variable name='r:Van_Der_Zwan-C1630044' kind=5 dataset=0, 0 datanorm= 7.09548e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630044@e*'/
+&variable name='r:Van_Der_Zwan-C1630045' kind=5 dataset=0, 0 datanorm= 1.16852e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630045@e*'/
+&variable name='r:Van_Der_Zwan-C1630046' kind=5 dataset=0, 0 datanorm= 1.02086e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630046@e*'/
+&variable name='r:Van_Der_Zwan-C1630047' kind=5 dataset=0, 0 datanorm= 9.62776e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630047@e*'/
+&variable name='r:Van_Der_Zwan-C1630048' kind=5 dataset=0, 0 datanorm= 7.54670e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630048@e*'/
+&variable name='r:Van_Der_Zwan-C1630049' kind=5 dataset=0, 0 datanorm= 8.76366e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630049@e*'/
+&variable name='r:Van_Der_Zwan-C1630050' kind=5 dataset=0, 0 datanorm= 7.57165e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630050@e*'/
+&variable name='r:Van_Der_Zwan-C1630051' kind=5 dataset=0, 0 datanorm= 1.14941e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630051@e*'/
+&variable name='r:Van_Der_Zwan-C1630052' kind=5 dataset=0, 0 datanorm= 6.34554e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630052@e*'/
+&variable name='r:Van_Der_Zwan-C1630053' kind=5 dataset=0, 0 datanorm= 1.04292e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630053@e*'/
+&variable name='r:Van_Der_Zwan-C1630054_e1' kind=5 dataset=0, 0 datanorm= 1.25232e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630054_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630055_e1' kind=5 dataset=0, 0 datanorm= 1.21104e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630055_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630056_e1' kind=5 dataset=0, 0 datanorm= 9.99255e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630056_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630057_e1' kind=5 dataset=0, 0 datanorm= 7.67213e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630057_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630058_e1' kind=5 dataset=0, 0 datanorm= 7.39005e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630058_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630059_e1' kind=5 dataset=0, 0 datanorm= 9.80211e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630059_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630060_e1' kind=5 dataset=0, 0 datanorm= 1.03011e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630060_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630061_e1' kind=5 dataset=0, 0 datanorm= 1.12367e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630061_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630062_e1' kind=5 dataset=0, 0 datanorm= 1.16645e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630062_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630063_e1' kind=5 dataset=0, 0 datanorm= 1.43468e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630063_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630064_e1' kind=5 dataset=0, 0 datanorm= 1.15828e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630064_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630065_e1' kind=5 dataset=0, 0 datanorm= 1.00275e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630065_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630066_e1' kind=5 dataset=0, 0 datanorm= 7.42130e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630066_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630067_e1' kind=5 dataset=0, 0 datanorm= 6.38694e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630067_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630068_e1' kind=5 dataset=0, 0 datanorm= 8.07218e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630068_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630069_e1' kind=5 dataset=0, 0 datanorm= 8.11380e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630069_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630070_e1' kind=5 dataset=0, 0 datanorm= 7.02578e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630070_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630071_e1' kind=5 dataset=0, 0 datanorm= 1.15225e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630071_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630072_e1' kind=5 dataset=0, 0 datanorm= 1.09497e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630072_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630073_e1' kind=5 dataset=0, 0 datanorm= 1.13895e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630073_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630074_e1' kind=5 dataset=0, 0 datanorm= 1.00959e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630074_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630075_e1' kind=5 dataset=0, 0 datanorm= 1.20066e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630075_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630076_e1' kind=5 dataset=0, 0 datanorm= 1.21997e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630076_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630077_e1' kind=5 dataset=0, 0 datanorm= 1.07651e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630077_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630078_e1' kind=5 dataset=0, 0 datanorm= 6.61842e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630078_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630079_e1' kind=5 dataset=0, 0 datanorm= 8.29917e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630079_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630080_e1' kind=5 dataset=0, 0 datanorm= 7.84631e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630080_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630081_e1' kind=5 dataset=0, 0 datanorm= 4.92708e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630081_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630082_e1' kind=5 dataset=0, 0 datanorm= 7.36794e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630082_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630083_e1' kind=5 dataset=0, 0 datanorm= 8.75319e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630083_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630084_e1' kind=5 dataset=0, 0 datanorm= 1.20640e+00 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630084_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630085_e1' kind=5 dataset=0, 0 datanorm= 7.78138e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630085_e1@e*'/
+&variable name='r:Van_Der_Zwan-C1630086_e1' kind=5 dataset=0, 0 datanorm= 8.56538e-01 step=0.01, reffile='Data_X4s/Van_Der_Zwan-C1630086_e1@e*'/
+&variable name='r:Wetteland-C2103003' kind=5 dataset=0, 0 datanorm= 3.42702e-01 step=0.01, reffile='Data_X4s/Wetteland-C2103003@a*'/
+&variable name='r:Wong-C2615004_e1' kind=5 dataset=0, 0 datanorm= 1.21087e+00 step=0.01, reffile='Data_X4s/Wong-C2615004_e1@e*'/
+&variable name='r:Wong-C2615006' kind=5 dataset=0, 0 datanorm= 1.09836e+00 step=0.01, reffile='Data_X4s/Wong-C2615006@e*'/
+
+
+
+]]></inputDeck></inputDecks></computerCode>
+            <computerCode label="transform2" name="ferdinand" version="">
+              <note><![CDATA[
+
+Processed by Ferdinand:
+Changing boundaryCondition from Brune to Brune 
+   by trans,std: False False ( Overrides=False)
+
+  amplitudes=True, 
+
+Sun Jan 10 18:27:11 2021
+
+]]></note></computerCode>
+            <computerCode label="Fit quality 2" name="Rflow" version="">
+              <note><![CDATA[ 
+Fitted by Rflow
+   N15r-a1p0n1-a+z0.1.xml
+2023-05-11T18:53:24
+Thompson, Ian J.
+ 
+ 
+ Initial chisq/pt:     71.96929
+ Final   chisq/pt:      4.07686 including ww/dof      0.00000 and Chisq/DOF =      4.07686  for dof = 8746
+
+ 
+ Fitted norm      0.92851 for r:Anderson-11339002
+ Fitted norm      1.00000 for r:Anli-13979004
+ Fitted norm      1.00000 for r:Baba-21984077
+ Fitted norm      1.00000 for r:Bachinger-20064002
+ Fitted norm      1.00000 for r:Bachinger-20064003_e1
+ Fitted norm      1.16805 for r:Barschall-14523002
+ Fitted norm      0.98132 for r:Barschall-14523003
+ Fitted norm      1.00000 for r:Bauer-11346005
+ Fitted norm      1.00000 for r:Bauer-11346006_e1
+ Fitted norm      1.21779 for r:Bauer-11347002
+ Fitted norm      1.00000 for r:Bauer-11347003
+ Fitted norm      1.00000 for r:Beach-11271002
+ Fitted norm      0.98875 for r:Becker-11093007
+ Fitted norm      1.00000 for r:Bernard-10437003
+ Fitted norm      1.00000 for r:Bernard-10437004_e1
+ Fitted norm      1.06697 for r:Bilpuch-11011005
+ Fitted norm      0.96889 for r:Bilpuch-11011009
+ Fitted norm      1.00000 for r:Bilpuch-11266002
+ Fitted norm      1.00000 for r:Bobyr'-40792004_e1
+ Fitted norm      1.20371 for r:Bollmann-21169003
+ Fitted norm      1.00473 for r:Bommer-20662002
+ Fitted norm      1.00000 for r:Bonetti-A0216002
+ Fitted norm      1.12965 for r:Bonetti-A0216003
+ Fitted norm      1.00000 for r:Bormann-20475005
+ Fitted norm      1.00000 for r:Bostrom-11357002
+ Fitted norm      1.00000 for r:Bostrom-11357003
+ Fitted norm      1.00000 for r:Bostrom-11357004
+ Fitted norm      1.01464 for r:Bostrom-11357005
+ Fitted norm      1.00000 for r:Bostrom-11358002_e1
+ Fitted norm      1.00000 for r:Bucher-10331003
+ Fitted norm      1.00000 for r:Burzynski-30476002
+ Fitted norm      1.00000 for r:Burzynski-30476002_e1
+ Fitted norm      1.00000 for r:Burzynski-30476003
+ Fitted norm      1.00000 for r:Burzynski-30476003_e1
+ Fitted norm      1.00000 for r:Burzynski-30476004
+ Fitted norm      1.00000 for r:Burzynski-30476004_e1
+ Fitted norm      1.00000 for r:Calvert-F0972002
+ Fitted norm      1.04537 for r:Carlson-10011004
+ Fitted norm      1.00000 for r:Chardine-22081002
+ Fitted norm      1.00000 for r:Chardine-22081003
+ Fitted norm      1.00000 for r:Chardine-22081004
+ Fitted norm      1.00000 for r:Chardine-22081005
+ Fitted norm      1.00000 for r:Chardine-22081006
+ Fitted norm      1.00000 for r:Chardine-22081007
+ Fitted norm      1.00000 for r:Chardine-22081008
+ Fitted norm      1.00000 for r:Chardine-22081009
+ Fitted norm      1.00000 for r:Chardine-22081010
+ Fitted norm      1.00000 for r:Chardine-22081011
+ Fitted norm      1.00000 for r:Chardine-22081012_e1
+ Fitted norm      1.00000 for r:Chardine-22081013_e1
+ Fitted norm      1.00000 for r:Chardine-22081014_e1
+ Fitted norm      1.00000 for r:Chardine-22081015_e1
+ Fitted norm      1.22247 for r:Chardine-22081083
+ Fitted norm      0.99635 for r:Chardine-22081084_e1
+ Fitted norm      1.06479 for r:Chase_Jr-11350002
+ Fitted norm      1.00604 for r:Chase_Jr-11350004
+ Fitted norm      1.00000 for r:Chase_Jr-11350005
+ Fitted norm      1.00000 for r:Clayeux-21677003_e1
+ Fitted norm      1.00000 for r:Csikai-30070003
+ Fitted norm      1.00000 for r:Curtis-D5055002
+ Fitted norm      1.00000 for r:Dayras-F0380002
+ Fitted norm      1.04654 for r:Finlay-13569004
+ Fitted norm      1.04942 for r:Foster_Jr-10047010
+ Fitted norm      1.00000 for r:Fowler-11280002
+ Fitted norm      1.00000 for r:Fowler-11314002
+ Fitted norm      0.97675 for r:Gabbard-11281007
+ Fitted norm      0.96420 for r:Gabbard-11281008
+ Fitted norm      0.97843 for r:Gabbard-11281016
+ Fitted norm      1.03703 for r:Gabbard-11281017_e1
+ Fitted norm      1.11655 for r:Gibbons-11100003
+ Fitted norm      1.09654 for r:Gibbons-T0010011
+ Fitted norm      1.00000 for r:Giorginis-O0815004
+ Fitted norm      1.00000 for r:Harvey-13728002
+ Fitted norm      1.00000 for r:Harvey-13728003
+ Fitted norm      1.00000 for r:Harvey-13728004
+ Fitted norm      1.00000 for r:Harvey-13728005
+ Fitted norm      1.00000 for r:Harvey-13728006
+ Fitted norm      1.04845 for r:Heaton_Ii-10068002
+ Fitted norm      1.03055 for r:Hinchey-11299002
+ Fitted norm      1.03818 for r:Hinchey-11299003
+ Fitted norm      0.44647 for r:Hou-B0133002
+ Fitted norm      1.00000 for r:Hsu-30027002
+ Fitted norm      1.00000 for r:Hsu-30027003_e1
+ Fitted norm      1.00000 for r:Hsu-30027007
+ Fitted norm      1.00000 for r:Hsu-30027007_e1
+ Fitted norm      1.00000 for r:Hyakutake-20273002
+ Fitted norm      1.00000 for r:Hyakutake-20273003_e1
+ Fitted norm      1.00000 for r:Hyakutake-20273004
+ Fitted norm      1.01331 for r:Johnson-11292002
+ Fitted norm      0.95516 for r:Johnson-11296002
+ Fitted norm      1.10993 for r:Johnson-11296003
+ Fitted norm      1.00918 for r:Johnson-14122002
+ Fitted norm      0.99483 for r:Khryachkov-41492002_e1
+ Fitted norm      0.99658 for r:Khryachkov-41492003_e1
+ Fitted norm      1.12302 for r:Khryachkov-41575003
+ Fitted norm      1.14882 for r:Khryachkov-41575009_e1
+ Fitted norm      1.00000 for r:Kjellman-F0469002
+ Fitted norm      1.02274 for r:Kjellman-F0469003
+ Fitted norm      1.00000 for r:Koehler-13164002
+ Fitted norm      1.00096 for r:Koester-22105005
+ Fitted norm      1.00000 for r:Lee_Jr-F0229002
+ Fitted norm      1.00000 for r:Lee_Jr-F0229003
+ Fitted norm      1.00000 for r:Liu-C0887002
+ Fitted norm      1.00000 for r:Lundberg-20163003
+ Fitted norm      1.04275 for r:Macphail-14675007
+ Fitted norm      0.87869 for r:Mani-F0428002
+ Fitted norm      1.00000 for r:Mani-F0465002
+ Fitted norm      1.00000 for r:Mani-F0465002_e1
+ Fitted norm      1.00000 for r:Maxson-11348002
+ Fitted norm      1.00000 for r:Maxson-11348003_e1
+ Fitted norm      1.00000 for r:Mcintyre_Jr-C0090003
+ Fitted norm      1.01551 for r:Meier-21042002
+ Fitted norm      1.00000 for r:Melkonian-11150004
+ Fitted norm      1.00000 for r:Moncoffre-F1195002
+ Fitted norm      1.06219 for r:Morgan-10789002
+ Fitted norm      1.07726 for r:Morgan-10789003
+ Fitted norm      0.89992 for r:Morgan-10789004_e1
+ Fitted norm      0.91378 for r:Morgan-10789005
+ Fitted norm      1.00000 for r:Morgan-12695004
+ Fitted norm      1.00000 for r:Morgan-12695004_e1
+ Fitted norm      1.00000 for r:Murillo-C1876002
+ Fitted norm      1.00000 for r:Murillo-C1876003
+ Fitted norm      1.00000 for r:Murillo-C1876004-1
+ Fitted norm      1.00000 for r:Nereson-11308002
+ Fitted norm      1.00000 for r:Nereson-11308026
+ Fitted norm      1.00000 for r:Niecke-F0480002
+ Fitted norm      1.00000 for r:Niecke-F0480005
+ Fitted norm      1.00000 for r:Nyberg-Ponnert-20245002
+ Fitted norm      1.00000 for r:Nyberg-Ponnert-20245002_e1
+ Fitted norm      1.00000 for r:Nystroem-20249002
+ Fitted norm      1.00000 for r:Nystroem-20249002_e1
+ Fitted norm      1.00000 for r:Nystroem-20249003
+ Fitted norm      1.00000 for r:Nystroem-20249003_e1
+ Fitted norm      1.00000 for r:Nystroem-20249006_e1
+ Fitted norm      1.00000 for r:Nystroem-20249007
+ Fitted norm      1.00000 for r:Ott-C0754002
+ Fitted norm      1.00000 for r:Ott-C0754003
+ Fitted norm      1.00000 for r:Ott-C0754004
+ Fitted norm      1.00000 for r:Ott-C0754005
+ Fitted norm      1.00000 for r:Ott-C0754006
+ Fitted norm      1.00000 for r:Ott-C0754007
+ Fitted norm      1.00000 for r:Ott-C0754008
+ Fitted norm      1.00000 for r:Ott-C0754009
+ Fitted norm      1.00000 for r:Perey-10283002
+ Fitted norm      1.16328 for r:Perey-10283011
+ Fitted norm      1.00000 for r:Perkin-20941002
+ Fitted norm      1.00000 for r:Peterson-11108008
+ Fitted norm      1.00000 for r:Phillips-11207007
+ Fitted norm      1.00000 for r:Ramirez-T0090002
+ Fitted norm      1.00000 for r:Ramirez-T0090003
+ Fitted norm      1.00000 for r:Ramirez-T0090004
+ Fitted norm      1.00000 for r:Ramirez-T0090004_e1
+ Fitted norm      1.00000 for r:Ramirez-T0090005
+ Fitted norm      1.09291 for r:Ramirez-T0090006
+ Fitted norm      0.93212 for r:Ramirez-T0090006_e1
+ Fitted norm      1.00000 for r:Ramirez-T0090009
+ Fitted norm      1.00000 for r:Ramirez-T0090010
+ Fitted norm      0.87537 for r:Ramirez-T0090011
+ Fitted norm      1.00000 for r:Salathe-20517003
+ Fitted norm      1.00000 for r:Salathe-20517003_e1
+ Fitted norm      1.00000 for r:Sanders-C1880005
+ Fitted norm      1.00000 for r:Schmidt-22806002
+ Fitted norm      1.00000 for r:Schmidt-22806003_e1
+ Fitted norm      1.20165 for r:Schmidt-22806020
+ Fitted norm      1.08628 for r:Schmidt-22806021_e1
+ Fitted norm      1.04145 for r:Scobel-20920002
+ Fitted norm      1.05752 for r:Scobel-20920003_e1
+ Fitted norm      1.08621 for r:Spassky-F0478002
+ Fitted norm      1.00000 for r:Spassky-F0478003
+ Fitted norm      1.00000 for r:Spassky-F0478004
+ Fitted norm      1.00000 for r:Spassky-F0478005
+ Fitted norm      1.00000 for r:Staples-13697002_e1
+ Fitted norm      1.00000 for r:Staples-13697003_e1
+ Fitted norm      1.00000 for r:Staudt-20546006
+ Fitted norm      1.00000 for r:Staudt-20546007_e1
+ Fitted norm      1.00000 for r:Strizhak-40793003
+ Fitted norm      1.00000 for r:Sukhanov-40041002_e1
+ Fitted norm      1.00000 for r:Templon-12939002
+ Fitted norm      1.00000 for r:Templon-12939003
+ Fitted norm      1.00000 for r:Tucker-12696002
+ Fitted norm      1.00000 for r:Tucker-12696002_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630002
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630003_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630006
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630007
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630008
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630009
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630010
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630011
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630012
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630013
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630014
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630015
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630016
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630017
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630018
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630019
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630020
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630021
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630022
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630023
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630024
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630025
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630026
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630027
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630028
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630029
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630030
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630031
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630032
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630033
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630034
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630035
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630036
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630037
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630038
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630039
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630040
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630041
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630042
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630043
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630044
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630045
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630046
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630047
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630048
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630049
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630050
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630051
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630052
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630053
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630054_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630055_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630056_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630057_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630058_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630059_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630060_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630061_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630062_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630063_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630064_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630065_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630066_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630067_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630068_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630069_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630070_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630071_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630072_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630073_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630074_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630075_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630076_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630077_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630078_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630079_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630080_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630081_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630082_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630083_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630084_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630085_e1
+ Fitted norm      1.00000 for r:Van_Der_Zwan-C1630086_e1
+ Fitted norm      1.00000 for r:Wetteland-C2103003
+ Fitted norm      1.00000 for r:Wong-C2615004_e1
+ Fitted norm      1.00000 for r:Wong-C2615006
+ ]]></note></computerCode>
+            <computerCode label="transform3" name="ferdinand" version="">
+              <note><![CDATA[
+
+Processed by Ferdinand:
+Changing boundary condition from Brune,None to Brune,None 
+   by std-in,std-out: False False ( Overrides=False)
+
+
+Mon May 22 17:27:58 2023
+
+]]></note></computerCode>
+            <computerCode label="Fit quality 3" name="Rflow" version="">
+              <note><![CDATA[ 
+Fitted by Rflow
+   N15r-a1p0n1-a+b3.xml
+2023-05-24T02:08:38
+Thompson, Ian J.
+ 
+ 
+ Initial chisq/pt:    295.77918
+ Final   chisq/pt:     10.08162 including ww/dof      0.00000 and Chisq/DOF =     10.08162  for dof = 13529
+
+ 
+ Fitted norm      1.05892 for r:Anderson-11339002
+ Fitted norm      1.00000 for r:Anli-13979004
+ Fitted norm      1.00000 for r:Baba-21984077
+ Fitted norm      1.00000 for r:Bachinger-20064002
+ Fitted norm      1.00000 for r:Bachinger-20064003_e1
+ Fitted norm      1.15507 for r:Barschall-14523002
+ Fitted norm      0.98183 for r:Barschall-14523003
+ Fitted norm      1.00000 for r:Bauer-11346005
+ Fitted norm      1.00000 for r:Bauer-11346006_e1
+ Fitted norm      1.16946 for r:Bauer-11347002
+ Fitted norm      1.28393 for r:Bauer-11347003
+ Fitted norm      1.00000 for r:Beach-11271002
+ Fitted norm      0.96476 for r:Becker-11093007
+ Fitted norm      1.31071 for r:Bernard-10437003
+ Fitted norm      0.84638 for r:Bernard-10437004_e1
+ Fitted norm      1.05092 for r:Bilpuch-11011005
+ Fitted norm      0.95816 for r:Bilpuch-11011009
+ Fitted norm      1.00000 for r:Bilpuch-11266002
+ Fitted norm      1.00000 for r:Bobyr'-40792004_e1
+ Fitted norm      1.39077 for r:Bollmann-21169003
+ Fitted norm      0.98935 for r:Bommer-20662002
+ Fitted norm      1.04306 for r:Bonetti-A0216002
+ Fitted norm      1.35451 for r:Bonetti-A0216003
+ Fitted norm      1.00000 for r:Bormann-20475005
+ Fitted norm      1.02815 for r:Bostrom-11357002
+ Fitted norm      1.08116 for r:Bostrom-11357003
+ Fitted norm      0.96199 for r:Bostrom-11357004
+ Fitted norm      0.99092 for r:Bostrom-11357005
+ Fitted norm      0.35403 for r:Bostrom-11358002_e1
+ Fitted norm      1.28447 for r:Bucher-10331003
+ Fitted norm      1.00000 for r:Burzynski-30476002
+ Fitted norm      1.00000 for r:Burzynski-30476002_e1
+ Fitted norm      1.00000 for r:Burzynski-30476003
+ Fitted norm      1.00000 for r:Burzynski-30476003_e1
+ Fitted norm      1.00000 for r:Burzynski-30476004
+ Fitted norm      1.00000 for r:Burzynski-30476004_e1
+ Fitted norm      0.08693 for r:Calvert-F0972002
+ Fitted norm      1.02725 for r:Carlson-10011004
+ Fitted norm      1.05811 for r:Chardine-22081002
+ Fitted norm      1.05586 for r:Chardine-22081003
+ Fitted norm      1.11897 for r:Chardine-22081004
+ Fitted norm      1.10194 for r:Chardine-22081005
+ Fitted norm      1.10667 for r:Chardine-22081006
+ Fitted norm      1.16444 for r:Chardine-22081007
+ Fitted norm      1.00000 for r:Chardine-22081008
+ Fitted norm      1.00000 for r:Chardine-22081009
+ Fitted norm      1.00000 for r:Chardine-22081010
+ Fitted norm      1.00000 for r:Chardine-22081011
+ Fitted norm      1.01038 for r:Chardine-22081012_e1
+ Fitted norm      1.00000 for r:Chardine-22081013_e1
+ Fitted norm      1.00000 for r:Chardine-22081014_e1
+ Fitted norm      1.00000 for r:Chardine-22081015_e1
+ Fitted norm      1.14166 for r:Chardine-22081083
+ Fitted norm      0.95308 for r:Chardine-22081084_e1
+ Fitted norm      1.05181 for r:Chase_Jr-11350002
+ Fitted norm      1.00433 for r:Chase_Jr-11350004
+ Fitted norm      1.09410 for r:Chase_Jr-11350005
+ Fitted norm      1.00000 for r:Clayeux-21677003_e1
+ Fitted norm      1.00000 for r:Csikai-30070003
+ Fitted norm      1.00000 for r:Curtis-D5055002
+ Fitted norm      1.00000 for r:Dayras-F0380002
+ Fitted norm      1.00506 for r:Finlay-13569004
+ Fitted norm      1.02439 for r:Foster_Jr-10047010
+ Fitted norm      0.99720 for r:Fowler-11280002
+ Fitted norm      1.07789 for r:Fowler-11314002
+ Fitted norm      1.02995 for r:Gabbard-11281007
+ Fitted norm      1.00269 for r:Gabbard-11281008
+ Fitted norm      1.06646 for r:Gabbard-11281016
+ Fitted norm      1.15372 for r:Gabbard-11281017_e1
+ Fitted norm      1.15499 for r:Gibbons-11100003
+ Fitted norm      1.20904 for r:Gibbons-T0010011
+ Fitted norm      1.08023 for r:Giorginis-O0815004
+ Fitted norm      1.00000 for r:Harvey-13728002
+ Fitted norm      1.00000 for r:Harvey-13728003
+ Fitted norm      1.00000 for r:Harvey-13728004
+ Fitted norm      1.00000 for r:Harvey-13728005
+ Fitted norm      1.00000 for r:Harvey-13728006
+ Fitted norm      1.02848 for r:Heaton_Ii-10068002
+ Fitted norm      1.01306 for r:Hinchey-11299002
+ Fitted norm      1.01165 for r:Hinchey-11299003
+ Fitted norm      0.56594 for r:Hou-B0133002
+ Fitted norm      1.00000 for r:Hsu-30027002
+ Fitted norm      1.00000 for r:Hsu-30027003_e1
+ Fitted norm      1.00000 for r:Hsu-30027007
+ Fitted norm      1.00000 for r:Hsu-30027007_e1
+ Fitted norm      1.00000 for r:Hyakutake-20273002
+ Fitted norm      1.00000 for r:Hyakutake-20273003_e1
+ Fitted norm      1.00000 for r:Hyakutake-20273004
+ Fitted norm      1.01546 for r:Johnson-11292002
+ Fitted norm      1.11562 for r:Johnson-11296002
+ Fitted norm      1.13398 for r:Johnson-11296003
+ Fitted norm      0.99640 for r:Johnson-14122002
+ Fitted norm      1.13953 for r:Khryachkov-41492002_e1
+ Fitted norm      1.10091 for r:Khryachkov-41492003_e1
+ Fitted norm      1.29912 for r:Khryachkov-41575003
+ Fitted norm      1.32423 for r:Khryachkov-41575009_e1
+ Fitted norm      1.21998 for r:Kjellman-F0469002
+ Fitted norm      1.12297 for r:Kjellman-F0469003
+ Fitted norm      1.00000 for r:Koehler-13164002
+ Fitted norm      0.99978 for r:Koester-22105005
+ Fitted norm      1.00000 for r:Lee_Jr-F0229002
+ Fitted norm      1.00000 for r:Lee_Jr-F0229003
+ Fitted norm      1.00000 for r:Liu-C0887002
+ Fitted norm      1.00000 for r:Lundberg-20163003
+ Fitted norm      1.01817 for r:Macphail-14675007
+ Fitted norm      1.05594 for r:Mani-F0428002
+ Fitted norm      1.00000 for r:Mani-F0465002
+ Fitted norm      1.00000 for r:Mani-F0465002_e1
+ Fitted norm      1.00000 for r:Maxson-11348002
+ Fitted norm      1.00000 for r:Maxson-11348003_e1
+ Fitted norm      1.19960 for r:Mcintyre_Jr-C0090003
+ Fitted norm      1.00707 for r:Meier-21042002
+ Fitted norm      1.00000 for r:Melkonian-11150004
+ Fitted norm      0.48619 for r:Moncoffre-F1195002
+ Fitted norm      1.12498 for r:Morgan-10789002
+ Fitted norm      1.14402 for r:Morgan-10789003
+ Fitted norm      1.05232 for r:Morgan-10789004_e1
+ Fitted norm      1.04309 for r:Morgan-10789005
+ Fitted norm      1.00000 for r:Morgan-12695004
+ Fitted norm      1.00000 for r:Morgan-12695004_e1
+ Fitted norm      1.21505 for r:Murillo-C1876002
+ Fitted norm      1.22914 for r:Murillo-C1876003
+ Fitted norm      1.57305 for r:Murillo-C1876004-1
+ Fitted norm      1.00000 for r:Nereson-11308002
+ Fitted norm      1.00000 for r:Nereson-11308026
+ Fitted norm      1.05574 for r:Niecke-F0480002
+ Fitted norm      0.99306 for r:Niecke-F0480005
+ Fitted norm      1.00000 for r:Nyberg-Ponnert-20245002
+ Fitted norm      1.00000 for r:Nyberg-Ponnert-20245002_e1
+ Fitted norm      1.44455 for r:Nystroem-20249002
+ Fitted norm      1.04751 for r:Nystroem-20249002_e1
+ Fitted norm      0.31096 for r:Nystroem-20249003
+ Fitted norm      0.03310 for r:Nystroem-20249003_e1
+ Fitted norm      1.05670 for r:Nystroem-20249006_e1
+ Fitted norm      0.85040 for r:Nystroem-20249007
+ Fitted norm      1.34033 for r:Ott-C0754002
+ Fitted norm      1.12956 for r:Ott-C0754003
+ Fitted norm      1.34409 for r:Ott-C0754004
+ Fitted norm      1.19703 for r:Ott-C0754005
+ Fitted norm      1.24483 for r:Ott-C0754006
+ Fitted norm      1.22004 for r:Ott-C0754007
+ Fitted norm      1.20048 for r:Ott-C0754008
+ Fitted norm      1.08873 for r:Ott-C0754009
+ Fitted norm      1.14964 for r:Perey-10283002
+ Fitted norm      1.11529 for r:Perey-10283011
+ Fitted norm      1.50082 for r:Perkin-20941002
+ Fitted norm      1.00000 for r:Peterson-11108008
+ Fitted norm      1.12928 for r:Phillips-11207007
+ Fitted norm      0.97960 for r:Ramirez-T0090002
+ Fitted norm      1.00015 for r:Ramirez-T0090003
+ Fitted norm      1.06996 for r:Ramirez-T0090004
+ Fitted norm      1.08357 for r:Ramirez-T0090004_e1
+ Fitted norm      0.89102 for r:Ramirez-T0090005
+ Fitted norm      1.26258 for r:Ramirez-T0090006
+ Fitted norm      1.10526 for r:Ramirez-T0090006_e1
+ Fitted norm      1.11624 for r:Ramirez-T0090009
+ Fitted norm      1.09313 for r:Ramirez-T0090010
+ Fitted norm      1.05228 for r:Ramirez-T0090011
+ Fitted norm      1.00000 for r:Salathe-20517003
+ Fitted norm      1.00000 for r:Salathe-20517003_e1
+ Fitted norm      1.00000 for r:Sanders-C1880005
+ Fitted norm      1.14242 for r:Schmidt-22806002
+ Fitted norm      1.13640 for r:Schmidt-22806003_e1
+ Fitted norm      1.12296 for r:Schmidt-22806020
+ Fitted norm      1.06839 for r:Schmidt-22806021_e1
+ Fitted norm      1.14247 for r:Scobel-20920002
+ Fitted norm      1.14486 for r:Scobel-20920003_e1
+ Fitted norm      1.00770 for r:Spassky-F0478002
+ Fitted norm      1.16591 for r:Spassky-F0478003
+ Fitted norm      1.15978 for r:Spassky-F0478004
+ Fitted norm      1.00000 for r:Spassky-F0478005
+ Fitted norm      1.30977 for r:Staples-13697002_e1
+ Fitted norm      1.22088 for r:Staples-13697003_e1
+ Fitted norm      1.00000 for r:Staudt-20546006
+ Fitted norm      1.00000 for r:Staudt-20546007_e1
+ Fitted norm      1.00000 for r:Strizhak-40793003
+ Fitted norm      1.00000 for r:Sukhanov-40041002_e1
+ Fitted norm      1.00000 for r:Templon-12939002
+ Fitted norm      1.00000 for r:Templon-12939003
+ Fitted norm      1.00000 for r:Tucker-12696002
+ Fitted norm      1.00000 for r:Tucker-12696002_e1
+ Fitted norm      0.99005 for r:Van_Der_Zwan-C1630002
+ Fitted norm      0.90216 for r:Van_Der_Zwan-C1630003_e1
+ Fitted norm      0.88466 for r:Van_Der_Zwan-C1630006
+ Fitted norm      0.87512 for r:Van_Der_Zwan-C1630007
+ Fitted norm      0.97274 for r:Van_Der_Zwan-C1630008
+ Fitted norm      0.99595 for r:Van_Der_Zwan-C1630009
+ Fitted norm      0.94866 for r:Van_Der_Zwan-C1630010
+ Fitted norm      0.97334 for r:Van_Der_Zwan-C1630011
+ Fitted norm      1.03968 for r:Van_Der_Zwan-C1630012
+ Fitted norm      0.93760 for r:Van_Der_Zwan-C1630013
+ Fitted norm      1.07932 for r:Van_Der_Zwan-C1630014
+ Fitted norm      0.98473 for r:Van_Der_Zwan-C1630015
+ Fitted norm      1.06420 for r:Van_Der_Zwan-C1630016
+ Fitted norm      1.07569 for r:Van_Der_Zwan-C1630017
+ Fitted norm      1.03767 for r:Van_Der_Zwan-C1630018
+ Fitted norm      1.00877 for r:Van_Der_Zwan-C1630019
+ Fitted norm      0.98461 for r:Van_Der_Zwan-C1630020
+ Fitted norm      0.99409 for r:Van_Der_Zwan-C1630021
+ Fitted norm      0.94097 for r:Van_Der_Zwan-C1630022
+ Fitted norm      1.01699 for r:Van_Der_Zwan-C1630023
+ Fitted norm      1.07586 for r:Van_Der_Zwan-C1630024
+ Fitted norm      1.04264 for r:Van_Der_Zwan-C1630025
+ Fitted norm      1.11444 for r:Van_Der_Zwan-C1630026
+ Fitted norm      1.03203 for r:Van_Der_Zwan-C1630027
+ Fitted norm      0.92798 for r:Van_Der_Zwan-C1630028
+ Fitted norm      1.03181 for r:Van_Der_Zwan-C1630029
+ Fitted norm      0.91984 for r:Van_Der_Zwan-C1630030
+ Fitted norm      0.96397 for r:Van_Der_Zwan-C1630031
+ Fitted norm      0.89778 for r:Van_Der_Zwan-C1630032
+ Fitted norm      0.83991 for r:Van_Der_Zwan-C1630033
+ Fitted norm      0.94342 for r:Van_Der_Zwan-C1630034
+ Fitted norm      1.03164 for r:Van_Der_Zwan-C1630035
+ Fitted norm      0.92995 for r:Van_Der_Zwan-C1630036
+ Fitted norm      0.79267 for r:Van_Der_Zwan-C1630037
+ Fitted norm      0.78831 for r:Van_Der_Zwan-C1630038
+ Fitted norm      0.78014 for r:Van_Der_Zwan-C1630039
+ Fitted norm      0.89846 for r:Van_Der_Zwan-C1630040
+ Fitted norm      1.18466 for r:Van_Der_Zwan-C1630041
+ Fitted norm      1.07923 for r:Van_Der_Zwan-C1630042
+ Fitted norm      0.96596 for r:Van_Der_Zwan-C1630043
+ Fitted norm      0.84235 for r:Van_Der_Zwan-C1630044
+ Fitted norm      1.08098 for r:Van_Der_Zwan-C1630045
+ Fitted norm      1.01038 for r:Van_Der_Zwan-C1630046
+ Fitted norm      0.98121 for r:Van_Der_Zwan-C1630047
+ Fitted norm      0.86872 for r:Van_Der_Zwan-C1630048
+ Fitted norm      0.93614 for r:Van_Der_Zwan-C1630049
+ Fitted norm      0.87015 for r:Van_Der_Zwan-C1630050
+ Fitted norm      1.07211 for r:Van_Der_Zwan-C1630051
+ Fitted norm      0.79659 for r:Van_Der_Zwan-C1630052
+ Fitted norm      1.02124 for r:Van_Der_Zwan-C1630053
+ Fitted norm      1.11907 for r:Van_Der_Zwan-C1630054_e1
+ Fitted norm      1.10047 for r:Van_Der_Zwan-C1630055_e1
+ Fitted norm      0.99963 for r:Van_Der_Zwan-C1630056_e1
+ Fitted norm      0.87591 for r:Van_Der_Zwan-C1630057_e1
+ Fitted norm      0.85965 for r:Van_Der_Zwan-C1630058_e1
+ Fitted norm      0.99006 for r:Van_Der_Zwan-C1630059_e1
+ Fitted norm      1.01494 for r:Van_Der_Zwan-C1630060_e1
+ Fitted norm      1.06003 for r:Van_Der_Zwan-C1630061_e1
+ Fitted norm      1.08002 for r:Van_Der_Zwan-C1630062_e1
+ Fitted norm      1.19778 for r:Van_Der_Zwan-C1630063_e1
+ Fitted norm      1.07623 for r:Van_Der_Zwan-C1630064_e1
+ Fitted norm      1.00137 for r:Van_Der_Zwan-C1630065_e1
+ Fitted norm      0.86147 for r:Van_Der_Zwan-C1630066_e1
+ Fitted norm      0.79918 for r:Van_Der_Zwan-C1630067_e1
+ Fitted norm      0.89845 for r:Van_Der_Zwan-C1630068_e1
+ Fitted norm      0.90077 for r:Van_Der_Zwan-C1630069_e1
+ Fitted norm      0.83820 for r:Van_Der_Zwan-C1630070_e1
+ Fitted norm      1.07343 for r:Van_Der_Zwan-C1630071_e1
+ Fitted norm      1.04641 for r:Van_Der_Zwan-C1630072_e1
+ Fitted norm      1.06722 for r:Van_Der_Zwan-C1630073_e1
+ Fitted norm      1.00478 for r:Van_Der_Zwan-C1630074_e1
+ Fitted norm      1.09575 for r:Van_Der_Zwan-C1630075_e1
+ Fitted norm      1.10452 for r:Van_Der_Zwan-C1630076_e1
+ Fitted norm      1.03755 for r:Van_Der_Zwan-C1630077_e1
+ Fitted norm      0.81354 for r:Van_Der_Zwan-C1630078_e1
+ Fitted norm      0.91100 for r:Van_Der_Zwan-C1630079_e1
+ Fitted norm      0.88579 for r:Van_Der_Zwan-C1630080_e1
+ Fitted norm      0.70193 for r:Van_Der_Zwan-C1630081_e1
+ Fitted norm      0.85837 for r:Van_Der_Zwan-C1630082_e1
+ Fitted norm      0.93558 for r:Van_Der_Zwan-C1630083_e1
+ Fitted norm      1.09836 for r:Van_Der_Zwan-C1630084_e1
+ Fitted norm      0.88212 for r:Van_Der_Zwan-C1630085_e1
+ Fitted norm      0.92549 for r:Van_Der_Zwan-C1630086_e1
+ Fitted norm      0.58541 for r:Wetteland-C2103003
+ Fitted norm      1.10040 for r:Wong-C2615004_e1
+ Fitted norm      1.04803 for r:Wong-C2615006
+ ]]></note></computerCode></computerCodes></documentation>
+        <resonanceReactions>
+          <resonanceReaction label="He4 + B11" ejectile="He4">
+            <link href="/reactionSuite/reactions/reaction[@label='He4 + B11']"/>
+            <scatteringRadius>
+              <constant1d value="5.5" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="radius" unit="fm"/></axes></constant1d></scatteringRadius></resonanceReaction>
+          <resonanceReaction label="He4 + B11_e1" ejectile="He4">
+            <link href="/reactionSuite/reactions/reaction[@label='He4 + B11_e1']"/>
+            <scatteringRadius>
+              <constant1d value="5.5" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="radius" unit="fm"/></axes></constant1d></scatteringRadius></resonanceReaction>
+          <resonanceReaction label="H1 + C14" ejectile="H1">
+            <link href="/reactionSuite/reactions/reaction[@label='H1 + C14']"/></resonanceReaction>
+          <resonanceReaction label="n + N14" ejectile="n">
+            <link href="/reactionSuite/reactions/reaction[@label='n + N14']"/>
+            <scatteringRadius>
+              <constant1d value="4" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="radius" unit="fm"/></axes></constant1d></scatteringRadius></resonanceReaction>
+          <resonanceReaction label="n + N14_e1" ejectile="n">
+            <link href="/reactionSuite/reactions/reaction[@label='n + N14_e1']"/>
+            <scatteringRadius>
+              <constant1d value="4" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="radius" unit="fm"/></axes></constant1d></scatteringRadius></resonanceReaction></resonanceReactions>
+        <spinGroups>
+          <spinGroup label="0" spin="1/2" parity="-1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="2" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11_e1" L="0" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + C14" L="1" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="n + N14" L="1" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="1" channelSpin="3/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14_e1" L="1" channelSpin="1/2" columnIndex="6"></channel></channels>
+            <resonanceParameters>
+              <table rows="4" columns="7">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="3" name="H1 + C14 width" unit="MeV"/>
+                  <column index="4" name="n + N14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width_2" unit="MeV"/>
+                  <column index="6" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data>
+                 <!--           energy |         He4 + B11 |       He4 + B11_e1 |           H1 + C14 |            n + N14 |            n + N14 |         n + N14_e1  -->
+                 <!--                  |            width  |             width  |             width  |             width  |           width_2  |             width   -->
+                       -14.958241971964    1.66365765569385   0.0641220837054088   0.0293740511889312   -0.936652894353351    0.595115949159141    0.874792861288532
+                      0.440307503499866   -0.90469437366944    0.435766245645843    0.263977811851448   0.0302529007429692   0.0229959155618393    0.657844137615338
+                       1.51862414659217   -1.80126994111617     3.73529167605163    0.363316011958643    0.261202776665214   -0.048654275399997     1.62476659447662
+                       26.2120592792517   -1.81982654553993    0.852588830666322    0.261302704814782     3.03326264664003      4.3056107222498   -0.389265885432345</data></table></resonanceParameters></spinGroup>
+          <spinGroup label="1" spin="1/2" parity="1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="1" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11_e1" L="1" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + C14" L="0" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="n + N14" L="0" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="2" channelSpin="3/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14_e1" L="0" channelSpin="1/2" columnIndex="6"></channel></channels>
+            <resonanceParameters>
+              <table rows="10" columns="7">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="3" name="H1 + C14 width" unit="MeV"/>
+                  <column index="4" name="n + N14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width_2" unit="MeV"/>
+                  <column index="6" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data>
+                 <!--           energy |          He4 + B11 |        He4 + B11_e1 |           H1 + C14 |            n + N14 |              n + N14 |         n + N14_e1  -->
+                 <!--                  |             width  |              width  |             width  |             width  |             width_2  |             width   -->
+                      -2.66120372257166   -0.250308796025929       1.5104004441049   0.0573659194033603     7.48784845304657     -0.643942778468817   -0.319931501833355
+                       0.58556545237758    -1.72033698191692   -0.0691079478002209    0.402689128374136   -0.275456891934903      0.212216661863522    0.150498233995406
+                      0.717916088523446    -1.61742540261468      0.69650786687576     1.10825221122279    0.156404554669276       0.34619153017442    0.684506419627007
+                       4.78451709225952    0.212634379643959      1.64925471258703     1.15519169236424     1.52735076761319     -0.302264346994403     5.85702208059452
+                       2.44134089358206    0.317995425936792    -0.909841919772892    0.128391827923232    -1.88757044417602      0.614289638466315    0.705796919318341
+                       4.03148827092343    -1.04872803668875     -0.75550619861483     3.63460472315368     4.08121688457218     -0.372359393085619     5.53521206623412
+                        4.0569353680639    0.800778566559325      2.28628436125011     4.18740393395205     1.17974716926339   -8.56476787265291e-3     5.03352298092381
+                       7.33348002775131   -0.663962327597986    -0.272989608753224    0.581410378839464    0.937528287502303    -0.0449929953034391    0.712925205728199
+                       8.04859726380456    0.214036323408219    -0.359443228156388   -0.616172255821391    -1.72129124958092      0.264715411965735    -1.46480730300608
+                       26.0245700061212     1.59728100833981      1.43214715638624     1.31617344940527    0.981881535975134      0.916157352539458    -1.55250799835021</data></table></resonanceParameters></spinGroup>
+          <spinGroup label="2" spin="3/2" parity="-1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="0" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="2" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="2" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="1" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="1" channelSpin="1/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="1" channelSpin="3/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="3" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="1" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="10" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data>
+                 <!--           energy |           He4 + B11 |           He4 + B11 |        He4 + B11_e1 |            H1 + C14 |              n + N14 |             n + N14 |            n + N14 |        n + N14_e1  -->
+                 <!--                  |              width  |            width_2  |              width  |              width  |               width  |            width_2  |           width_3  |            width   -->
+                      0.323041992762433      -1.4222100611985      1.06210426135763    -0.817497353903504   -0.0378752971149923    -0.0135754623577853   -0.0255989987756853   -0.628138910029948    2.89767605928278
+                       1.19420729463645      1.16730346879926     0.129654548172059    0.0367161281895151    -0.640728894278667     0.0308667994398695    0.0347276722594118    0.134302247974519    2.18293820114155
+                       1.60422373369952   -0.0656409947559588     -0.96974179214252      1.54746086519444     0.132739180064389        1.6972167609089      1.71538700040138    -1.97771763705863   -2.92111136941651
+                       1.72332385355399     0.344662615673828   -0.0259067637333242     -2.00790939095077       1.0510960015338    -0.0302398224678444    -0.135246737684713    -1.29297730414916    6.22494188580606
+                       2.60174726978515   -0.0895972487392414    -0.293384351843806   -0.0976539886688003    0.0723554915501336     0.0385932651055939    -0.207021377266268    0.618386483821429   0.622074734553361
+                       2.32260797731473    0.0509728983141562    -0.149499271788331     -1.21615877716551    0.0379516700769184   -5.93268017333052e-3   6.75920783078046e-3   0.0541254489227947   0.164781950862905
+                       3.22670663731966     0.439772141968516      2.15046385133477    -0.544685536328217    0.0574380231735106     -0.121419118147634    -0.393086930992684    0.153852174598688   -0.40542955316357
+                       10.9209728508262      10.2878899066335    -0.683667371194477     -1.99045748180228      -2.8541704234163      0.715623751678143     -2.01100806555929     0.28390548046553    1.35959016643117
+                       22.0218997123726    -0.760018268721509     0.852949966779645     0.655335988384856    0.0135369686426994     -0.281442605810184      3.40789675353915      3.1498889723686    3.17330321613481
+                       27.0340700831891     -3.16520121941754      2.77789062330715      1.20077323084013     0.954023145196066       4.22494294570758     0.417803095683458   -0.253316456435353     1.4665376101374</data></table></resonanceParameters></spinGroup>
+          <spinGroup label="3" spin="3/2" parity="1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="1" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="3" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="1" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="2" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="0" channelSpin="3/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="2" channelSpin="1/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="2" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="2" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="14" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data>
+                 <!--            energy |          He4 + B11 |          He4 + B11 |       He4 + B11_e1 |            H1 + C14 |            n + N14 |             n + N14 |             n + N14 |          n + N14_e1  -->
+                 <!--                   |             width  |           width_2  |             width  |              width  |             width  |            width_2  |            width_3  |              width   -->
+                       -1.54941926844658    -0.25937983862549   -0.645849540235999   -0.557621029181173     0.443998322527312     2.03248299194163    -0.973138119999269     -1.35563244463823     0.074751907264327
+                       -2.54514472270284    -2.12612980763011    -2.37319402514265   -0.335993968728128       3.5977523991252    0.308009385096513     0.457357652375273     -1.04966205785764      3.66065104104983
+                      -0.150144484117629    -0.64205790280608    -1.14081769569284   -0.552116398186055    -0.425000566285596   -0.121848391583181   -0.0134441391790706    -0.952753043158377     -3.17244446664078
+                        1.05608219700874    0.236075937327381    0.182006097000319     1.74884468247079    -0.133109227675753    0.259909487645694    -0.109495422027668    -0.629811417270148      1.46833197737644
+                        1.57775492755586   0.0458493819065458   -0.697477173229527    0.327044197413854    0.0586730135831839    0.859945459714738    -0.340241625434692     0.794482787063903   -0.0368434516284491
+                        3.33210538439254   0.0394992158607502   -0.517633140133493     3.78389769262371    -0.996885472184502    0.193514785905972     0.320855759400709     0.387736289540495     0.694343550705034
+                        3.32274031113875     1.63914099261427   -0.918940840003949     2.57435470628847    -0.457033743809741    0.274068416035458    -0.318681937134378   -0.0257717317154173    -0.918213205240926
+                         3.8983365967741    0.506696207229704   -0.966457315002499     4.61949574479995     0.205700815268758   0.0767745236645498   -0.0457589604520689     0.336464845920103    -0.506904442576571
+                         4.0529372502959   -0.586789191368823   -0.314437947042861    -4.32034852505073    0.0232677671735339    0.693689378413059    -0.263862567123713    -0.408337430319353       1.3001121041111
+                        5.50630804095213    -5.03128418919214    0.489563765544177    -1.06937311035316    -0.107116143029228     0.20249002634668     -1.25530576549935     -0.13162665296543      0.33616321810826
+                        4.93649087455522    0.545272702102843    -2.72279619117552   -0.317874436962773   -0.0696648156033337   -0.929268495667973     0.199837925400309     0.733864685770412    -0.289486851402303
+                         7.6845899460294    -1.43011320213935    0.969244167623039    -2.10708642110714    -0.350931776794589    0.537365514176997     0.597057053656001    -0.057337697809706    -0.507839562801952
+                        7.03897854550853     6.95351104117376    -2.39978565264952     2.95072945936526   -0.0444011840073722     3.74982299843982     0.366433231789753     0.482559271211591     0.391903123335332
+                        26.2160047702121     1.31646066120932    -2.87625455333118    -1.05318126130818     -2.98930350336268    -1.79697740175604       1.2222368595377      2.24454426250711     -2.72916766628359</data></table></resonanceParameters></spinGroup>
+          <spinGroup label="4" spin="5/2" parity="-1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="2" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="4" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="2" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="3" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="1" channelSpin="3/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="3" channelSpin="1/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="3" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="3" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="3" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data>
+                 <!--          energy |         He4 + B11 |          He4 + B11 |       He4 + B11_e1 |            H1 + C14 |            n + N14 |           n + N14 |           n + N14 |         n + N14_e1  -->
+                 <!--                 |            width  |           width_2  |             width  |              width  |             width  |          width_2  |          width_3  |             width   -->
+                      1.20274388215771   0.971204515438867   -0.787907413309112   -0.366169689669253   -0.0500625007277397    0.190056996101555   -1.95165383622796   -20.4406013616309     1.58315972750458
+                      5.24575113222154   0.797887962623537   -0.449878078559065    -1.23714273697817     0.255853093432882   -0.187207454646327   -0.58229485481863    1.19400752498557   -0.469915824250664
+                      26.7007298353643   0.287364164267367   -0.180086198399186    0.302007463706337    -0.870856254085964     7.19189203855457    2.87706495391408    -5.2746803974587   -0.368727351944521</data></table></resonanceParameters></spinGroup>
+          <spinGroup label="5" spin="5/2" parity="1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="1" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="3" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="3" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="2" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="2" channelSpin="1/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="2" channelSpin="3/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="4" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="2" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="41" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data>
+                 <!--           energy |           He4 + B11 |           He4 + B11 |        He4 + B11_e1 |            H1 + C14 |              n + N14 |             n + N14 |            n + N14 |          n + N14_e1  -->
+                 <!--                  |              width  |            width_2  |              width  |              width  |               width  |            width_2  |           width_3  |              width   -->
+                      -2.08545598135762     -1.11749584104565    -0.176818906416164   -0.0186828527601895     0.531537792459695      -1.35892791897096     0.133634176726005   -0.244916767079231     -1.71779607271158
+                       1.29838373132366     -1.97395853433898   -0.0842281870352259     0.493400599104744      2.25085366414355     -0.158045909295835    0.0237789692462028      2.1583755818245       3.1137751494273
+                       1.50141542687706     0.228193847834837    -0.445951911139282    -0.670955232933149     0.811314758960272      0.325600733583504    -0.167183322970727   -0.927976557501166     0.105977594647454
+                       1.49289919191406    -0.513981894338106      2.14179189690072     0.029356453236422     -2.18459214813379      0.701757038655284     0.311462886708391      3.1132319129533     -0.25743683411579
+                       1.63359306438422   -0.0732976734658767     0.508640791765812     0.214432369611467      1.07543269609958      0.139391791237986     0.247307554731273    0.513124677379358     0.133366463328463
+                       2.06061623418802     0.152827058613598     -0.61747587540779   -0.0484845078720578    0.0398565763629506     -0.435039101099923     0.130870763192315   -0.425279298887953     0.426642717138661
+                       1.89757087293415    -0.251078514525061     -1.74919665678389    -0.989808362374542     -2.15320978023898     -0.178061013950377    0.0776562835101965     1.23760313057322     0.873238076680308
+                       3.20428436654894   9.19968134055279e-3     0.113277230434703    -0.601527193878557   -0.0288573262509429      0.107506579025776     0.119208765794809     1.25041043476172      1.86050377638985
+                        3.5689255742863    0.0291100009324873     0.218570509882263    -0.278376584186529   -0.0156924414715879       0.20757219821435     0.123062796797481    -1.18950355954887     0.191930173056708
+                       4.29435971884394     0.119133225144528       0.1809387370065    -0.206974087171916    -0.157556334377568      0.236945977934489      1.17500614424124     1.45692475680423     0.419011586479501
+                        3.9149998667771    -0.320827291655569     0.372197296890342     0.358288959532717      0.22691462130883     -0.308868315095672     0.435455554281986    0.762933027779838    -0.202286329338345
+                       5.15431402424093     -1.82175264706681    -0.579975428992406     0.306746364493168   -0.0608989664297457    -0.0327275491498327    -0.820135818813222     5.91691189914273     0.397930014477427
+                       5.18591335159218      1.21372192219205     0.230071785657547    -0.702778261221545    -0.872697407542816     -0.346582965642198     -1.03807782558945     1.82830569527575     -0.68943834579704
+                       4.66015817991695     0.764737157872659     0.521302132093125     -1.53439331378417    -0.410698239852046      0.992889605406561     0.935829151591326     4.57907275292427     0.467510897242027
+                       4.97882193219611     0.643277663276565     0.878738068172572    -0.442064513263234   -0.0849844211241409      0.348678382239536   -0.0245908663721705    -1.33964157854269     0.519614968836781
+                       5.45842838287572     0.335042462835349    -0.798730776349082    -0.140382577488551      0.99713596915938    -0.0518751395779711      0.93709297826098    -1.43041055562991     -4.82192864126058
+                       5.23932547710955     0.602932882508417     0.232901850177134    -0.478026465052368    -0.209306738332498       -0.1272318047681     0.450804012836926    -2.32661482231233   -0.0534058581973829
+                       5.86850834738519     -1.57137443763826      1.23799211821876      5.38163507724011     -3.05678506990331     -0.613471963683577    -0.840734978700234      2.1167737232229         3.62406515961
+                       5.05554692776164     0.462903874494045   1.24179460786483e-3    0.0835372090822547     0.483775271798896     -0.749646884560452    -0.106158123084895     5.36708058145339     -1.39382802814241
+                       5.48445333338047    -0.107245483256277    -0.519571729254601     0.037209837362487    -0.227156379516612       0.30889208861283   -0.0888011517944206    -1.81444218428672      1.37983300011079
+                       6.31789025794121     -2.24338573931765     -3.42596151099504      4.21093202432863    -0.242901904109206      -1.40929457198677     0.672236339715822    -1.68450551011852      3.57892705791877
+                       5.90065241962316    0.0427758397801975    -0.181885464538967    -0.636432412330333      1.02534675704775     -0.024832586873475    -0.188116289626194   -0.810625368916387     0.819760349690808
+                        6.2624494005156     -1.87260588284348      -1.2375591461025     0.441980395544521    0.0919302552005401      0.645922015593119    -0.225725435234958    0.481532981165488     -2.14123565580221
+                       6.50459506818439      2.25376658053749     0.386773697072075     -2.20725151663398     -1.41853019897619      0.943940120710978     0.445430741391237   -0.299695753957438     -3.69878117667915
+                       6.48049712239789     0.335652688541803     -2.96116809713057       0.7389675947656     -3.98993950462003     -0.437669897102664    -0.916057972689333     1.15134709224016      1.66978053600942
+                       6.42244219816615      2.45383863066563      1.68381097407621    -0.739164625828329     -2.87097469342989     -0.455063222525718   -0.0755633393900259     2.14370337699285     -3.00976159722106
+                       6.31305333025615    -0.796528705427118    -0.779162508377639     -1.28449856957777      2.43244745370996     0.0953321204231925     0.974774125672661      3.5866245253232     -1.62168210665636
+                       6.84547583162344     -2.36367508525522     -2.63985955243429      4.14737112245575     -2.33171854320204      -2.30673061222211     -3.33419161063115    -2.55811961260651      8.93119660383596
+                       6.43403801361485      1.08615016929572     0.919278271788984     -1.17729129550574    -0.276528574746838     -0.411140138674864      0.96843043211309   -0.321924943285144     -1.45708113207278
+                       6.94202624398929     -1.99247477642843     -2.78644670810661      2.15201876536678    -0.633399858149733      -1.00967313642987    -0.866722975562027     1.89997986038029      1.57912761281419
+                       6.83860892759586     0.915711495314711     0.559848396155146    -0.548314664347669    -0.535318863769291    -0.0772111221936797      0.23179491220608    0.263379919325351    0.0507193459831743
+                       7.04559287324645    -0.548326434289139    -0.218834675930642     0.916602171573061   -0.0570864375650115      0.627214427314726      1.13088415721972   -0.839450538856974      1.15485800884703
+                       7.71319539156023     -4.72540894949292     -4.30023314119882      1.86616921442855     -0.54014104546627        1.4495151930121     -2.05190932815367   -0.861427382516953      5.61331159680657
+                       7.56778149108352     -1.10265940613249      1.92025122866142     0.259608394845661      3.84569749371638   -9.94625838122953e-3     0.534836549300974    -1.29172180056647    -0.032574886559227
+                       7.63186387546217      2.70488208387697     -1.11660241831861     -1.88294768390281     -4.77201007428418     -0.471943983445181      1.30358739538619   -0.691480841312298    -0.275136917969308
+                       7.92045189647206     -5.34251204662827     -2.46680264476319      1.95177200655399        3.961302029903      0.439746973593489     -2.21680490641296    0.620731071011986      2.52478204579056
+                       8.09381200225325     0.473024923313427      5.12681286206855     -1.20475248358293      1.31414053495956      0.292043415798442      3.63896108877765    -4.08543938224565      2.34659318156811
+                        9.4246064915576     -2.17882107990843     0.856963971864546      1.30939886106513     -4.26778597927632       1.50877964100685     0.631727916615301    0.333883039665506     -1.29592351963967
+                        9.0259038431299    -0.630949711985055    -0.991821937881303     0.171645266637341     0.626428351344856     0.0704131154829519     -2.25151909180917     2.62086593288557     -1.81607384088878
+                       10.0116027736474    0.0666535838184904     0.312532662372258    -0.901161461278074    0.0404937064116668      0.050165164432056     0.254809916121826   -0.183649208687216       1.1406899276003
+                       26.3943445822085   -0.0443497169069996    -0.971213617555318      1.44964883246775     0.814914691983334        2.4381934727956    0.0436398487483101   -0.470416890074899     -1.02204630283542</data></table></resonanceParameters></spinGroup>
+          <spinGroup label="6" spin="7/2" parity="-1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="2" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="4" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="4" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="3" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="3" channelSpin="1/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="3" channelSpin="3/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="5" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="3" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="2" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data>
+                 <!--           energy |          He4 + B11 |         He4 + B11 |      He4 + B11_e1 |           H1 + C14 |             n + N14 |            n + N14 |            n + N14 |        n + N14_e1  -->
+                 <!--                  |             width  |          width_2  |            width  |             width  |              width  |           width_2  |           width_3  |            width   -->
+                      0.456372224610682   -0.153612534870277   0.876915718086123   0.518710557017817   -0.616033203639498   -0.0584981073757515   -0.103513922253167   -0.519623074241354   0.309319079916435
+                       2.65556667692263    0.556332707224969    1.95913193321947    3.26738633978663    0.271248889757055     0.198820990823984    0.500391503600834    0.277801082631368   0.177419831470382</data></table></resonanceParameters></spinGroup>
+          <spinGroup label="7" spin="7/2" parity="1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="3" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="5" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="3" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="4" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="2" channelSpin="3/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="4" channelSpin="1/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="4" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="4" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="3" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data>
+                 <!--          energy |         He4 + B11 |         He4 + B11 |       He4 + B11_e1 |          H1 + C14 |            n + N14 |            n + N14 |            n + N14 |        n + N14_e1  -->
+                 <!--                 |            width  |          width_2  |             width  |            width  |             width  |           width_2  |           width_3  |            width   -->
+                      4.28428131492008    2.07224819492998   -7.71549230054609   -0.297224280794029   -7.12773775888433    -1.59205105866805   -0.942661322255024   -0.368264828495869   -2.75810717467138
+                      4.05497197006796   0.147442867032813     2.7673406162449     2.12491345313455   0.390556541488656   -0.261234292126101    0.377402643173346   -0.676404829873422    3.89949228400953
+                      5.27466352695309    2.40884375668697   -5.88959498923391   -0.708818772981737    3.77469882537918     1.60058661791322     4.51638828651876    0.550334255985326   -1.89178364968949</data></table></resonanceParameters></spinGroup>
+          <spinGroup label="8" spin="13/2" parity="1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="5" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="7" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="7" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="6" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="6" channelSpin="1/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="6" channelSpin="3/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="8" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="6" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="1" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data>
+                 <!--          energy |          He4 + B11 |        He4 + B11 |       He4 + B11_e1 |          H1 + C14 |           n + N14 |           n + N14 |          n + N14 |        n + N14_e1  -->
+                 <!--                 |             width  |         width_2  |             width  |            width  |            width  |          width_2  |         width_3  |            width   -->
+                      6.06102900133032   -0.443043209371181   1.73962440407781   0.0999990897844855   -7.91076136196646   -27.9898317873361   -27.9892057363172   1223.83140226732   0.098452027667106</data></table></resonanceParameters></spinGroup>
+          <spinGroup label="9" spin="9/2" parity="-1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="4" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="6" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="4" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="5" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="3" channelSpin="3/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="5" channelSpin="1/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="5" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="5" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="0" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data/></table></resonanceParameters></spinGroup>
+          <spinGroup label="10" spin="9/2" parity="1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="3" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="5" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="5" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="4" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="4" channelSpin="1/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="4" channelSpin="3/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="6" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="4" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="0" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data/></table></resonanceParameters></spinGroup>
+          <spinGroup label="11" spin="11/2" parity="-1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="4" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="6" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="6" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="5" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="5" channelSpin="1/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="5" channelSpin="3/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="7" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="5" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="0" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data/></table></resonanceParameters></spinGroup>
+          <spinGroup label="12" spin="11/2" parity="1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="5" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="7" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="5" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="6" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="4" channelSpin="3/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="6" channelSpin="1/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="6" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="6" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="0" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data/></table></resonanceParameters></spinGroup>
+          <spinGroup label="13" spin="13/2" parity="-1">
+            <channels>
+              <channel label="1" resonanceReaction="He4 + B11" L="6" channelSpin="3/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="He4 + B11" L="8" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="He4 + B11_e1" L="6" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + C14" L="7" channelSpin="1/2" columnIndex="4"></channel>
+              <channel label="5" resonanceReaction="n + N14" L="5" channelSpin="3/2" columnIndex="5"></channel>
+              <channel label="6" resonanceReaction="n + N14" L="7" channelSpin="1/2" columnIndex="6"></channel>
+              <channel label="7" resonanceReaction="n + N14" L="7" channelSpin="3/2" columnIndex="7"></channel>
+              <channel label="8" resonanceReaction="n + N14_e1" L="7" channelSpin="1/2" columnIndex="8"></channel></channels>
+            <resonanceParameters>
+              <table rows="0" columns="9">
+                <columnHeaders>
+                  <column index="0" name="energy" unit="MeV"/>
+                  <column index="1" name="He4 + B11 width" unit="MeV"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV"/>
+                  <column index="5" name="n + N14 width" unit="MeV"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                <data/></table></resonanceParameters></spinGroup></spinGroups></RMatrix></resolved></resonances>
+  <reactions>
+    <reaction label="He4 + B11" ENDF_MT="2">
+      <crossSection>
+        <resonancesWithBackground label="eval">
+          <resonances href="/reactionSuite/resonances"/>
+          <background>
+            <resolvedRegion>
+              <regions1d>
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="crossSection" unit="b"/></axes>
+                <function1ds>
+                  <XYs1d index="0">
+                    <values>
+                      1.00000000e-02 0.00000000e+00 1.00000000e+01 0.00000000e+00</values></XYs1d></function1ds></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
+      <outputChannel genre="twoBody">
+        <Q>
+          <constant1d label="eval" value="0" domainMin="1e-2" domainMax="10">
+            <axes>
+              <axis index="1" label="energy_in" unit="MeV"/>
+              <axis index="0" label="Q" unit="MeV"/></axes></constant1d></Q>
+        <products>
+          <product pid="He4" label="He4">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product>
+          <product pid="B11" label="B11">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product></products></outputChannel></reaction>
+    <reaction label="He4 + B11_e1" ENDF_MT="801">
+      <crossSection>
+        <resonancesWithBackground label="eval">
+          <resonances href="/reactionSuite/resonances"/>
+          <background>
+            <resolvedRegion>
+              <regions1d>
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="crossSection" unit="b"/></axes>
+                <function1ds>
+                  <XYs1d index="0">
+                    <values>
+                      1.00000000e-02 0.00000000e+00 1.00000000e+01 0.00000000e+00</values></XYs1d></function1ds></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
+      <outputChannel genre="twoBody">
+        <Q>
+          <constant1d label="eval" value="-2.124693" domainMin="1e-2" domainMax="10">
+            <axes>
+              <axis index="1" label="energy_in" unit="MeV"/>
+              <axis index="0" label="Q" unit="MeV"/></axes></constant1d></Q>
+        <products>
+          <product pid="He4" label="He4">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product>
+          <product pid="B11_e1" label="B11_e1">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product></products></outputChannel></reaction>
+    <reaction label="H1 + C14" ENDF_MT="600">
+      <crossSection>
+        <resonancesWithBackground label="eval">
+          <resonances href="/reactionSuite/resonances"/>
+          <background>
+            <resolvedRegion>
+              <regions1d>
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="crossSection" unit="b"/></axes>
+                <function1ds>
+                  <XYs1d index="0">
+                    <values>
+                      1.00000000e-02 0.00000000e+00 1.00000000e+01 0.00000000e+00</values></XYs1d></function1ds></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
+      <outputChannel genre="twoBody">
+        <Q>
+          <constant1d label="eval" value="0.78398211292522" domainMin="1e-2" domainMax="10">
+            <axes>
+              <axis index="1" label="energy_in" unit="MeV"/>
+              <axis index="0" label="Q" unit="MeV"/></axes></constant1d></Q>
+        <products>
+          <product pid="H1" label="H1">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product>
+          <product pid="C14" label="C14">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product></products></outputChannel></reaction>
+    <reaction label="n + N14" ENDF_MT="50">
+      <crossSection>
+        <resonancesWithBackground label="eval">
+          <resonances href="/reactionSuite/resonances"/>
+          <background>
+            <resolvedRegion>
+              <regions1d>
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="crossSection" unit="b"/></axes>
+                <function1ds>
+                  <XYs1d index="0">
+                    <values>
+                      1.00000000e-02 0.00000000e+00 1.00000000e+01 0.00000000e+00</values></XYs1d></function1ds></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
+      <outputChannel genre="twoBody">
+        <Q>
+          <constant1d label="eval" value="0.1614" domainMin="1e-2" domainMax="10">
+            <axes>
+              <axis index="1" label="energy_in" unit="MeV"/>
+              <axis index="0" label="Q" unit="MeV"/></axes></constant1d></Q>
+        <products>
+          <product pid="n" label="n">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product>
+          <product pid="N14" label="N14">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product></products></outputChannel></reaction>
+    <reaction label="n + N14_e1" ENDF_MT="51">
+      <crossSection>
+        <resonancesWithBackground label="eval">
+          <resonances href="/reactionSuite/resonances"/>
+          <background>
+            <resolvedRegion>
+              <regions1d>
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="crossSection" unit="b"/></axes>
+                <function1ds>
+                  <XYs1d index="0">
+                    <values>
+                      1.00000000e-02 0.00000000e+00 1.00000000e+01 0.00000000e+00</values></XYs1d></function1ds></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
+      <outputChannel genre="twoBody">
+        <Q>
+          <constant1d label="eval" value="-2.15468668594076" domainMin="1e-2" domainMax="10">
+            <axes>
+              <axis index="1" label="energy_in" unit="MeV"/>
+              <axis index="0" label="Q" unit="MeV"/></axes></constant1d></Q>
+        <products>
+          <product pid="n" label="n">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product>
+          <product pid="N14_e1" label="N14_e1">
+            <multiplicity>
+              <constant1d label="eval" value="1" domainMin="1e-2" domainMax="10">
+                <axes>
+                  <axis index="1" label="energy_in" unit="MeV"/>
+                  <axis index="0" label="multiplicity" unit=""/></axes></constant1d></multiplicity>
+            <distribution>
+              <unspecified label="eval" productFrame="centerOfMass"></unspecified></distribution></product></products></outputChannel></reaction></reactions>
+</reactionSuite>

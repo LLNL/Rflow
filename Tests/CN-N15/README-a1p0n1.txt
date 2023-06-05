@@ -1,5 +1,5 @@
 # 
-# Ian Thompson. Jan 25, 2022
+# Ian Thompson. June 5, 2023
 #
 # The N15 here is the compound system.
 
@@ -16,7 +16,8 @@ rm -rf Data_X4s
 # Read all *.dat files and csv files, to put into big files flow.data and flow.norms for rflow.py
 #
 # A1P0N1
-../../data4rflows.py -d Data_X4s --CSV datafile.props.csv --Projectiles  He4 H1 n -L 1 0 1 -o flow-a1p0n1.data -n flow-a1p0n1.norms --EminCN 7.0  --EmaxCN 20. -E 20.0 --pops  ../ripl2pops_to_Z8.xml -j 2.5 -p 1 -w 0.1 -I Data_X4s/*.dat -T 1 |& tee data4rflow-Data_X4s-a1p0n1-B10C20.out
+012
+
 
 # Calculate cross-sections and transitions with existing R-matrix parameters (no searching)
 
@@ -25,20 +26,15 @@ rm -rf Data_X4s
 
 # plot results for individual EXFOR sets
 ../plotjson N15r-a1p0n1-a+.xml+flow-a1p0n1-E10.0_a0+C_v/*@*json
+
 # plot results for excitation functions
 ../plotjson N15r-a1p0n1-a+.xml+flow-a1p0n1-E10.0_a0+C_v/Angle-integrals-*json'
 
 
-# no cross-sections (-a 0), and excluding Harvey data (4135 points) for speed.
-../../rflow.py N15r-a1p0n1-a+.xml flow-a1p0n1.data flow-a1p0n1.norms  --Cross_Sections --TransitionMatrix 1  --tag xHarvey --anglesData 0 --EMAX 10 -x Harvey | tee N15r-a1p0n1-a+.xml+flow-a1p0n1-E10.0_a0+C_xHarvey.out
+# Search excluding Harvey Dayras Lee_Jr data for speed, and Sanders Mani-F0465002 Liu-C0887002 data for normalization uncertainties. Up to 10 MeV
+# The results of this search are included in the code release, parameters in N15r-a1p0n1-a+b3.xml+flow-a1p0n1-E10.0+S10_I300+C_xHDLCSM-fit.xml 
+#
+../../rflow.py N15r-a1p0n1-a+b3.xml flow-a1p0n1.data flow-a1p0n1.norms --Cross_Sections --TransitionMatrix 1 --EMAX 10 -t xHDLCSM -x Harvey Dayras Lee_Jr Sanders Mani-F0465002 Liu-C0887002 -S 10 -I 300 | tee N15r-a1p0n1-a+b3.xml+flow-a1p0n1-E10.0+S10_I300+C_xHDLCSM.out
 
 
-# Up to 4 MeV max, no cross-sections (-a 0), and excluding Harvey data (4135 points) for speed.
-../../rflow.py N15r-a1p0n1-a+.xml flow-a1p0n1.data flow-a1p0n1.norms  --Cross_Sections --TransitionMatrix 1  --tag xHarvey --anglesData 0 --EMAX 4 -x Harvey | tee N15r-a1p0n1-a+.xml+flow-a1p0n1-E4.0_a0+C_xHarvey.out
 
-
-# Up to 10 MeV max, no cross-sections (-a 0), and excluding Harvey data (4135 points) for speed, and excluding Dayras and Lee_Jr for bad preliminary normalizations
-../../rflow.py N15r-a1p0n1-a+.xml flow-a1p0n1.data flow-a1p0n1.norms --Cross_Sections --TransitionMatrix 1 --tag xHarvey2 --anglesData 0 --EMAX 10 -t xH+D+L -x Harvey Dayras Lee_Jr  | tee N15r-a1p0n1-a+.xml+flow-a1p0n1-E10.0_a0+C_xH+D+L.out
-
-# search above
-../../rflow.py N15r-a1p0n1-a+.xml flow-a1p0n1.data flow-a1p0n1.norms --Cross_Sections --TransitionMatrix 1 --tag xHarvey2 --anglesData 0 --EMAX 10 -t xH+D+L -x Harvey Dayras Lee_Jr  --Search 10 | tee N15r-a1p0n1-a+.xml+flow-a1p0n1-E10.0_a0+C-S10_xH+D+L.out

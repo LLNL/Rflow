@@ -728,7 +728,7 @@ for datFile in args.InFiles:
     
     Qvalue_ref = qvalue[p_ref] - qvalue[p]; print(' From p=',p,qvalue[p],' and p_ref',p_ref,qvalue[p_ref] )
     lab2cm_ref= masses[t_ref]/(masses[p_ref]+masses[t_ref])
-    print('Lab2cm: in =',lab2cm_in,'  ref =',lab2cm_ref,'for',p_ref,'+',t_ref,'with Q from ref',Qvalue_ref)
+    print('Lab2cm: in =',lab2cm_in,'  ref =',lab2cm_ref,'for',p_ref,'+',t_ref,'with Q from ref',Qvalue_ref,' Scale',scalefactor)
     
 # convert to mb for rflow:
     xs_scale  =  xscales[iscale]

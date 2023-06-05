@@ -95,12 +95,14 @@
 1          0.01        r:Khryachkov-41575003 1          0.05       Data_X4s/Khryachkov-41575003-Aint*
 1          0.01        r:Khryachkov-41575009_e1 1          0.05       Data_X4s/Khryachkov-41575009_e1-Aint*
 1          0.01        r:Kjellman-F0469002  1          0.05       Data_X4s/Kjellman-F0469002@e*
+1          0.01        r:Kjellman-F0469003  1          0.05       Data_X4s/Kjellman-F0469003-Aint*
 1          0.01        r:Koehler-13164002   1          0.05       Data_X4s/Koehler-13164002-Aint*
 1          0.01        r:Koester-22105005   1          0.01       Data_X4s/Koester-22105005-Aint*
 1          0.01        r:Lee_Jr-F0229002    1          0.05       Data_X4s/Lee_Jr-F0229002@a*
 1          0.01        r:Lee_Jr-F0229003    1          0.05       Data_X4s/Lee_Jr-F0229003-Aint*
 1          0.01        r:Liu-C0887002       1          0.05       Data_X4s/Liu-C0887002@a*
 1          0.01        r:Lundberg-20163003  1          0.05       Data_X4s/Lundberg-20163003@e*
+1          0.01        r:Macphail-14675007  1          0.05       Data_X4s/Macphail-14675007-Aint*
 1          0.01        r:Mani-F0428002      1          -0.01      Data_X4s/Mani-F0428002-Aint*
 1          0.01        r:Mani-F0465002      1          0.05       Data_X4s/Mani-F0465002@a*
 1          0.01        r:Mani-F0465002_e1   1          0.05       Data_X4s/Mani-F0465002_e1@a*
@@ -120,6 +122,7 @@
 1          0.01        r:Murillo-C1876003   1          0.05       Data_X4s/Murillo-C1876003@a*
 1          0.01        r:Murillo-C1876004-1 1          0.05       Data_X4s/Murillo-C1876004-1@a*
 1          0.01        r:Nereson-11308002   1          0.01       Data_X4s/Nereson-11308002-Aint*
+1          0.01        r:Nereson-11308026   1          0.01       Data_X4s/Nereson-11308026-Aint*
 1          0.01        r:Niecke-F0480002    1          0.05       Data_X4s/Niecke-F0480002@e*
 1          0.01        r:Niecke-F0480005    1          0.05       Data_X4s/Niecke-F0480005@e*
 1          0.01        r:Nyberg-Ponnert-20245002 1          0.05       Data_X4s/Nyberg-Ponnert-20245002@a*
@@ -140,6 +143,7 @@
 1          0.01        r:Ott-C0754009       1          0.05       Data_X4s/Ott-C0754009@e*
 1          0.01        r:Perey-10283002     1          0.05       Data_X4s/Perey-10283002@e*
 1          0.01        r:Perey-10283011     1          0.05       Data_X4s/Perey-10283011-Aint*
+1          0.01        r:Perkin-20941002    1          0.05       Data_X4s/Perkin-20941002@a*
 1          0.01        r:Peterson-11108008  1          0.01       Data_X4s/Peterson-11108008-Aint*
 1          0.01        r:Phillips-11207007  1          0.05       Data_X4s/Phillips-11207007@e*
 1          0.01        r:Ramirez-T0090002   1          0.05       Data_X4s/Ramirez-T0090002@a*
@@ -154,7 +158,6 @@
 1          0.01        r:Ramirez-T0090011   1          0.05       Data_X4s/Ramirez-T0090011-Aint*
 1          0.01        r:Salathe-20517003   1          0.05       Data_X4s/Salathe-20517003@a*
 1          0.01        r:Salathe-20517003_e1 1          0.05       Data_X4s/Salathe-20517003_e1@a*
-1          0.01        r:Sanders-C1853002   1          -0.01      Data_X4s/Sanders-C1853002-Aint*
 1          0.01        r:Sanders-C1880005   1          -0.01      Data_X4s/Sanders-C1880005@a*
 1          0.01        r:Schmidt-22806002   1          0.05       Data_X4s/Schmidt-22806002@e*
 1          0.01        r:Schmidt-22806003_e1 1          0.05       Data_X4s/Schmidt-22806003_e1@e*
@@ -260,3 +263,5 @@
 1          0.01        r:Van_Der_Zwan-C1630085_e1 1          0.05       Data_X4s/Van_Der_Zwan-C1630085_e1@e*
 1          0.01        r:Van_Der_Zwan-C1630086_e1 1          0.05       Data_X4s/Van_Der_Zwan-C1630086_e1@e*
 1          0.01        r:Wetteland-C2103003 1          0.05       Data_X4s/Wetteland-C2103003@a*
+1          0.01        r:Wong-C2615004_e1   1          0.05       Data_X4s/Wong-C2615004_e1@e*
+1          0.01        r:Wong-C2615006      1          0.05       Data_X4s/Wong-C2615006@e*
