@@ -5,6 +5,19 @@
 
 	 Email: thompson97@llnl.gov
 	   
+## Needed libraries
+
+Users to download:
+
+**fudge** version > 6 from [github.com/LLNL/fudge](https://github.com/LLNL/fudge),
+  for example the tag at [github.com/LLNL/fudge/releases/tag/6.1.0](https://github.com/LLNL/fudge/releases/tag/6.1.0). Include fudge in PYTHONPATH.
+
+**tensorflow** from [www.tensorflow.org/install](https://www.tensorflow.org/install).
+For macs see [developer.apple.com/metal/tensorflow-plugin/](https://developer.apple.com/metal/tensorflow-plugin/)
+
+**x4i** from [github.com/brown170/x4i.git](https://github.com/brown170/x4i.git)
+
+
 ## R-matrix fitting EXFOR data using tensorflow
 ```
 usage: rflow.py [-h] [-x [EXCL [EXCL ...]]] [-1] [-F [FIXED [FIXED ...]]] [-n]
