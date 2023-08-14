@@ -207,7 +207,10 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
             prmax = Rmatrix_radius * (Ap**(1./3.) + At**(1./3.)) if Rmatrix_radius > 0 else abs(Rmatrix_radius)
             rmass = pmass*tmass/(pmass+tmass)
             Qp = qvalue[p]
-            wignerLimitRWA = ( 3.0/prmax**2  / (fmscal * rmass) ) ** 0.5
+            if rmass > 0.:
+                wignerLimitRWA = ( 3.0/prmax**2  / (fmscal * rmass) ) ** 0.5
+            else:
+                wignerLimitRWA = 0.1
 
             print('\n##\nPartition',ic,':',p,t,'so Q=',Qp,'  Wigner rwa=',wignerLimitRWA)
             icnew += 1
@@ -551,6 +554,7 @@ for prop in csv.DictReader(csvf):
 
 p_ref = args.Projectiles[0]
 t_ref = targs[projs.index(p_ref)]
+print('masses:\n',masses)
 masses_ref = masses[p_ref] + masses[t_ref]
 
 try:

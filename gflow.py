@@ -38,7 +38,7 @@ rsqr4pi = 1.0/(4*pi)**0.5
 def now():
     return date.Date( resolution = date.Resolution.time )
 
-def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
+def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,n_totals,n_captures,
         Ein_list, fixedlist, NLMAX,emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ML,ABES,Grid,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
@@ -73,23 +73,25 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #         LMatrix = True
  
     n_data = data_val.shape[0]
-    n_totals = n_data - n_angles - n_angle_integrals
-    n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
-    n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
-
+    n_angles0 = 0
+    n_angle_integrals0 = n_angles0                                # so [n_angle_integrals0,n_totals0] for angle-integrals
+    n_totals0          = n_angle_integrals0 + n_angle_integrals   # so [n_totals0:n_captures0]             for totals
+    n_captures0        = n_totals0 + n_totals                     # so [n_totals0:n_data]             for captures
+    
     n_jsets = len(RMatrix.spinGroups)
     n_poles = 0
     n_chans = 0
     
     np = len(RMatrix.resonanceReactions)
     ReichMoore = False
+    damping = 0
     for pair in range(np):
         print('Partition',pair,'elim,label',RMatrix.resonanceReactions[pair].eliminated,RMatrix.resonanceReactions[pair].label)
         if RMatrix.resonanceReactions[pair].eliminated: 
             ReichMoore = True
-            damping_pair = pair
+            damping = 1
             damping_label = RMatrix.resonanceReactions[pair].label
-            print('\nReich-Moore channel is',damping_pair,':',damping_label)
+            print('    Reich-Moore:',damping_label,'\n')
         
     prmax = numpy.zeros(np, dtype=REAL)
     QI = numpy.zeros(np, dtype=REAL)
@@ -115,6 +117,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         kp = partition.label
         if partition.eliminated: # no two-body kinematics
             partitions[kp] = None
+            print('Reaction eliminated:',kp)
             continue
         channels[pair] = kp
         reaction = partition.link.link
@@ -158,6 +161,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     if verbose: print("\nElastic channel is",elasticChannel,'with IFG=',IFG)
 #     if debug: print("Charged-particle elastic:",chargedElastic,",  identical:",identicalParticles,' rStyle:',rStyle)
     npairs  = pair
+#     print('npairs:',npairs)
     if not IFG:
         print("Not yet coded for IFG =",IFG)
         sys.exit()
@@ -183,6 +187,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     if nExcluded > 0: print('\n %5i points excluded as outside range [%s, %s]' % (nExcluded,emin,emax))
     
     mu_val = data_val[:,1]
+#     print('partitions:',partitions)
 
     Lmax = 0
     for Jpi in RMatrix.spinGroups:
@@ -195,8 +200,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         partition_channels = numpy.zeros(npairs, dtype=INT)
         for ch in Jpi.channels:
             rr = ch.resonanceReaction
+            if RMatrix.resonanceReactions[rr].eliminated: continue
             pair = partitions[rr] #.get(rr,None)
-#             print('rr,pair: p_c',rr,pair,partition_channels[pair])
+#             print('rr,pair',rr,pair,rr)
             if NLMAX is not None and partition_channels[pair] >= NLMAX: continue
             Lmax = max(Lmax,ch.L)
 #             print('       L,Lmax',ch.L,Lmax)
@@ -361,7 +367,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         if ReichMoore: 
 #             D_poles[jset,:rows] = numpy.asarray( R.getColumn(damping_label,'MeV') , dtype=REAL)   # lab MeV
             for n in range(rows):
-                D_poles[jset,n] = R.data[n][damping_pair+1]
+                D_poles[jset,n] = R.data[n][damping]
             if IFG==1:     D_poles[jset,:] = 2*D_poles[jset,:]**2
         for n in range(rows):
             for c in range(ncols):
@@ -390,6 +396,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     pin = data_p[ie,0]
                     pout= data_p[ie,1]
                     if pout == -1: pout = pin # to get total cross-section
+                    #  pout == -2 for capture cross-section
                     B = None
                     if bndx == resolvedResonanceModule.BoundaryCondition.NegativeOrbitalMomentum:
                         B = -ch.L
@@ -447,11 +454,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             Highest_pole_energy = numpy.amax(E_poles) + 20.
             N_gridE = int( (Highest_pole_energy - Lowest_pole_energy) / Grid ) + 1
             print('Make grid of S+iP at %s MeV spacings for e.g. Brune level matrix with %i points from Elab from %.3f to %.3f' % (Grid,N_gridE,Lowest_pole_energy,Highest_pole_energy))
-            GRsize = N_gridE*n_jsets*n_chans*2*realSize / 1e9
-            if GRsize > 0.01: print('    Grid storage size = %6.3f GB' % GRsize)
+#             GRsize = N_gridE*n_jsets*n_chans*2*realSize / 1e9
+#             if GRsize > 0.01: print('    Grid storage size = %6.3f GB' % GRsize)
             L_poles = numpy.zeros([N_gridE,n_jsets,n_chans,2], dtype=REAL)
             LGB = N_gridE*n_jsets*n_chans*2 * realSize / 1e9
-            if LGB>0.01: print(' Grid storage size = %.3f GB' % LGB)
+            if LGB>0.01: print('    Grid storage size = %.3f GB' % LGB)
             dLdE_poles = None
             EO_poles = None
             CF2_L = numpy.zeros(Lmax+1, dtype=CMPLX)
@@ -747,18 +754,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         mu = mu_val[ie]
         if abs(mu)>1.: 
             print('Data pt ',ie,data_p[ie,:],'has bad mu:',mu_val[ie])
+            print(data_val[ie,:])
+            continue
             sys.exit()
         for L in range(NL):
             Pleg[ie,L] = Legendre(L, mu)
-                        
-#     for ie in range(n_angle_integrals):
-#         pin = data_p[n_angle_integrals0+ie,0]
-#         pout= data_p[n_angle_integrals0+ie,1]
-#         ExptAint[ie,pout,pin] = 1.
-#         
-#     for ie in range(n_totals):
-#         pin = data_p[n_totals0+ie,0]
-#         ExptTot[ie,pin] = 1.
         
     if chargedElastic:
         Rutherford = numpy.zeros([n_angles], dtype=REAL)
@@ -884,11 +884,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     E_poles_fixed_v = numpy.ravel(E_poles_fixed)
     g_poles_fixed_v = numpy.ravel(g_poles_fixed)
     D_poles_fixed_v = numpy.ravel(D_poles_fixed)
-    
-    n_angle_integrals = n_data - n_totals - n_angles
-    n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
-    n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
 
+    n_angles0 = 0
+    n_angle_integrals0 = n_angles0 + n_angles                     # so [n_angle_integrals0,n_totals0] for angle-integrals
+    n_totals0          = n_angle_integrals0 + n_angle_integrals   # so [n_totals0:n_captures0]             for totals
+    n_captures0        = n_totals0 + n_totals                     # so [n_totals0:n_data]             for captures
 
     searchpars0 = searchparms
     n_pars = searchpars0.shape[0]
@@ -906,9 +906,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             sys.exit()
 
     if Cross_Sections:
-    
+        
         ExptAint = numpy.zeros([n_angle_integrals,npairs, npairs], dtype=REAL)
         ExptTot = numpy.zeros([n_totals,npairs], dtype=REAL)
+        ExptCap = numpy.zeros([n_captures,npairs], dtype=REAL)
         for ie in range(n_angle_integrals):
             pin = data_p[n_angle_integrals0+ie,0]
             pout= data_p[n_angle_integrals0+ie,1]
@@ -916,7 +917,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         for ie in range(n_totals):
             pin = data_p[n_totals0+ie,0]
             ExptTot[ie,pin] = 1.
-            
+        for ie in range(n_captures):
+            pin = data_p[n_captures0+ie,0]
+            ExptCap[ie,pin] = 1.
+                        
         CS_diag = numpy.zeros([n_data,n_jsets,n_chans], dtype=CMPLX)
         for jset in range(n_jsets):
             for c in range(n_chans):
@@ -932,7 +936,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 for ie in range(n_data):
                     gfac_s[ie,jset,pair,0:nic] = pi * (2*J_set[jset]+1) * rksq_val[ie,pair] / denom * 10.  # mb
     else:
-        ExptAint,ExptTot,CS_diag,p_mask,gfac_s = None, None, None, None, None
+        ExptAint,ExptTot,ExptCap,CS_diag,p_mask,gfac_s = None, None, None, None, None, None
 
 
             
@@ -960,11 +964,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     else:
         CoulombFunctions_poles = [None,None,None] 
 
-    Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches]
+    Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,n_captures,NL,maxpc,batches]
     Logicals = [LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose]
     Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections]
 
-    Data_Control = [Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
+    Data_Control = [Pleg, ExptAint,ExptTot,ExptCap,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     
 #     print('Channels:',Channels)    
 #     print('CoulombFunctions_data:',CoulombFunctions_data)    
@@ -1164,6 +1168,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                             
         trace = open('%s/bfgs_min.trace'% (base),'r')
         tracel = open('%s/bfgs_min.tracel'% (base),'w')
+        traced = open('%s/bfgs_min.traced'% (base),'w')
         traces = trace.readlines( )
         trace.close( )
         lowest_chisq = 1e8
@@ -1172,7 +1177,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
             chis = float(css[0])
             lowest_chisq = min(lowest_chisq, chis)
             print(i+1,lowest_chisq,' '.join(css[1:3]),chis, file=tracel)
+            print(i+1,css[2],css[1],chis,lowest_chisq, file=traced)
         tracel.close()
+        traced.close()
     
         snap = open('%s/bfgs_min.snap'% (base),'r')
         snapl = open('%s/bfgs_min.snapl'% (base),'w')

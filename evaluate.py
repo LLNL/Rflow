@@ -59,7 +59,7 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
 
     REAL, CMPLX, INT, realSize = ComputerPrecisions
     LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose = Logicals
-    n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,NL,maxpc,batches = Dimensions
+    n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,n_captures,NL,maxpc,batches = Dimensions
 
     ipair,nch,npl,pname,tname,za,zb,QI,cm2lab,rmass,prmax,L_val,c0,cn,seg_val = Channels
     L_diag, Om2_mat,POm_diag,CSp_diag_in,CSp_diag_out, Rutherford, InterferenceAmpl, Gfacc,gfac = CoulombFunctions_data   # batch n_data
@@ -72,7 +72,7 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
 
     searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections = Search_Control
 
-    Pleg, ExptAint,ExptTot,CS_diag,p_mask,gfac_s = Data_Control
+    Pleg, ExptAint,ExptTot,ExptCap,CS_diag,p_mask,gfac_s = Data_Control
 
 #     AAL = numpy.zeros([npairs,npairs, n_jsets,maxpc,maxpc, n_jsets,maxpc,maxpc ,NL], dtype=REAL)
 
@@ -108,14 +108,16 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
                     Mind[ie,jset,ico,ici]   = 1.0
 #     Tp = tfx.gather_nd(Tmat, Tind, batch_dims=1)
                      
-    n_angle_integrals0 = n_angles                # so [n_angle_integrals0,n_totals0] for angle-integrals
-    n_totals0 = n_angles + n_angle_integrals     # so [n_totals0:n_data]             for totals
+    n_angle_integrals0 = n_angles                                 # so [n_angle_integrals0,n_totals0] for angle-integrals
+    n_totals0          = n_angle_integrals0 + n_angle_integrals   # so [n_totals0:n_captures0]             for totals
+    n_captures0        = n_totals0 + n_totals                     # so [n_totals0:n_data]             for captures
+#     print('Baselines:',n_angle_integrals0,n_totals0,n_captures0)
                    
     n_pars = border[4]
     n_norms = fixed_norms.shape[0]
     print('Search parameters :',n_pars)
     n_dof = n_data - n_pars
-    print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals. Dof=',n_dof)
+    print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals,',n_totals,'are for totals, and',n_captures,'for capture. Dof=',n_dof)
     
     sys.stdout.flush()
 
@@ -582,16 +584,17 @@ def evaluate(Multi,ML,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombF
         XSp_mat,XSp_tot,XSp_cap  = T2X_transforms_s(TAp_mat,CS_diag,gfac_s,p_mask, n_jsets,n_chans,npairs,maxpc)
         
         AxI = tf.reduce_sum(XSp_mat[n_angle_integrals0:n_totals0,:,:] * ExptAint, [1,2])   # sum over pout,pin
-        AxT = tf.reduce_sum(XSp_tot[n_totals0:n_data,:] * ExptTot, 1)   # sum over pin
+        AxT = tf.reduce_sum(XSp_tot[n_totals0:n_captures0,:] * ExptTot, 1)   # sum over pin
+        AxC = tf.reduce_sum(XSp_cap[n_captures0:n_data,:] * ExptCap, 1)      # sum over pin
 
-        A_tF = tf.concat([AxA,AxI,AxT], 0)
+        A_tF = tf.concat([AxA,AxI,AxT,AxC], 0)
         chisq = ChiSqTF(A_tF, widthWeight,searchpars[border[1]:border[2]], data_val,norm_val,norm_info,effect_norm)
 
         print("First FitStatusTF: ",tim.toString( ),'giving chisq/pt',chisq.numpy()/n_data)
 
         A_tF_n = A_tF.numpy()
         XS_totals = [XSp_tot.numpy(),XSp_cap.numpy(), XSp_mat.numpy()]
-    
+
     else:
         A_tF_n, XS_totals = None, None
         

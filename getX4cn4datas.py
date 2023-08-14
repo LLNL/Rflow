@@ -553,6 +553,7 @@ if __name__ == "__main__":
                                 if Data_units.lower() in ['mb*mev']: data_scale = 1e-3
                                 if Data_units.lower() in ['b*mev']: data_scale = 1.0
                                 if Data_units.lower() in ['b*kev']: data_scale = 1e-3
+                                if Data_units.lower() in ['b*ev']: data_scale = 1e-6
                                 if Data_units.lower() in ['mb*kev']: data_scale = 1e-6
                                 print('S_factor: data_scale=',data_scale)
            

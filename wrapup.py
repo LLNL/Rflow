@@ -75,7 +75,7 @@ def saveNorms2gnds(gnd,docData,previousFit,computerCodeFit,inFile,n_norms,norm_v
         RMatrix.documentation.computerCodes.add( computerCodeFit )
     return
 
-def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, 
+def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, inclusiveCaptures,
     chisqTOT,ww,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
     groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, TransitionMatrix,
     XCLUDE,p,projectile4LabEnergies,data_lines,dataFile,
@@ -250,6 +250,8 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
                 pn = quickName(pname[pin],tname[pin])
                 if pout == -1:
                     reaction = '%s total' % pn
+                elif pout == -2:
+                    reaction = '%s capture' % pn
                 elif pout == pin:
                     reaction = '%s elastic' % pn
                 else:
@@ -268,6 +270,8 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir,
             pn = quickName(pname[pin],tname[pin])
             if pout == -1:
                 po = 'tot'
+            elif pout == -2:
+                po = 'cap'
             elif pout == pin:
                 po = 'el'
             else:

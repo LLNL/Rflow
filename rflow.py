@@ -58,11 +58,11 @@ pi = 3.1415926536
 if __name__=='__main__':
     import argparse,re
 
-    print('\nRflow')
+    print('\nRflow 0.20')
     cmd = ' '.join([t if '*' not in t else ("'%s'" % t) for t in sys.argv[:]])
     print('Command:',cmd ,'\n')
 
-    Gdefault = 0.001
+    Gdefault = 0.01
 
     # Process command line options
     parser = argparse.ArgumentParser(description='Compare R-matrix Cross sections with Data')
@@ -70,9 +70,11 @@ if __name__=='__main__':
     parser.add_argument('dataFile', type=str, help='Experimental data to fit' )
     parser.add_argument('normFile', type=str, help='Experimental norms for fitting' )
     parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Substrings to exclude if any string within group name")
+    parser.add_argument(      "--ExcludeFile", type=str,   help="Name of file with names of variables (as regex) to exclude if any string within group name")
 
     parser.add_argument("-1", "--norm1", action="store_true", help="Start with all norms=1")
     parser.add_argument("-F", "--Fixed", type=str, nargs="*", help="Names of variables (as regex) to keep fixed in searches")
+    parser.add_argument(      "--FixedFile", type=str,   help="Name of file with names of variables (as regex) to keep fixed in searches")
     parser.add_argument("-n", "--normsfixed", action="store_true",  help="Fix all physical experimental norms (but not free norms)")
 
     parser.add_argument("-r", "--restarts", type=int, default=0, help="max restarts for search")
@@ -138,7 +140,7 @@ if __name__=='__main__':
     if args.emin is not None: emin = args.emin
     if args.EMAX is not None: emax = args.EMAX
     print(' Trim incoming data within [',emin,',',emax,'] in cm MeV for projectile',p)
-            
+    
 # Previous fitted norms:
 # any variable or data namelists in the documentation?
     docVars = []
@@ -166,9 +168,12 @@ if __name__=='__main__':
     pair = 0
     partitions = {}
     pins = []
+    inclusiveCaptures = False
     for partition in RMatrix.resonanceReactions:
         kp = partition.label
-        if partition.eliminated: continue
+        if partition.eliminated: 
+            inclusiveCaptures = True
+            continue
         p,t = partition.ejectile,partition.residual
         partitions[kp] = pair
         pins.append(kp.replace(' ',''))
@@ -198,6 +203,15 @@ if __name__=='__main__':
             
             
 #     print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
+
+    if args.ExcludeFile is not None:
+        excludeLines = open(args.ExcludeFile,'r').readlines()
+        Excluded = []
+        for line in excludeLines: 
+            Excluded.append(line.strip())
+        args.exclude = Excluded
+        print('Excluded data sets:',args.exclude)
+        
     if args.exclude is not None:
         print('Exclude any data line with these substrings:',' '.join(args.exclude))
     EminFound = 1e6; EmaxFound = -1e6
@@ -223,7 +237,7 @@ if __name__=='__main__':
             else:
                 lines_excluded += 1      
         
-    print(n_data-lines_excluded,'data lines after -x and lab energies defined by projectile',projectile4LabEnergies,'(',lines_excluded,'lines excluded)')
+    print(n_data-lines_excluded,'data lines after -x options and lab energies defined by projectile',projectile4LabEnergies,'(',lines_excluded,'lines excluded)')
     if EminFound < EmaxFound: print('Kept data in the Ecm g-p range [',EminFound,',',EmaxFound,'] using Qd,Qi =',Qvalued,Qvaluei,'\n')
     if args.maxData is not None: 
         if args.maxData < 0:
@@ -233,9 +247,26 @@ if __name__=='__main__':
             print('Data size reduced from',n_data,'to',len(data_lines))
     f.close( )
 #     angular_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])>=0.)  )
-    angular_lines = [ x for x in data_lines if float(x.split()[1])>=0. ] 
+    angular_lines = [ x for x in data_lines if float(x.split()[1])>=0. ]  # non-negative scattering angles
     tot_lines     = [ x for x in data_lines if x.split()[4]=='TOT' ] 
-    aint_lines    = [ x for x in data_lines if float(x.split()[1])<0. and x.split()[4]!='TOT'] 
+    
+    if inclusiveCaptures:  
+        aint_lines    = [ x for x in data_lines if float(x.split()[1])<0. and x.split()[4] not in ['TOT','photon'] ]  # only particle angle-integrated cross sections
+        
+        cap_lines = [ x for x in data_lines if x.split()[4]=='photon' and  float(x.split()[1])<0.]   # Angle-integrated (angle = -1) gammas for Reich-Moore 
+        
+        angular_lines = [ x for x in angular_lines if 'photon' not in x ] # Specific gamma angles from Reich-Moore not yet implemented 
+#         angular_lines = [] # Specific gamma angles from Reich-Moore not yet implemented 
+#         for x in data_lines: # start again
+#             if 'photon' not in x and float(x.split()[1])>=0.:
+#                 angular_lines.append(x)
+#         for x in angular_lines:
+#             if 'photon' in x and float(x.split()[1])>=0.:
+#                 print(x.split()[4]=='photon','Excluded?',x)
+    else:
+        aint_lines    = [ x for x in data_lines if float(x.split()[1])<0. and x.split()[4]!='TOT']  # include angle-integrated primary gammas. Specific angles to angular_lines.
+        cap_lines = [] # Use specific primaries only (!?) from 
+        
 #     print('Angulars, aints, totals=',len(angular_lines),len(aint_lines),len(tot_lines) )
     n_angular = len(angular_lines)
     if args.anglesData is not None: 
@@ -245,10 +276,10 @@ if __name__=='__main__':
             angular_lines = list(numpy.random.choice(angular_lines,args.anglesData))
             print('Angular data size reduced from',n_angular ,'to',len(angular_lines))
     f.close( )    
-    data_lines = angular_lines + aint_lines + tot_lines
+    data_lines = angular_lines + aint_lines + tot_lines + cap_lines
     
     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]), float(x.split()[1]) ) )
-              
+
     dataFilter = ''
     if args.emin       is not None: dataFilter += '-e%s' % args.emin
     if args.EMAX       is not None: dataFilter += '-E%s' % args.EMAX
@@ -271,6 +302,8 @@ if __name__=='__main__':
     id = 0
     n_angles = 0
     n_angle_integrals = 0
+    n_totals = 0
+    n_captures = 0
     ni = 0
     for l in data_lines:
         parts = l.split()
@@ -283,10 +316,16 @@ if __name__=='__main__':
         ex2cm,Aex = float(ex2cm),float(Aex)
 #         print('p,t,e,r =',projectile,target,ejectile,residual)
         inLabel = projectile + " + " + target
-        outLabel = ejectile + " + " + residual
+        outLabel = ejectile + " + " + residual if ejectile != 'photon' else (residual + ' + ' + ejectile)
         if outLabel == ' + ': outLabel = inLabel   # elastic
         pin = partitions.get(inLabel,None)
-        pout= partitions.get(outLabel,None) if ejectile != 'TOT' else -1
+        pout= partitions.get(outLabel,None) 
+        if ejectile == 'TOT':
+            pout = -1
+        elif ejectile == 'photon' and inclusiveCaptures: # MT 102 inclusive captures from Reich-Moore
+            pout = -2
+            if CMangle > 0: 
+                print('     Specific gamma angles from Reich-Moore not yet implemented, so exclude',l.strip())            
         if pin is None:
             print("Entrance partition",inLabel,"not found in list",partitions.keys(),'in line',l)
             sys.exit()
@@ -298,6 +337,7 @@ if __name__=='__main__':
         mu = math.cos(thrad)
         if thrad < 0 : mu = 2   # indicated angle-integrated cross-section data
         if pout == -1: mu =-2   # indicated total cross-section data
+        if pout == -2: mu =-2   # indicated capture cross-section data
         group_list.append(group)
         cluster_list.append(cluster)
         Ein_list.append(Ein)
@@ -308,10 +348,21 @@ if __name__=='__main__':
         X4group = group.split('@')[0] + '@'
         X4groups.add(X4group)
         
-        if CMangle > 0:  n_angles = id + 1  # number of angle-data points
-        if CMangle < 0 and ejectile != 'TOT': n_angle_integrals = id+1  - n_angles  # number of Angle-ints after the angulars
+        if CMangle >= 0:  
+            n_angles += 1          # number of angle-data points
+        else:
+            if pout == -1: 
+                n_totals += 1
+            elif pout == -2:
+                n_captures += 1  # Reich-Moore captures only
+            else: 
+                n_angle_integrals += 1    # number of Angle-ints
         id += 1
+    if n_data != n_totals + n_angles + n_angle_integrals + n_captures:
+        print("Counting error:",n_data,'from', n_totals , n_angles , n_angle_integrals ,+ n_captures)
+        sys.exit()
     
+#     print('group_list has',len(group_list))
 #     if not args.norm1: print('Fitted norms:',Fitted_norm)
     f = open( args.normFile )
     norm_lines = f.readlines( )
@@ -358,8 +409,7 @@ if __name__=='__main__':
         norm_refs.append([name,reffile])
         ni += 1
 
-    n_totals = n_data - n_angles - n_angle_integrals
-    print('\nData points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals, and ',n_totals,'are for totals',
+    print('\nData points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals,',n_totals,'are for totals, and',n_captures,'for Reich-Moore captures',
           '\nData groups:',len(groups),'\nX4 groups:',len(X4groups),
           '\nVariable norms:',n_norms,' of which ',n_cnorms,'constrained,',n_free,'free, and',n_fixed,' fixed (',tempfixes,'temporarily)\n')
 
@@ -383,6 +433,13 @@ if __name__=='__main__':
 
     if args.Fixed is not None: 
         print('Fixed variables:',args.Fixed)
+    elif args.FixedFile is not None:
+        fixedLines = open(args.FixedFile,'r').readlines()
+        Fixed = []
+        for line in fixedLines: 
+            Fixed.append(line.strip())
+        args.Fixed = Fixed
+        print('Fixed variables:',args.Fixed)
     else:
         args.Fixed = []
     print('Energy limits:   Data min,max:',args.emin,args.EMAX,'.  Poles min,max:',args.pmin,args.PMAX)
@@ -401,8 +458,11 @@ if __name__=='__main__':
     base += '+%s' % args.dataFile.replace('.data','')
     base += dataFilter
 # searching
-    if args.NLMAX       is not None: base += '-N%s' % args.NLMAX
-    if len(args.Fixed) > 0:         base += '_Fix:' + ('+'.join(args.Fixed)).replace('.*','@').replace('[',':').replace(']',':')
+    if args.NLMAX      is not None: base += '-N%s' % args.NLMAX
+    if args.ExcludeFile             : base += '_XD=%s'  % args.ExcludeFile
+    if args.FixedFile             : base += '_FF=%s'  % args.FixedFile
+    if len(args.Fixed) > 0 and not args.FixedFile :         
+                    base += '_Fix:' + ('+'.join(args.Fixed)).replace('.*','@').replace('[',':').replace(']',':')
     if args.normsfixed            : base += '+n' 
     if args.pmin       is not None: base += '-p%s' % args.pmin
     if args.PMAX       is not None: base += '-P%s' % args.PMAX
@@ -426,7 +486,7 @@ if __name__=='__main__':
     print("Finish setup: ",tim.toString( ),'\n')
  
     chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
-                        gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,
+                        gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,n_totals,n_captures,
                         Ein_list,args.Fixed,args.NLMAX,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Averaging, args.Multi,args.ML,args.ABES,args.Grid,
                         norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
@@ -434,7 +494,6 @@ if __name__=='__main__':
 
 #     print("Finish rflow call: ",tim.toString( ))
 #     print('\n ChiSq/pt = %10.4f from %i points' % (chisqppt,n_data))
-
     if args.Search:  
     
         print('Revised norms:',norm_val)
@@ -467,7 +526,7 @@ if __name__=='__main__':
             totals = None
             pnin = ''
 
-        plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, 
+        plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, inclusiveCaptures,
             chisq,ww,data_val,norm_val,norm_info,effect_norm,norm_refs, previousFit,computerCodeFit,
             groups,cluster_list,group_list,Ein_list,Aex_list,xsc,X4groups, data_p,pins, args.TransitionMatrix,
             args.XCLUDE,p,projectile4LabEnergies,data_lines,args.dataFile,
