@@ -39,7 +39,7 @@ def now():
     return date.Date( resolution = date.Resolution.time )
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,n_totals,n_captures,
-        Ein_list, fixedlist, NLMAX,emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ML,ABES,Grid,
+        Ein_list, fixedlist, NLMAX,emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ABES,Grid,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
@@ -390,6 +390,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 if pairc is None or pairc!=pair: continue
                 m = ch.columnIndex - 1
                 g_poles[jset,:rows,c] = numpy.asarray(widths[m][:],  dtype=REAL) 
+                
+                if nonzero  is not None:
+                    for n  in range(rows):
+                        if abs(g_poles[jset,n,c]) < 1e-20:
+                            g_poles[jset, n, c] = nonzero
 
             # Find S, P, phi, sigma for all data points
                 for ie in range(n_data):
@@ -904,7 +909,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         if n_pars != len(searchpars0):
             print('Number of reread search parameters',len(searchpars0),' is not',n_pars,'now expected. STOP')
             sys.exit()
-
+#         if nonzero  is not None:
+#             for n  in range(rows):
+#                 if abs(g_poles[jset,n,c]) < 1e-20:
+#                     g_poles[jset, n, c] = nonzero
+                            
     if Cross_Sections:
         
         ExptAint = numpy.zeros([n_angle_integrals,npairs, npairs], dtype=REAL)
@@ -976,10 +985,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #     print('Dimensions:',Dimensions)
 #     print('Logicals:',Logicals)
 #     print('Search_Control:',Search_Control)
-#     print('other args:',Multi,ML,ComputerPrecisions,searchpars0,data_val)
+#     print('other args:',Multi,ComputerPrecisions,searchpars0,data_val)
 
     from evaluate import evaluate
-    searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0, A_tF_n, XS_totals = evaluate(Multi,ML,ComputerPrecisions, Channels,
+    searchpars_n, chisq_n, grad1, inverse_hessian, chisq0_n,grad0, A_tF_n, XS_totals = evaluate(Multi,ComputerPrecisions, Channels,
         CoulombFunctions_data,CoulombFunctions_poles, Dimensions,Logicals, 
         Search_Control,Data_Control, searchpars0, data_val, tim)
 

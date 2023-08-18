@@ -118,9 +118,9 @@ def PoPsLevelFind(nucname,level,trace):
         except:
             pass
     tag = '_e%s' % nearest if nearest > 0 else ''
-    if trace and proximity>args.tolerance : 
-        print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity)
-#     print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity)
+    if proximity>args.tolerance : 
+        print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity,' IGNORE')
+#         print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity)
         tag = None
     return(tag)
 
@@ -566,6 +566,8 @@ if __name__ == "__main__":
                             dData_index2 = None
                             if 'd(Data)' in labels:
                                 dData_index = labels.index('d(Data)')
+                            elif 'ERR-1' in labels:
+                                dData_index = labels.index('ERR-1')
                             elif 'DATA-ERR' in labels:
                                 dData_index = labels.index('DATA-ERR')
                             elif 'ERR-T' in labels:

@@ -258,15 +258,17 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, inclusiveCaptures,
                     reaction = pins[pin]+'->'+pins[pout]
                     
                 fac = 1.0 # assume same for all data(id) in this curve!
+                shape = False
                 if not args.norm1:
                     for ni in range(n_norms):
                         fac += (norm_val[ni]-1.) * effect_norm[id,ni]
+                        shape = shape or norm_info[ni,1]==0.0
                 lfac = (fac-1)*100
-                curves.add((curve,fac,lfac,pin,pout,reaction))
+                curves.add((curve,fac,lfac,shape,pin,pout,reaction))
      
         if args.debug: print('\nGroup',group,'has curves:',curves)
         ncurve = 0
-        for curve,fac,lfac,pin,pout,reaction in curves:
+        for curve,fac,lfac,shape,pin,pout,reaction in curves:
             pn = quickName(pname[pin],tname[pin])
             if pout == -1:
                 po = 'tot'
@@ -522,14 +524,16 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, inclusiveCaptures,
                                 reaction = pins[pin]+'->'+pins[pout]
                     
                             fac = 1.0 # assume same for all data(id) in this curve!
+                            shape = False
                             if not args.norm1:
                                 for ni in range(n_norms):
                                     fac += (norm_val[ni]-1.) * effect_norm[id,ni]
+                                    shape = shape or norm_info[ni,1]==0.0
                             lfac = (fac-1)*100
-                            curves.add((curve,fac,lfac,pin,pout,reaction))
+                            curves.add((curve,fac,lfac,shape,pin,pout,reaction))
 #                     if len(curves)>0: print('\nGroup',group,'has curves:',curves)     
                     
-                    for curve,fac,lfac,pin,pout,reaction in curves:
+                    for curve,fac,lfac,shape,pin,pout,reaction in curves:
                         if pin != pinG or pout != poG: continue
                         if ptsInCurve[curve]==0: continue
 #                         print('Data for',legend,'from',curve)

@@ -1,0 +1,18 @@
+Mani-F0428002.dat  2.44e-5   Arb units anyway
+Sanders-C1853002.dat 1e-5   Arb units anyway
+Sanders-C1880005.dat 1e-6   Arb units anyway
+21169002 0.0   Bollman much below the other data
+41492006 0.0   Khryachkov much above other data, especially at high energies
+Turowiecki-F0538002 0.0   Replaced by ND data at 90 deg. (10.0 to approx math with Wang-C0519007)
+Wang-C0519007 0.0 Replaced by ND data at 90 deg.
+Abramovich 0.0    A0244.x4 is all summary, not experiment
+Zahnow-A0639002-T 0.0   This is sum of g and g1. Not coded yet
+Wang-C 0.0 All Wang-C0519 data doubted now. But recheck wrt final fits
+Csikai-30070002 0.0   DAE data not fitted yet
+Bashkin_C0845002 0.0    Duplicate as R/Ruth of A14542002 with no ERRs given
+A1295005  0.0   Exact duplicate of A1295004
+O1221003 0.0    Just O1221002 as S-factor
+A1407004 0.0    Exact duplicate of A1409004
+F0380004 0.0    Upper-energy part of data is 5 times too small  TEMPORARY
+41704003 0.0    Stated as thermal, but listed wrong
+C1853002 0.0    Superceded by C1880 on 20210130D
