@@ -278,7 +278,7 @@ if __name__=='__main__':
     f.close( )    
     data_lines = angular_lines + aint_lines + tot_lines + cap_lines
     
-    data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0.,x.split()[4]=='TOT',float(x.split()[0]), float(x.split()[1]) ) )
+#     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0., x.split()[4]=='TOT', float(x.split()[0]), float(x.split()[1]) ) )
 
     dataFilter = ''
     if args.emin       is not None: dataFilter += '-e%s' % args.emin
