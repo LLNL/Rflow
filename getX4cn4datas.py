@@ -52,7 +52,7 @@ parser.add_argument("-i", "--include", metavar="INCL",  nargs="*", help="Subentr
 parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Subentries to exclude if any string within subentry name")
 parser.add_argument(      "--pops", type=str, default=defaultPops, help="pops files with all the level information from RIPL3. Default = %s" % defaultPops)
 parser.add_argument(      "--allowNeg", action="store_true", help="Allow points if lower error bar goes negative")
-parser.add_argument("-t", "--tolerance", type=float,  default="0.1", help="Print warnings for level discrepancies larger than this")
+parser.add_argument("-t", "--tolerance", type=float,  default="0.1", help="Omit levels with discrepancies larger than this")
 
 
 args = parser.parse_args()
@@ -118,8 +118,10 @@ def PoPsLevelFind(nucname,level,trace):
         except:
             pass
     tag = '_e%s' % nearest if nearest > 0 else ''
-    if trace and proximity>args.tolerance : print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity)
+    if trace and proximity>args.tolerance : 
+        print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity)
 #     print('Level nearest to E=',level,'in',nucname,'is at',Enearest,':',tag,'missing by%6.3f' % proximity)
+        tag = None
     return(tag)
 
 if __name__ == "__main__":
@@ -493,6 +495,8 @@ if __name__ == "__main__":
                                     level = 0.
                                 
                                 leveltag = PoPsLevelFind(residual,level,True)   
+                                if leveltag is None:
+                                    continue
                                 leveltags.add(leveltag)
 #                             print('Found leveltags:',leveltags,'from',levels,'for',subent)
 # GET DATA                            
