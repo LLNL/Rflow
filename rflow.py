@@ -488,7 +488,7 @@ if __name__=='__main__':
  
     chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
                         gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,n_totals,n_captures,
-                        Ein_list,args.Fixed,args.NLMAX,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Averaging, args.Multi,args.ABES,args.Grid,
+                        Ein_list,args.Fixed,args.NLMAX,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Averaging, args.Multi,args.ABES,args.Grid,args.nonzero,
                         norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
                         args.Cross_Sections,args.verbose,args.debug,args.inFile,fitStyle,'_'+args.tag,args.Large,ComputerPrecisions,tim)

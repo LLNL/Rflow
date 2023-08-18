@@ -39,7 +39,7 @@ def now():
     return date.Date( resolution = date.Resolution.time )
 
 def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,n_totals,n_captures,
-        Ein_list, fixedlist, NLMAX,emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ABES,Grid,
+        Ein_list, fixedlist, NLMAX,emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ABES,Grid,nonzero,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
         Cross_Sections,verbose,debug,inFile,fitStyle,tag,large,ComputerPrecisions,tim):
