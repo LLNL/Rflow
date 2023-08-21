@@ -390,7 +390,7 @@ parser.add_argument('-s', '--scalefactors', type=str, default='../ScalingFactors
 parser.add_argument(      "--pops", type=str, default=defaultPops, help="pops files with all the level information from RIPL3. Default = %s" % defaultPops)
 parser.add_argument(      "--pops2", type=str, help="local pops file")
 
-parser.add_argument("-d", "--Dir", type=str,  default="Data_X4s", help="output data directory for small filesdu")
+parser.add_argument("-d", "--Dir", type=str,  default="Data_X4s", help="input data directory with small files")
 parser.add_argument("-o", "--Out", type=str,  default="flow.data", help="output data file")
 parser.add_argument("-n", "--Norms", type=str,  default="flow.norms", help="output normalization file")
 parser.add_argument("-S", "--Sfresco", action="store_true", help="Outputs for Sfresco")
@@ -402,11 +402,11 @@ parser.add_argument(      "--CSV", type=str,  default="datafile.props.csv", help
 parser.add_argument("-a", "--Adjusts", type=str,  default="adjusts", help="list of current norm and shift adjustments")
 parser.add_argument("-f", "--Fits", type=str,  default="datafit.csv", help="list of current norm and shift adjustments")
 
-print('Command:',' '.join(sys.argv[:]) ,'\n')
+# print('Command:',' '.join(sys.argv[:]) ,'\n')
     
 args = parser.parse_args()
 Dir = args.Dir + '/'
-os.system('mkdir '+Dir)
+# os.system('mkdir '+Dir)
 EmaxCN = args.EmaxCN
 Projectiles = args.Projectiles
 LevelsMax = args.LevelsMax
@@ -458,8 +458,8 @@ projs = args.Projectiles
 print('projs 1',projs)
 if 'photon' not in projs: 
     projs += ['photon']
-    masses['photon'] = 0.0
-    charges['photon'] = 0.0
+masses['photon'] = 0.0
+charges['photon'] = 0.0
 print('projs 2',projs)
 MPT = len(projs)
 targs = ['' for i in range(MPT)]
@@ -654,7 +654,7 @@ for datFile in args.InFiles:
     if projectile=='photon' and not args.GammaChannel:
         continue
         
-    leveltag = '_e%s' % level if level != '0' else ''
+    leveltag = '_e%s' % level if level not in ['0','A','T'] else ''
     
     if level == '*':
         if ejectile == 'photon' and args.ReichMoore:
@@ -663,18 +663,27 @@ for datFile in args.InFiles:
             print('Unspecified  non-elastic apart from capture: SKIP')
             continue
                     
-    level = int(level)
+    try:
+        level = int(level)
+    except:
+        if level in ['A','T']:
+            level = 0
+            ejectile = 'INCL'
+        else:
+            print('Unknown level',level)
+            sys.exit()
+            
     p,e,x = projectile,ejectile,level
     try:
         ia= int(x)+1
     except:
         ia = 1
         
-    if p not in projs or (e not in projs and e != 'TOT'):
+    if p not in projs or (e not in projs and e != 'TOT' and e != 'INCL'):
         print('SKIP',datFile,'as strange projectile')
         continue
         
-    if ( p not in Projectiles or (e not in Projectiles and e != 'TOT') ) and p != 'photon':
+    if ( p not in Projectiles or (e not in Projectiles and e != 'TOT' and e != 'INCL') ) and p != 'photon':
         print('SKIP',datFile,'as',p,'or',e,'not in',Projectiles)
         continue
         
@@ -687,7 +696,7 @@ for datFile in args.InFiles:
     try:
         iti = args.Projectiles.index(ejectile)
     except:
-        if ejectile!='TOT':
+        if ejectile!='TOT' and ejectile !='INCL':
             print('Unwanted ejectile',ejectile,": SKIP")
             continue
         iti = 0
@@ -696,19 +705,26 @@ for datFile in args.InFiles:
         print('Ejectile',ejectile,'for residual level',iti,'is too large')
         continue
     
-    if args.LevelsMax is not None and int(level) > int(args.LevelsMax[iti]):
+    if args.LevelsMax is not None and isinstance(level,int) and int(level) > int(args.LevelsMax[iti]):
         print('Level',level,ia-1,'is above level limit',args.LevelsMax[iti],"for",iti," %s -> %s+%s" % (projectile,ejectile,residual),": SKIP")
         print('LevelsMax=',args.LevelsMax)
         continue         
     levels[residual].add(level)
 
     pel = projs.index(p) + 1
-    ic  = projs.index(e) + 1 if e != 'TOT' else 0
+    ic  = projs.index(e) + 1 if (e != 'TOT' and e != 'INCL') else 0
     elim = elimits[pel-1]
     index = projs.index(p)
     t = targs[index]
-    r =   targs[projs.index(e)] if e!= 'TOT' else 0
-    r_l = (targs[projs.index(e)]+leveltag) if e!= 'TOT' else 0
+    if e != 'TOT':
+        if e != 'INCL':
+            r =   targs[projs.index(e)] 
+            r_l = (targs[projs.index(e)]+leveltag) 
+        else:
+            r =   targs[projs.index('photon')] 
+            r_l = (targs[projs.index('photon')]+leveltag)
+    else:
+        r = r_l = 0
     
     Ein_scale =  1.0
     Ec = Ein[0].lower()
@@ -723,8 +739,13 @@ for datFile in args.InFiles:
     idir = 1 if rRuth else 0
     pn,tn,en,rn = [lightA.get(n,n) for n in (p,t,e,r_l)]
     if e != 'TOT':
-        Qvalue_masses = (masses[p] + masses[t] - masses[e]-masses[r]) * amu
-        Qvalue = qvalue[e] - qvalue[p]
+        ej = e
+        if e == 'INCL': 
+            ej = 'photon'
+            r  = 'Be7' # FIXME
+        print('p,t,ej,r',p,t,ej,r)
+        Qvalue_masses = (masses[p] + masses[t] - masses[ej]-masses[r]) * amu
+        Qvalue = qvalue[ej] - qvalue[p]
         print("Q value =",Qvalue,Qvalue_masses,' Target for gnds projectile =',args.Projectiles[0])
     else:
         Qvalue = 0.

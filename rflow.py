@@ -251,20 +251,17 @@ if __name__=='__main__':
     tot_lines     = [ x for x in data_lines if x.split()[4]=='TOT' ] 
     
     if inclusiveCaptures:  
-        aint_lines    = [ x for x in data_lines if float(x.split()[1])<0. and x.split()[4] not in ['TOT','photon'] ]  # only particle angle-integrated cross sections
+        aint_lines    = [ x for x in data_lines if float(x.split()[1])<0. and x.split()[4] not in ['TOT','INCL','photon'] ]  # only exclusive particle angle-integrated cross sections
         
-        cap_lines = [ x for x in data_lines if x.split()[4]=='photon' and  float(x.split()[1])<0.]   # Angle-integrated (angle = -1) gammas for Reich-Moore 
-        
-        angular_lines = [ x for x in angular_lines if 'photon' not in x ] # Specific gamma angles from Reich-Moore not yet implemented 
-#         angular_lines = [] # Specific gamma angles from Reich-Moore not yet implemented 
-#         for x in data_lines: # start again
-#             if 'photon' not in x and float(x.split()[1])>=0.:
-#                 angular_lines.append(x)
-#         for x in angular_lines:
-#             if 'photon' in x and float(x.split()[1])>=0.:
-#                 print(x.split()[4]=='photon','Excluded?',x)
+        cap_lines = [ x for x in data_lines if x.split()[4]=='INCL' and x.split()[4]!='photon' ]   # INCL  (total or activation) gammas for Reich-Moore 
+        for i,x in enumerate(cap_lines):  # change back from INCL to photon, for GNDS output 
+            xs = x.split()
+            xs[4] = 'photon'
+            cap_lines[i] = ' '.join(xs)
+              
+        angular_lines = [ x for x in angular_lines if 'INCL' not in x and 'photon' not in x ] # Specific gamma angles from Reich-Moore not yet implemented 
     else:
-        aint_lines    = [ x for x in data_lines if float(x.split()[1])<0. and x.split()[4]!='TOT']  # include angle-integrated primary gammas. Specific angles to angular_lines.
+        aint_lines    = [ x for x in data_lines if float(x.split()[1])<0. and x.split()[4] not in ['TOT','INCL'] ]  # include angle-integrated primary gammas. Specific angles to angular_lines.
         cap_lines = [] # Use specific primaries only (!?) from 
         
 #     print('Angulars, aints, totals=',len(angular_lines),len(aint_lines),len(tot_lines) )
@@ -277,6 +274,7 @@ if __name__=='__main__':
             print('Angular data size reduced from',n_angular ,'to',len(angular_lines))
     f.close( )    
     data_lines = angular_lines + aint_lines + tot_lines + cap_lines
+    print('Make',len(data_lines),'data from',len(angular_lines),'angular,',len(aint_lines),'angle integrals,',len(tot_lines),'totals and',len(cap_lines),'Reich-Moore captures')
     
 #     data_lines = sorted(data_lines, key=lambda x: (float(x.split()[1])<0., x.split()[4]=='TOT', float(x.split()[0]), float(x.split()[1]) ) )
 
@@ -287,7 +285,7 @@ if __name__=='__main__':
     if args.anglesData is not None: dataFilter += '_a%s' % args.anglesData
     
     if dataFilter != '':
-        with open(args.dataFile.replace('.data',dataFilter+'.data')+'2','w') as fout: fout.writelines([projectile4LabEnergies+'\n'] + data_lines)
+        with open(args.dataFile.replace('.data',dataFilter+'.data')+'2','w') as fout: fout.writelines([projectile4LabEnergies+'\n'] + [x+'\n' if '\n' not in x else x for x in data_lines] )
     
     n_data = len(data_lines)
     data_val = numpy.zeros([n_data,5], dtype=REAL)    # Elab,mu, datum,absError
@@ -459,7 +457,8 @@ if __name__=='__main__':
     base += dataFilter
 # searching
     if args.NLMAX      is not None: base += '-N%s' % args.NLMAX
-    if args.ExcludeFile             : base += '_XD=%s'  % args.ExcludeFile
+    if args.exclude                : base += '_x=%s'  % ','.join(args.exclude)
+    if args.ExcludeFile             : base += '_xF=%s'  % args.ExcludeFile
     if args.FixedFile             : base += '_FF=%s'  % args.FixedFile
     if len(args.Fixed) > 0 and not args.FixedFile :         
                     base += '_Fix:' + ('+'.join(args.Fixed)).replace('.*','@').replace('[',':').replace(']',':')
