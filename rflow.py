@@ -3,8 +3,9 @@
 
 ##############################################
 #                                            #
-#    Rflow 0.10      Ian Thompson, LLNL      #
+#    Rflow 0.20      Ian Thompson, LLNL      #
 #                                            #
+# SPDX-License-Identifier: MIT               #
 ##############################################
 
 import times
@@ -101,7 +102,7 @@ if __name__=='__main__':
     parser.add_argument("-I", "--Iterations", type=int, default=2000, help="max_iterations for search")
     parser.add_argument("-i", "--init",type=str, nargs=2, help="iterations and snap file name for starting parameters")
     parser.add_argument("-A", "--Averaging", type=float, default=0.0, help="Averaging width to all scattering: imaginary = Average/2.")
-    parser.add_argument("-w", "--widthWeight", type=float, default=0.0, help="Add widthWeight*vary_widths**2 to chisq during searches")
+    parser.add_argument("-w", "--widthWeight", type=float, default=0.0, help="Add widthWeight*vary_widths**4 to chisq during searches")
     parser.add_argument("-X", "--XCLUDE", type=float,  help="Make dataset*3 with data chi < X (e.g. X=3). Needs -C data.")
     
     parser.add_argument(      "--Large", type=float, default="40",  help="'large' threshold for parameter progress plotts.")

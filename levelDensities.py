@@ -1,8 +1,9 @@
 
 ##############################################
 #                                            #
-#    Rflow 0.10      Ian Thompson, LLNL      #
+#    Rflow 0.20      Ian Thompson, LLNL      #
 #                                            #
+# SPDX-License-Identifier: MIT               #
 ##############################################
 
 import math,sys

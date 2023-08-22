@@ -1,5 +1,12 @@
 #! /usr/bin/env python3
 
+##############################################
+#                                            #
+#    Rflow 0.20      Ian Thompson, LLNL      #
+#                                            #
+# SPDX-License-Identifier: MIT               #
+##############################################
+
 # <<BEGIN-copyright>>
 # <<END-copyright>>
 

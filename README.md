@@ -1,7 +1,8 @@
-# Rflow: R-matrix fitting EXFOR data using tensorflow
+# Rflow:  R-matrix methods for fitting EXFOR data using tensorflow
 	 Version 0.20
-	 Release: LLNL-CODE-000000
-###  Ian Thompson
+	 Release: LLNL-CODE-853144
+	 SPDX-License-Identifier: MIT
+###  Ian J. Thompson
 
 	 Email: thompson97@llnl.gov
 	   
@@ -20,15 +21,17 @@ For macs optionally see [developer.apple.com/metal/tensorflow-plugin/](https://d
 
 ## R-matrix fitting EXFOR data using tensorflow
 ```
-usage: rflow.py [-h] [-x [EXCL [EXCL ...]]] [-1] [-F [FIXED [FIXED ...]]] [-n]
-                [-r RESTARTS] [-B BACKGROUND] [--BG] [-R] [--LMatrix]
-                [--groupAngles GROUPANGLES] [-a ANGLESDATA] [-m MAXDATA]
-                [-e EMIN] [-E EMAX] [-p PMIN] [-P PMAX] [-d DMIN] [-D DMAX]
-                [-N NLMAX] [-L LAMBDA] [--ABES] [-G GRID] [-S SEARCH]
-                [-I ITERATIONS] [-i INIT INIT] [-A AVERAGING] [-w WIDTHWEIGHT]
-                [-X XCLUDE] [--Large LARGE] [-C] [-c] [-T TRANSITIONMATRIX] [-s]
-                [-M MULTI] [--ML ML] [--datasize size] [-l LOGS] [-t TAG] [-v]
-                [-g]
+usage: rflow.py [-h] [-x [EXCL ...]] [--ExcludeFile EXCLUDEFILE] [-1]
+                [-F [FIXED ...]] [--FixedFile FIXEDFILE] [-n]
+                [--nonzero NONZERO] [-r RESTARTS] [-B BACKGROUND]
+                [--BG] [-R] [--LMatrix] [--groupAngles GROUPANGLES]
+                [-a ANGLESDATA] [-m MAXDATA] [-e EMIN] [-E EMAX]
+                [-p PMIN] [-P PMAX] [-d DMIN] [-D DMAX] [-N NLMAX]
+                [-L LAMBDA] [--ABES] [-G GRID] [-S SEARCH]
+                [-I ITERATIONS] [-i INIT INIT] [-A AVERAGING]
+                [-w WIDTHWEIGHT] [-X XCLUDE] [--Large LARGE] [-C] [-c]
+                [-T TRANSITIONMATRIX] [-s] [-M MULTI] [--datasize size]
+                [-l LOGS] [-t TAG] [-v] [-g]
                 inFile dataFile normFile
 ```
 ## Compare R-matrix Cross sections with Data
@@ -46,6 +49,9 @@ usage: rflow.py [-h] [-x [EXCL [EXCL ...]]] [-1] [-F [FIXED [FIXED ...]]] [-n]
   -1, --norm1           Start with all norms=1
   -F [FIXED [FIXED ...]], --Fixed [FIXED [FIXED ...]]
                         Names of variables (as regex) to keep fixed in searches
+  --ExcludeFile EXCLUDEFILE
+                        Name of file with names of variables (as regex) to
+                        exclude if any string within group name
   -n, --normsfixed      Fix all physical experimental norms (but not free norms)
   -r RESTARTS, --restarts RESTARTS
                         max restarts for search
@@ -91,7 +97,7 @@ usage: rflow.py [-h] [-x [EXCL [EXCL ...]]] [-1] [-F [FIXED [FIXED ...]]] [-n]
                         Averaging width to all scattering: imaginary =
                         Average/2.
   -w WIDTHWEIGHT, --widthWeight WIDTHWEIGHT
-                        Add widthWeight*vary_widths**2 to chisq during searches
+                        Add widthWeight*vary_widths**4 to chisq during searches
   -X XCLUDE, --XCLUDE XCLUDE
                         Make dataset*3 with data chi < X (e.g. X=3). Needs -C
                         data.
@@ -103,9 +109,6 @@ usage: rflow.py [-h] [-x [EXCL [EXCL ...]]] [-1] [-F [FIXED [FIXED ...]]] [-n]
                         Produce cross-section transition matrix functions in
                         *tot_a and *fch_a-to-b
   -s, --single          Single precision: float32, complex64
-  -M MULTI, --Multi MULTI
-                        Which Mirrored Strategy in TF
-  --ML ML               MLcompute device for Macs
   --datasize size       Font size for experiment symbols. Default=0.2
   -l LOGS, --logs LOGS  none, x, y or xy for plots
   -t TAG, --tag TAG     Tag identifier for this run
@@ -118,10 +121,10 @@ usage: rflow.py [-h] [-x [EXCL [EXCL ...]]] [-1] [-F [FIXED [FIXED ...]]] [-n]
 ```
 	Extract EXFOR data using x4i calls.
 
-usage: getX4cn4datas.py [-h] [-E ENERGYMAX] [-e ENERGYMIN] [-p PROJECTILES]
-                        [-n NAT] [-d DIR] [-i [INCL [INCL ...]]]
-                        [-x [EXCL [EXCL ...]]] [--pops POPS] [--allowNeg]
-                        [-t TOLERANCE]
+usage: getX4cn4datas.py [-h] [-E ENERGYMAX] [-e ENERGYMIN]
+                        [-p PROJECTILES] [-n NAT] [-d DIR]
+                        [-i [INCL ...]] [-x [EXCL ...]] [--pops POPS]
+                        [--allowNeg] [-t TOLERANCE]
                         CN
 
 ```
@@ -131,11 +134,12 @@ usage: getX4cn4datas.py [-h] [-E ENERGYMAX] [-e ENERGYMIN] [-p PROJECTILES]
 usage: data4rflows.py [-h] [-P PROJECTILES [PROJECTILES ...]]
                       [-L LEVELSMAX [LEVELSMAX ...]] [-B EMINCN]
                       [-C EMAXCN] [-J JMAX] [-e EMINP] [-E EMAXP]
-                      [-r RMATRIX_RADIUS] [-G] [-R] [-j JDEF] [-p PIDEF]
-                      [-w WIDEF] [-F] [-I INFILES [INFILES ...]]
-                      [-s SCALEFACTORS] [--pops POPS] [--pops2 POPS2]
-                      [-d DIR] [-o OUT] [-n NORMS] [-S] [--SF] [-T TERM0]
-                      [-M MAXPARS] [--CSV CSV] [-a ADJUSTS] [-f FITS]
+                      [-r RMATRIX_RADIUS] [-G] [-R] [-j JDEF]
+                      [-p PIDEF] [-w WIDEF] [-F]
+                      [-I INFILES [INFILES ...]] [-s SCALEFACTORS]
+                      [--pops POPS] [--pops2 POPS2] [-d DIR] [-o OUT]
+                      [-n NORMS] [-S] [--SF] [-T TERM0] [-M MAXPARS]
+                      [--CSV CSV] [-a ADJUSTS] [-f FITS]
 ```
 See README files in subfolders of Tests for examples of using these codes.
 

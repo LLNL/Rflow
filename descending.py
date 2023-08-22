@@ -1,5 +1,12 @@
 #! /usr/bin/env python3
 
+##############################################
+#                                            #
+#    Rflow 0.20      Ian Thompson, LLNL      #
+#                                            #
+# SPDX-License-Identifier: MIT               #
+##############################################
+
 import sys
 
 npts = int(sys.argv[1])

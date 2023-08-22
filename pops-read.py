@@ -1,5 +1,11 @@
 #! /usr/bin/env python3
 
+##############################################
+#                                            #
+#    Rflow 0.20      Ian Thompson, LLNL      #
+#                                            #
+# SPDX-License-Identifier: MIT               #
+##############################################
 
 from PoPs import database
 import sys
