@@ -103,7 +103,7 @@ def write_gnds_covariances(gnds,searchpars,inverse_hessian,GNDS_loc,POLE_details
     parameterSection = covarianceModelParametersModule.ParameterCovariance("resolved resonances", rowData)
     parameterSection.add(covmatrix)
 
-    covarianceSuite = covarianceSuiteModule.CovarianceSuite(  gnds.projectile, gnds.target, 'Rflow R-matrix covariances' )
+    covarianceSuite = covarianceSuiteModule.CovarianceSuite(  gnds.projectile, gnds.target, 'Rflow R-matrix covariances', interaction="nuclear")
     covarianceSuite.parameterCovariances.add(parameterSection)
 
 #   if debug: print(covarianceSuite.toXMLList())
