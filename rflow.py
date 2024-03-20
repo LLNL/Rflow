@@ -22,6 +22,10 @@ from printExcitationFunctions import *
 from fudge import reactionSuite as reactionSuiteModule
 from fudge import styles        as stylesModule
 from pqu import PQU as PQUModule
+from fudge import fudgeVersion
+if fudgeVersion.FUDGE_MAJORVERSION < 6 or fudgeVersion.FUDGE_MINORVERSION < 5:
+    print('Need Fudge version 6.5')
+    sys.exit()
 
 REAL = numpy.double
 CMPLX = numpy.complex128
@@ -70,8 +74,8 @@ if __name__=='__main__':
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
     parser.add_argument('dataFile', type=str, help='Experimental data to fit' )
     parser.add_argument('normFile', type=str, help='Experimental norms for fitting' )
-    parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Substrings to exclude if any string within group name")
-    parser.add_argument(      "--ExcludeFile", type=str,   help="Name of file with names of variables (as regex) to exclude if any string within group name")
+    parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Substrings to exclude in datasets if any string within group name")
+    parser.add_argument(      "--ExcludeFile", type=str,   help="Name of file with names of datasets (as regex) to exclude if any string within group name")
 
     parser.add_argument("-1", "--norm1", action="store_true", help="Start with all norms=1")
     parser.add_argument("-F", "--Fixed", type=str, nargs="*", help="Names of variables (as regex) to keep fixed in searches")
@@ -128,6 +132,7 @@ if __name__=='__main__':
     ComputerPrecisions = (REAL, CMPLX, INT, realSize)
 
     gnd=reactionSuiteModule.ReactionSuite.readXML_file(args.inFile)
+#   print('gnd.sourcePath =',gnd.sourcePath)
     p,t = gnd.projectile,gnd.target
     PoPs = gnd.PoPs
     projectile = PoPs[p];
@@ -204,17 +209,20 @@ if __name__=='__main__':
             
             
 #     print('lab2cmi:',lab2cmi,'and lab2cmd:',lab2cmd)
+    excludes_empty_initial =  args.exclude is None
+    if excludes_empty_initial: args.exclude = []
 
     if args.ExcludeFile is not None:
         excludeLines = open(args.ExcludeFile,'r').readlines()
         Excluded = []
         for line in excludeLines: 
             Excluded.append(line.strip())
-        args.exclude = Excluded
+        args.exclude += Excluded
         print('Excluded data sets:',args.exclude)
         
-    if args.exclude is not None:
+    if len(args.exclude) > 0:
         print('Exclude any data line with these substrings:',' '.join(args.exclude))
+        
     EminFound = 1e6; EmaxFound = -1e6
     if args.emin is None and args.EMAX is None and args.exclude is None:
         data_lines = f.readlines( )
@@ -336,7 +344,7 @@ if __name__=='__main__':
         mu = math.cos(thrad)
         if thrad < 0 : mu = 2   # indicated angle-integrated cross-section data
         if pout == -1: mu =-2   # indicated total cross-section data
-        if pout == -2: mu =-2   # indicated capture cross-section data
+        if pout == -2: mu =-3   # indicated capture cross-section data
         group_list.append(group)
         cluster_list.append(cluster)
         Ein_list.append(Ein)
@@ -458,7 +466,7 @@ if __name__=='__main__':
     base += dataFilter
 # searching
     if args.NLMAX      is not None: base += '-N%s' % args.NLMAX
-    if args.exclude                : base += '_x=%s'  % ','.join(args.exclude)
+    if args.exclude and not excludes_empty_initial  : base += '_x=%s'  % ','.join(args.exclude)
     if args.ExcludeFile             : base += '_xF=%s'  % args.ExcludeFile
     if args.FixedFile             : base += '_FF=%s'  % args.FixedFile
     if len(args.Fixed) > 0 and not args.FixedFile :         
@@ -483,6 +491,11 @@ if __name__=='__main__':
     dataDir = base 
 #   if args.Cross_S0ctions or args.Matplot or args.TransitionMatrix >= 0 : os.system('mkdir '+dataDir)
     if args.Search or args.Cross_Sections : os.system('mkdir '+dataDir)
+    if args.debug:
+        dd = open('final.data','w')
+        print(n_angles,n_angle_integrals,n_totals,n_captures, file=dd)
+        for ie in range(n_data):
+             print(' '.join([str(d) for d in data_val[ie,:]]),data_p[ie,:],file=dd)
     print("File base:",base)
     print("Finish setup: ",tim.toString( ),'\n')
  
@@ -502,14 +515,17 @@ if __name__=='__main__':
 
         info = '+S_' + args.tag
         newFitFile = base  + '-fit.xml'
-#       open( newFitFile, mode='w' ).writelines( line+'\n' for line in gnd.toXMLList( ) )
-        gnd.saveToFile( newFitFile )
+        print('Write gnds files to',newFitFile)
+        if cov is not None: 
+            if hasattr(gnd, 'loadCovariances'): 
+                for oldCov in gnd.loadCovariances():
+                    gnd.externalFiles.pop(oldCov.label)     
+            gnd.addCovariance(cov)
+
+        covFiles = gnd.saveAllToFile( newFitFile , covarianceDir = '.' )
         print('Written new fit file:',newFitFile)
+        if cov is not None: print('Written new cov file:',covFiles[0])
         
-        if cov is not None:
-            newCovFile = base  + '-fit_covs.xml'
-#           open( newCovFile, mode='w' ).writelines( line+'\n' for line in cov.toXMLList( ) )            
-            cov.saveToFile( newCovFile )
     else:
         info = '' 
 

@@ -301,7 +301,7 @@ def plotOut(n_data,n_norms,n_dof,args, base,info,dataDir, inclusiveCaptures,
                 chi = (xsc[id]/fac/ex2cm-data_val[id,2])/data_val[id,3] 
                 
                 cluster = cluster_list[id]
-                xlabel = 'Incident %s energy [MeV, lab]' % pn if cluster in ['E','I'] else 'Scattering angle [deg, lab]'
+                xlabel = 'Incident %s energy [MeV, lab]' % pn if cluster in ['E','I'] else 'Scattering angle [deg, cm]'
                 Ein = Ein_list[id]
                 Aex = Aex_list[id]
                 if args.Cross_Sections:

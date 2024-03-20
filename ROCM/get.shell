@@ -1,0 +1,2 @@
+
+singularity shell --rocm tensorflow_latest.sif

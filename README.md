@@ -18,8 +18,6 @@ For macs optionally see [developer.apple.com/metal/tensorflow-plugin/](https://d
 
 **x4i** from [github.com/brown170/x4i.git](https://github.com/brown170/x4i.git)
 
-**tensoflow-probability** by pip install tensorflow-probability
-
 
 ## R-matrix fitting EXFOR data using tensorflow
 ```

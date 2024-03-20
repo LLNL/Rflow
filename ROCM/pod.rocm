@@ -1,0 +1,7 @@
+podman pull docker://rocm/tensorflow:latest
+
+podman shell --rocm tensorflow_latest.sif
+
+pip3 install tensorflow-probability
+
+python tf.py

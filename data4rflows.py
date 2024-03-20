@@ -426,7 +426,7 @@ plotd = open(Dir + 'sfresco.split.plotd','w')
 if args.InFiles is not None:
     output = open(args.Out,'w')
     noutput = open(args.Norms,'w')
-    print(args.Projectiles[0],' : projectile defining the lab energy in first column', file=output)
+    print(args.Projectiles[0],' : projectile defining the lab energy in first column. Energies in MeV and cross sections in mb', file=output)
 z_errorOut = open(Dir + 'Zero-errors.log','w')
 z_errors = set()
 
@@ -768,7 +768,6 @@ for datFile in args.InFiles:
 
         if len(datum)==0: continue
         if elim!=0. and float(datum[0])>elim: continue
-        #print datum
         datum[0] *= Ein_scale
 
 #         for i in range(4):
@@ -783,14 +782,15 @@ for datFile in args.InFiles:
         
 #         if staterror>0: datum[3] = max(datum[2]*staterror,datum[3])
 #       if staterror>0 and datum[3]==0.: datum[3] = datum[2]*staterror
-        if staterror>0 and datum[3]<=datum[2]*stat_percent/100: datum[3] = datum[2]*staterror
+        if staterror>0 and datum[3]<=datum[2]*stat_percent/100: 
+            datum[3] = datum[2]*staterror
+            print('Error set to',datum[3],'=',datum[2],'*',staterror)
         data.append(datum)
         energies.add(datum[0])   
         a = datum[1]
         if Aflip: a = 180-a
         angles.add(a)
         npts += 1
-    #print "\n",data
     anglelist = sorted(angles)
     energylist  = sorted(energies)
     #print ' Angles:',anglelist
@@ -807,7 +807,7 @@ for datFile in args.InFiles:
         collect = 0
         filelist = energylist
         spec = 'energy'
-    else:
+    else:          # energy distribution for fixed angles
         type = 2
         collect = 1
         filelist = anglelist
@@ -907,7 +907,7 @@ for datFile in args.InFiles:
                 angle_ex = angle_lab
                 ex2cm = frame_scale if not rRuth else 1.0
                 if abs(ex2cm.imag)>0: 
-                    print("STRANGE SUB-THRESHOLD TRANSITION!!!. Omit as ex2cm=",ex2cm)
+                    print("STRANGE SUB-THRESHOLD TRANSITION!!!. Omit as ex2cm=",ex2cm,'for data=',datum)
                     continue
             if rRuth:
                 rmass = masses[p] * masses[t] / (masses[p] + masses[t])
@@ -974,7 +974,7 @@ for datFile in args.InFiles:
                         angle_ex = angle_lab
                         ex2cm = frame_scale if not rRuth else 1.0
                         if abs(ex2cm.imag)>0: 
-                            print("STRANGE SUB-THRESHOLD TRANSITION!!!. Omit as ex2cm=",ex2cm)
+                            print("STRANGE SUB-THRESHOLD TRANSITION!!!. Omit as ex2cm=",ex2cm,'for dat=',dat)
                             continue
 
                     if rRuth:

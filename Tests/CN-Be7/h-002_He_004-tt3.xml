@@ -82,7 +82,7 @@
           <axis index="1" label="energy_in" unit="MeV"/>
           <axis index="0" label="radius" unit="fm"/></axes></constant1d></scatteringRadius>
     <resolved domainMin="1" domainMax="12" domainUnit="MeV">
-      <RMatrix label="eval" approximation="Full R-Matrix" boundaryCondition="NegativeOrbitalMomentum" supportsAngularReconstruction="true" reducedWidthAmplitudes="true">
+      <RMatrix label="eval" approximation="FullRMatrix" boundaryCondition="NegativeOrbitalMomentum" supportsAngularReconstruction="true" reducedWidthAmplitudes="true">
         <documentation>
           <computerCodes>
             <computerCode label="R-matrix fit" name="sfrescox" version="7.1-6-gad5c8e">

@@ -1,0 +1,7 @@
+singularity pull docker://rocm/tensorflow:latest
+
+singularity shell --rocm tensorflow_latest.sif
+
+pip3 install tensorflow-probability
+
+python tf.py

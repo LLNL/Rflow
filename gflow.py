@@ -375,7 +375,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 GNDS_order[jset,n,c] = G_order  # order of variables in GNDS and ENDF, needed for covariance matrix
                 G_order += 1 
 
-        widths = [R.getColumn( col.name, 'MeV' ) for col in R.columns if col.name != 'energy']
+        widths = [R.getColumn( col.name, 'MeV**(1/2)' ) for col in R.columns if col.name != 'energy']
         
 #         if verbose:  print("\n".join(R.toXMLList()))       
         n = None
@@ -725,6 +725,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         print('Fixed    parameterlist:',' '.join(fixedlistex))
     print('Searching on pole energies:',searchparms[border[0]:border[1]])
     print('Keep fixed   pole energies:',fixednames[frontier[0]:frontier[1]])
+    print('Searching on widths :',searchparms[border[1]:border[2]])
+    print('Keep fixed   widths:',fixednames[frontier[1]:frontier[2]])
+    print('Searching on norms :',searchparms[border[2]:border[3]])
+    print('Keep fixed   norms:',fixednames[frontier[2]:frontier[3]])
     print('Searching on damping widths: [',' '.join(['%.2e' % d**2 for d in searchparms[border[3]:border[4]]]),']') 
     print('L4 norm of widths:',numpy.sum(searchparms[border[1]:border[2]]**4))
     
@@ -759,8 +763,9 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         Gfacc[ie]    = pi * rksq_val[ie,pin] / denom  * 10.   # mb.  Likd gfac, but no (2J+1) factor
         mu = mu_val[ie]
         if abs(mu)>1.: 
-            print('Data pt ',ie,data_p[ie,:],'has bad mu:',mu_val[ie])
+            print('\nData pt ',ie,data_p[ie,:],'has bad mu:',mu_val[ie])
             print(data_val[ie,:])
+            print(data_p[ie,:])
             continue
             sys.exit()
         for L in range(NL):
@@ -1248,6 +1253,6 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     
     ch_info = [pname,tname, za,zb, npairs,cm2lab,QI,ipair]
     if Cross_Sections:
-        return(chisq_n,ww,A_tF_n,norm_val,n_pars,n_dof,XS_totals,ch_info,None)
+        return(chisq_n,ww,A_tF_n,norm_val,n_pars,n_dof,XS_totals,ch_info,covarianceSuite)
     else:
-        return(chisq_n,ww,None,  norm_val,n_pars,n_dof,None,     ch_info,None)
+        return(chisq_n,ww,None,  norm_val,n_pars,n_dof,None,     ch_info,covarianceSuite)

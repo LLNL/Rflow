@@ -404,7 +404,7 @@ if __name__ == "__main__":
                                 for stuff in ds[d].data:
                                     Emin_in = stuff[E_index_min]
                                     Emax_in = stuff[E_index_max]
-                                    if Emin_in is None: continue
+                                    if Emin_in is None: Emin_in = 0.0
                                     E = (Emin_in + Emax_in)*0.5
                                     E *= E_scale
                                     emin = min(emin,E)
@@ -450,6 +450,7 @@ if __name__ == "__main__":
                                     if E_index_min is None and E_index_max is None: 
                                         continue
                                     Emin_in = stuff[E_index_min] if E_index_min is not None else 0.0
+                                    if Emin_in is None: Emin_in = 0.0
                                     Emax_in = stuff[E_index_max]
                                     E = (Emin_in + Emax_in)*0.5
                                 if E is None: continue
@@ -664,6 +665,7 @@ if __name__ == "__main__":
                                         if E_index_min is None and E_index_max is None: 
                                             continue
                                         Emin_in = stuff[E_index_min] if E_index_min is not None else 0.0
+                                        if Emin_in is None: Emin_in = 0.0
                                         Emax_in = stuff[E_index_max]
                                         E = (Emin_in + Emax_in)*0.5
                                     if E is None: continue
@@ -725,6 +727,7 @@ if __name__ == "__main__":
                                                 print('Neither E_index_min or E_index_max given. Skip *****')
                                                 continue
                                             Emin_in = stuff[E_index_min] if E_index_min is not None else 0.0
+                                            if Emin_in is None: Emin_in = 0.0
                                             Emax_in = stuff[E_index_max]
                                             E = (Emin_in + Emax_in)*0.5
                                             Ediff = (Emax_in - Emin_in)*0.5

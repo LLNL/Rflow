@@ -148,6 +148,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
     RMatrix = rrr.evaluated
     bndx = RMatrix.boundaryCondition
     IFG = RMatrix.reducedWidthAmplitudes
+    widthUnits = 'MeV' if IFG = 0 else 'MeV**(1/2)'
     Overrides = False
     brune = bndx=='Brune'
     if brune: LMatrix = True
@@ -423,7 +424,7 @@ def Gomp(gnds,base,emin,emax,jmin,jmax,Dspacing,LevelParms,PorterThomas,optical_
                 GNDS_order[jset,n,c] = G_order  # order of variables in GNDS and ENDF, needed for covariance matrix
                 G_order += 1 
 
-        widths = [R.getColumn( col.name, 'MeV' ) for col in R.columns if col.name != 'energy']
+        widths = [R.getColumn( col.name, widthUnits ) for col in R.columns if col.name != 'energy']
         
 #         if verbose:  print(R.toXML()))       
         n = None
