@@ -106,6 +106,9 @@ def write_gnds_covariances(gnds,searchpars,inverse_hessian,GNDS_loc,POLE_details
 
     covarianceSuite = covarianceSuiteModule.CovarianceSuite(  gnds.projectile, gnds.target, 'Rflow R-matrix covariances', interaction="nuclear")
     covarianceSuite.parameterCovariances.add(parameterSection)
+ 
+    evalStyle = gnds.styles.getEvaluatedStyle().copy()
+    covarianceSuite.styles.add( evalStyle )
 
 #   if debug: print(covarianceSuite.toXMLList())
     if debug: 
