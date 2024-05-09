@@ -14,6 +14,7 @@ import os,math,numpy,cmath,pwd,sys,time,json,re
 
 from CoulCF import cf1,cf2,csigma,Pole_Shifts
 from write_covariances import write_gnds_covariances
+from writeRyaml import write_Ryaml
 
 from pqu import PQU as PQUModule
 from numericalFunctions import angularMomentumCoupling
@@ -66,7 +67,6 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     bndx = RMatrix.boundaryCondition
     bndv = RMatrix.boundaryConditionValue
     IFG = RMatrix.reducedWidthAmplitudes
-    Overrides = False
     brune = bndx==resolvedResonanceModule.BoundaryCondition.Brune
     if brune: LMatrix = True
 #     if brune and not LMatrix:
@@ -221,6 +221,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     g_poles_fixed = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL) # fixed in search
     
     GNDS_order = numpy.zeros([n_jsets,n_poles,n_chans+2], dtype=INT) # [,,0] is energy, 1 is damping, as in GNDS
+    GNDS_var   = numpy.zeros([n_jsets,n_poles,n_chans+2], dtype=INT) # [,,0] is energy, 1 is damping, as in GNDS
     J_set = numpy.zeros(n_jsets, dtype=REAL)
     pi_set = numpy.zeros(n_jsets, dtype=INT)
     L_val  =  numpy.zeros([n_jsets,n_chans], dtype=INT) - 1
@@ -533,6 +534,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     fixedpars = numpy.zeros(t_vars, dtype=REAL)
     fixedloc  = numpy.zeros([t_vars,1], dtype=INT)  
     GNDS_loc  = numpy.zeros([t_vars,1], dtype=INT)  
+    NORM_var =numpy.zeros([t_vars]) # searchpars_n[border[2]:border[3]] ** 2
 
     searchnames = []
     fixednames = []
@@ -570,6 +572,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                 searchnames += [nam]
                 search_vars.append([E,i])
                 GNDS_loc[ip] = GNDS_order[jset,n,0]
+                GNDS_var[jset,n,0] = 1
                 det = ('E',jset,n,ip,float(J_set[jset]),int(pi_set[jset]))
 #                 print('det:',det,type(det))
                 POLE_details[ip] =  det
@@ -630,6 +633,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
                     searchnames += [wnam]
                     search_vars.append([g_poles[jset,n,c],i])
                     GNDS_loc[ip] = GNDS_order[jset,n,c+1]
+                    GNDS_var[jset,n,c+1] = 1
                     det = ('W',jset,n,ip,seg_val[jset,c],L_val[jset,c],S_val[jset,c])
                     POLE_details[ip] = det
                     ip += 1
@@ -655,6 +659,10 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 #             searchloc[ip,0] = ni
             searchnames += [nnam]
             search_vars.append([snorm,ni])
+            det = ('N',ni,ip)
+#           print('det:',det)
+            POLE_details[ip] =  det
+            NORM_var[ni] = ip
             ip += 1
         else:
             fixedlistex.add(nnam)
@@ -723,11 +731,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     if debug:
         print('\n Variable parameters:',' '.join(searchnames)) 
         print('Fixed    parameterlist:',' '.join(fixedlistex))
-    print('Searching on pole energies:',searchparms[border[0]:border[1]])
+    print('Searching on pole energies:',searchnames[border[0]:border[1]])
     print('Keep fixed   pole energies:',fixednames[frontier[0]:frontier[1]])
-    print('Searching on widths :',searchparms[border[1]:border[2]])
+    print('Searching on widths :',searchnames[border[1]:border[2]])
     print('Keep fixed   widths:',fixednames[frontier[1]:frontier[2]])
-    print('Searching on norms :',searchparms[border[2]:border[3]])
+    print('Searching on norms :',searchnames[border[2]:border[3]])
     print('Keep fixed   norms:',fixednames[frontier[2]:frontier[3]])
     print('Searching on damping widths: [',' '.join(['%.2e' % d**2 for d in searchparms[border[3]:border[4]]]),']') 
     print('L4 norm of widths:',numpy.sum(searchparms[border[1]:border[2]]**4))
@@ -1178,6 +1186,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
         print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %11.3e' % (chisq_n/n_data,chisqpdof,n_dof,chisq_n*n_data))
                 
 
+# write Ryaml file with complete parameter+norms covariance data
+    
+        outFile = "%s-fit.Ryaml" % base
+        write_Ryaml(gnd,outFile,inverse_hessian,border,frontier,GNDS_var,NORM_var,searchnames,searchpars_n,fixedpars,fixednames,verbose,debug)
+    
 # Copy covariance matrix back into GNDS 
         covarianceSuite = write_gnds_covariances(gnd,searchpars_n,inverse_hessian,GNDS_loc,POLE_details,searchnames,border,  base,verbose,debug)
                             

@@ -16,7 +16,6 @@ import os,math,numpy,cmath,pwd,sys,time,json
 from wrapup import plotOut,saveNorms2gnds
 # from gflowe import Gflow
 from gflow import Gflow
-from write_covariances import write_gnds_covariances
 from printExcitationFunctions import *
 
 from fudge import reactionSuite as reactionSuiteModule
