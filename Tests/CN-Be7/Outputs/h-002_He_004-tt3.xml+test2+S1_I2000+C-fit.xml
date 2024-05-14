@@ -1,9 +1,12 @@
-<reactionSuite projectile="He3" target="He4" evaluation="fresco R-matrix fit mod" format="1.10" projectileFrame="lab" interaction="nuclear">
+<?xml version="1.0" encoding="UTF-8"?>
+<reactionSuite projectile="He3" target="He4" evaluation="fresco R-matrix fit mod mod" format="2.0" projectileFrame="lab" interaction="nuclear">
+  <externalFiles>
+    <externalFile label="covariances" path="h-002_He_004-tt3.xml+test2+S1_I2000+C-fit-covar.xml" checksum="6975dc3229e2af8003c364159709933cc55ad2a4" algorithm="sha1"/></externalFiles>
   <styles>
     <evaluated label="eval" date="2020-12-07" library="from test2-vc1a-s2.sfrescoed" version="0.1.0">
       <temperature value="3e2" unit="K"/>
       <projectileEnergyDomain min="1" max="12" unit="MeV"/></evaluated></styles>
-  <PoPs name="protare_internal" version="1.0" format="0.1">
+  <PoPs name="protare_internal" version="1.0" format="2.0">
     <chemicalElements>
       <chemicalElement symbol="H" Z="1" name="Hydrogen">
         <isotopes>
@@ -82,10 +85,10 @@
           <axis index="1" label="energy_in" unit="MeV"/>
           <axis index="0" label="radius" unit="fm"/></axes></constant1d></scatteringRadius>
     <resolved domainMin="1" domainMax="12" domainUnit="MeV">
-      <RMatrix label="eval" approximation="Full R-Matrix" boundaryCondition="-L" supportsAngularReconstruction="true" reducedWidthAmplitudes="true">
+      <RMatrix label="eval" approximation="FullRMatrix" boundaryCondition="NegativeOrbitalMomentum" supportsAngularReconstruction="true" reducedWidthAmplitudes="true">
         <documentation>
           <computerCodes>
-            <computerCode label="R-matrix fit" name="sfrescox" version="7.1-6-gad5c8e" date="Mon Dec  7 20:54:03 2020">
+            <computerCode label="R-matrix fit" name="sfrescox" version="7.1-6-gad5c8e">
               <note><![CDATA[ 
 Converted from SFRESCO search file
    test2-vc1a-s2.sfrescoed
@@ -94,7 +97,7 @@ Thompson, Ian J.
  
  ]]></note>
               <inputDecks>
-                <inputDeck label="Fitted_data"><![CDATA[
+                <inputDeck label="Fitted_data" filename="None"><![CDATA[
 &variable name='r:Barnard ' kind=5 dataset=0, 0 reffile='Dataa/Barnard-c*', datanorm=1.0010511058042 step=0.01 ivar=73 /
 &variable name='r:Elwyn ' kind=5 dataset=0, 0 reffile='Dataa/Elwyn-Aint*', datanorm=1.09766707895025 step=0.01 ivar=74 /
 &variable name='r:Elwyn_dXS ' kind=5 dataset=0, 0 reffile='Dataa/Elwyn_dXS-c*', datanorm=1.08813392440759 step=0.01 ivar=75 /
@@ -125,20 +128,20 @@ Thompson, Ian J.
 &data type=6 reffile='Dataa/Spiger_3He3He-c*', value=1.0 error=0.015 abserr=T idat=17 kind=5 /
 &data type=6 reffile='Dataa/Spiger_3Hep-c*', value=1.0 error=0.015 abserr=T idat=18 kind=5 /
 ]]></inputDeck>
-                <inputDeck label="Fitted_data 2"><![CDATA[
-  2021-10-21T18:16:12
+                <inputDeck label="Fitted_data 2" filename="h-002_He_004-tt3.xml"><![CDATA[
+  2024-05-14T09:05:35
 Rflow:
-&variable name='r:Barnard' kind=5 dataset=0, 0 datanorm= 9.95247e-01 step=0.01, reffile='Test2/Barnard@a*'/
-&variable name='r:Elwyn' kind=5 dataset=0, 0 datanorm= 1.06578e+00 step=0.01, reffile='Test2/Elwyn-Aint*'/
-&variable name='r:Elwyn_dXS' kind=5 dataset=0, 0 datanorm= 1.03464e+00 step=0.01, reffile='Test2/Elwyn_dXS@e*'/
-&variable name='r:Fasoli' kind=5 dataset=0, 0 datanorm= 9.97116e-01 step=0.01, reffile='Test2/Fasoli@a*'/
-&variable name='r:Fiedler' kind=5 dataset=0, 0 datanorm= 1.47081e+00 step=0.01, reffile='Test2/Fiedler-Aint*'/
-&variable name='r:Harrison' kind=5 dataset=0, 0 datanorm= 1.14312e+00 step=0.01, reffile='Test2/Harrison@e*'/
-&variable name='r:Ivanovic' kind=5 dataset=0, 0 datanorm= 1.04671e+00 step=0.01, reffile='Test2/Ivanovic@a*'/
-&variable name='r:McCray' kind=5 dataset=0, 0 datanorm= 1.13259e+00 step=0.01, reffile='Test2/McCray@a*'/
-&variable name='r:Spiger_3He3He' kind=5 dataset=0, 0 datanorm= 9.11814e-01 step=0.01, reffile='Test2/Spiger_3He3He@a*'/
-&variable name='r:Spiger_3Hep' kind=5 dataset=0, 0 datanorm= 9.99989e-01 step=0.01, reffile='Test2/Spiger_3Hep@e*'/
-&variable name='r:Tumino' kind=5 dataset=0, 0 datanorm= 1.08376e+00 step=0.01, reffile='Test2/Tumino-Aint*'/
+&variable name='r:Barnard' kind=5 dataset=0, 0 datanorm= 9.95451e-01 step=0.01, reffile='Test2/Barnard@a*'/
+&variable name='r:Elwyn' kind=5 dataset=0, 0 datanorm= 1.07185e+00 step=0.01, reffile='Test2/Elwyn-Aint*'/
+&variable name='r:Elwyn_dXS' kind=5 dataset=0, 0 datanorm= 1.03737e+00 step=0.01, reffile='Test2/Elwyn_dXS@e*'/
+&variable name='r:Fasoli' kind=5 dataset=0, 0 datanorm= 9.97048e-01 step=0.01, reffile='Test2/Fasoli@a*'/
+&variable name='r:Fiedler' kind=5 dataset=0, 0 datanorm= 1.47090e+00 step=0.01, reffile='Test2/Fiedler-Aint*'/
+&variable name='r:Harrison' kind=5 dataset=0, 0 datanorm= 1.14809e+00 step=0.01, reffile='Test2/Harrison@e*'/
+&variable name='r:Ivanovic' kind=5 dataset=0, 0 datanorm= 1.04649e+00 step=0.01, reffile='Test2/Ivanovic@a*'/
+&variable name='r:McCray' kind=5 dataset=0, 0 datanorm= 1.13450e+00 step=0.01, reffile='Test2/McCray@a*'/
+&variable name='r:Spiger_3He3He' kind=5 dataset=0, 0 datanorm= 9.12228e-01 step=0.01, reffile='Test2/Spiger_3He3He@a*'/
+&variable name='r:Spiger_3Hep' kind=5 dataset=0, 0 datanorm= 1.00144e+00 step=0.01, reffile='Test2/Spiger_3Hep@e*'/
+&variable name='r:Tumino' kind=5 dataset=0, 0 datanorm= 1.08892e+00 step=0.01, reffile='Test2/Tumino-Aint*'/
 
 
 &data type=1 data_file='Dataa/Barnard-c.data', lab=F idat=1 idir=0 iscale=1 abserr=T ic=1 ia=1 pel=1 /
@@ -160,7 +163,7 @@ Rflow:
 &data type=6 reffile='Dataa/Spiger_3He3He-c*', value=1.0 error=0.015 abserr=T idat=17 kind=5 /
 &data type=6 reffile='Dataa/Spiger_3Hep-c*', value=1.0 error=0.015 abserr=T idat=18 kind=5 /
 ]]></inputDeck></inputDecks></computerCode>
-            <computerCode label="transform2" name="ferdinand" version="" date="Mon Dec  7 20:54:03 2020">
+            <computerCode label="transform2" name="ferdinand" version="">
               <note><![CDATA[
 
 Processed by Ferdinand:
@@ -172,34 +175,45 @@ Changing boundaryCondition from -L to -L
 Mon Dec  7 20:54:03 2020
 
 ]]></note></computerCode>
-            <computerCode label="Fit quality 2" name="Rflow" version="" date="2021-10-21T18:16:12">
+            <computerCode label="transform3" name="ferdinand" version="">
+              <note><![CDATA[
+
+Processed by Ferdinand:
+Changing boundaryCondition from NegativeOrbitalMomentum to NegativeOrbitalMomentum 
+   by trans,std: False False ( Overrides=False)
+
+
+Wed Nov 24 14:27:26 2021
+
+]]></note></computerCode>
+            <computerCode label="Fit quality 2" name="Rflow" version="">
               <note><![CDATA[ 
 Fitted by Rflow
    h-002_He_004-tt3.xml
-2021-10-21T18:16:12
-Thompson, Ian J.
+2024-05-14T09:05:35
+Ian Thompson
  
  
  Initial chisq/pt:      1.92822
- Final   chisq/pt:      1.57340 including ww/dof      0.00000 and Chisq/DOF =      1.57340  for dof = 1791
+ Final   chisq/pt:      1.60234 including ww/dof      0.00000 and Chisq/DOF =      1.60234  for dof = 1791
 
  
- Fitted norm      0.99762 for r:Barnard
- Fitted norm      1.03237 for r:Elwyn
- Fitted norm      1.01717 for r:Elwyn_dXS
- Fitted norm      0.99856 for r:Fasoli
- Fitted norm      1.21277 for r:Fiedler
- Fitted norm      1.06917 for r:Harrison
- Fitted norm      1.02309 for r:Ivanovic
- Fitted norm      1.06423 for r:McCray
- Fitted norm      0.95489 for r:Spiger_3He3He
- Fitted norm      0.99999 for r:Spiger_3Hep
- Fitted norm      1.04104 for r:Tumino
+ Fitted norm      0.99772 for r:Barnard
+ Fitted norm      1.03530 for r:Elwyn
+ Fitted norm      1.01851 for r:Elwyn_dXS
+ Fitted norm      0.99852 for r:Fasoli
+ Fitted norm      1.21281 for r:Fiedler
+ Fitted norm      1.07149 for r:Harrison
+ Fitted norm      1.02298 for r:Ivanovic
+ Fitted norm      1.06513 for r:McCray
+ Fitted norm      0.95511 for r:Spiger_3He3He
+ Fitted norm      1.00072 for r:Spiger_3Hep
+ Fitted norm      1.04351 for r:Tumino
  ]]></note></computerCode></computerCodes></documentation>
         <resonanceReactions>
-          <resonanceReaction label="He3 + He4" ejectile="He3" computeShiftFactor="true">
+          <resonanceReaction label="He3 + He4" ejectile="He3">
             <link href="/reactionSuite/reactions/reaction[@label='He3 + He4']"/></resonanceReaction>
-          <resonanceReaction label="H1 + Li6" ejectile="H1" computeShiftFactor="true">
+          <resonanceReaction label="H1 + Li6" ejectile="H1">
             <link href="/reactionSuite/reactions/reaction[@label='H1 + Li6']"/>
             <scatteringRadius>
               <constant1d value="3.94396" domainMin="1" domainMax="12">
@@ -209,178 +223,178 @@ Thompson, Ian J.
         <spinGroups>
           <spinGroup label="0" spin="3/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="1" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="1" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="1" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="3" columns="5">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/>
-                  <column index="4" name="H1 + Li6 width_3" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + Li6 width_3" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
-                 <!--           energy |          He3 + He4 |          H1 + Li6 |          H1 + Li6 |          H1 + Li6  -->
-                 <!--                  |             width  |            width  |          width_2  |          width_3   -->
-                      -700.889035941637    -38.7966900603827   -24.2451083741787    18.1836175316787    -8.8995709553611
-                       29.5373545275055   -0.107777860114312   -2.69563576248296   -3.23807074221407   0.772159208806383
-                        1017.0017546093     47.5487243721729    30.0119021287833   -21.7172376179534    21.5715944742621</data></table></resonanceParameters></spinGroup>
+                 <!--           energy |           He3 + He4 |          H1 + Li6 |           H1 + Li6 |          H1 + Li6  -->
+                 <!--                  |              width  |            width  |           width_2  |          width_3   -->
+                      -12.9075277491112     -1.64881131478777   -1.36943215153129     0.67026820330135   0.609214342502372
+                       25.8592344510857   -0.0135026516443538   -2.24656313101626    -2.96173509809771    1.30722474207213
+                       34.9931472564167      2.54885377747649    2.20587366225313   -0.744941353226004    3.35752937457697</data></table></resonanceParameters></spinGroup>
           <spinGroup label="1" spin="1/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="1" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="1" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="3"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="1" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="3"></channel></channels>
             <resonanceParameters>
               <table rows="2" columns="4">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
-                 <!--           energy |         He3 + He4 |           H1 + Li6 |            H1 + Li6  -->
-                 <!--                  |            width  |             width  |            width_2   -->
-                      -5.51040880445334   -1.03854690263902     2.10785409042948   -0.0589523143135875
-                       810.822205827099    9.97723361590466   -0.286193014963526     -5.66859522955798</data></table></resonanceParameters></spinGroup>
+                 <!--           energy |        He3 + He4 |          H1 + Li6 |          H1 + Li6  -->
+                 <!--                  |           width  |            width  |          width_2   -->
+                      -28.4643643585869   -1.8619905520393    5.05083768370991   0.416030601600901
+                       38.2732830174029   2.02968734510482   -1.64775909313775   -1.49127429027708</data></table></resonanceParameters></spinGroup>
           <spinGroup label="2" spin="7/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="3" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="3" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="5" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="3" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="3" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="5" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="2" columns="5">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/>
-                  <column index="4" name="H1 + Li6 width_3" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + Li6 width_3" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
-                 <!--           energy |        He3 + He4 |          H1 + Li6 |          H1 + Li6 |          H1 + Li6  -->
-                 <!--                  |           width  |            width  |          width_2  |          width_3   -->
-                      -143.559981545779   4.21364385147741   -6.55797974882273   -19.1375685011259    35.7240164745796
-                       709.837367766066   6.80103570679893    7.37215610706533    21.8965439394516   -45.0292059626119</data></table></resonanceParameters></spinGroup>
+                 <!--          energy |        He3 + He4 |           H1 + Li6 |           H1 + Li6 |           H1 + Li6  -->
+                 <!--                 |           width  |             width  |           width_2  |           width_3   -->
+                      -22.050097248009   3.38994995329013    -3.05735880816923    -10.3090519338905     7.74836400243222
+                      49.3978667966842   3.53947448658613   -0.184899440469206   -0.679585549015268   -0.144272359501185</data></table></resonanceParameters></spinGroup>
           <spinGroup label="3" spin="5/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="3" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="3" channelSpin="1/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="3" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="1" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="3" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="3" columns="5">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/>
-                  <column index="4" name="H1 + Li6 width_3" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + Li6 width_3" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--          energy |          He3 + He4 |          H1 + Li6 |           H1 + Li6 |           H1 + Li6  -->
                  <!--                 |             width  |            width  |           width_2  |           width_3   -->
-                      11.2574092169079   -0.930343469382767   0.327649131506307   -0.835984412985162   -0.202131808984984
-                      10.3852675719609    -0.31281939427109   -1.37345609641918    0.574298731493374    -1.58402379176151
-                      423.294535781269    -11.7663518767882    3.24778946757853   -0.475285195636855    -2.64984985584831</data></table></resonanceParameters></spinGroup>
+                      11.2272891128174   -0.799534442780919   0.514369412019122    -1.14733600099676    0.147242212691618
+                      10.4179494889228   -0.414820668563448   -1.34428863174588    0.963685548158058    -1.39968383347815
+                      44.5743144472379    -3.67536588859096    1.16676271033544   -0.425347346616222   -0.971769502773693</data></table></resonanceParameters></spinGroup>
           <spinGroup label="4" spin="1/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="0" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="0" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="3"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="0" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="0" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="3"></channel></channels>
             <resonanceParameters>
               <table rows="1" columns="4">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
-                 <!--         energy |         He3 + He4 |          H1 + Li6 |           H1 + Li6  -->
-                 <!--                |            width  |            width  |           width_2   -->
-                      16.691216172942   -2.48671160152536   -2.23877104253733   -0.137437951266211</data></table></resonanceParameters></spinGroup>
+                 <!--          energy |         He3 + He4 |          H1 + Li6 |           H1 + Li6  -->
+                 <!--                 |            width  |            width  |           width_2   -->
+                      16.9852152029509   -2.50861275987425   -2.27398566641842   -0.120640688448569</data></table></resonanceParameters></spinGroup>
           <spinGroup label="5" spin="3/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="2" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="0" channelSpin="3/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="1/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="2" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="0" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="2" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="2" columns="5">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/>
-                  <column index="4" name="H1 + Li6 width_3" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + Li6 width_3" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--          energy |          He3 + He4 |         H1 + Li6 |          H1 + Li6 |          H1 + Li6  -->
                  <!--                 |             width  |           width  |          width_2  |          width_3   -->
-                      13.7876372442551   -0.519799176102997   1.41260828073885   0.378407483244682   0.930689505204544
-                      30.8301941687354     1.78181495744892   1.96586135877893    1.77619397013902   0.702428597639193</data></table></resonanceParameters></spinGroup>
+                      13.6448633204785   -0.482752918036733   1.40879481645299   0.509212124475135   0.961628679357612
+                      29.7703716841179      1.7611990840009   1.82208791280699    1.94977893355842    1.04924056394264</data></table></resonanceParameters></spinGroup>
           <spinGroup label="6" spin="5/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="2" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="2" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="2" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="2" columns="5">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/>
-                  <column index="4" name="H1 + Li6 width_3" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + Li6 width_3" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
-                 <!--          energy |          He3 + He4 |          H1 + Li6 |           H1 + Li6 |          H1 + Li6  -->
-                 <!--                 |             width  |            width  |           width_2  |          width_3   -->
-                      73.5635885685594    -3.22794344396277   -1.28029079490199    0.314329493044639   -12.3820254648801
-                      30.1842735952501   -0.946213883943603   -2.36048840609737   0.0308857021513185    7.64663698083998</data></table></resonanceParameters></spinGroup>
+                 <!--          energy |          He3 + He4 |         H1 + Li6 |           H1 + Li6 |           H1 + Li6  -->
+                 <!--                 |             width  |           width  |           width_2  |           width_3   -->
+                      27.3066064447791   -0.361889081773192   1.10901164764372   0.0927802014260346    -9.54325843187526
+                      38.5183064066801    -2.40991365978631    -2.320030796348    0.349570588327834   -0.110925737316589</data></table></resonanceParameters></spinGroup>
           <spinGroup label="7" spin="7/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="4" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="4" channelSpin="1/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="4" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="2" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="4" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="0" columns="5">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/>
-                  <column index="4" name="H1 + Li6 width_3" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + Li6 width_3" unit="MeV**(1/2)"/></columnHeaders>
                 <data/></table></resonanceParameters></spinGroup>
           <spinGroup label="8" spin="9/2" parity="-1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="5" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="5" channelSpin="1/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="5" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="5" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="3" channelSpin="3/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="5" channelSpin="1/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="5" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="0" columns="5">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/>
-                  <column index="4" name="H1 + Li6 width_3" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + Li6 width_3" unit="MeV**(1/2)"/></columnHeaders>
                 <data/></table></resonanceParameters></spinGroup>
           <spinGroup label="9" spin="9/2" parity="1">
             <channels>
-              <channel label="0" resonanceReaction="He3 + He4" L="4" channelSpin="1/2" columnIndex="1"></channel>
-              <channel label="1" resonanceReaction="H1 + Li6" L="4" channelSpin="1/2" columnIndex="2"></channel>
-              <channel label="2" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="3"></channel>
-              <channel label="3" resonanceReaction="H1 + Li6" L="6" channelSpin="3/2" columnIndex="4"></channel></channels>
+              <channel label="1" resonanceReaction="He3 + He4" L="4" channelSpin="1/2" columnIndex="1"></channel>
+              <channel label="2" resonanceReaction="H1 + Li6" L="4" channelSpin="1/2" columnIndex="2"></channel>
+              <channel label="3" resonanceReaction="H1 + Li6" L="4" channelSpin="3/2" columnIndex="3"></channel>
+              <channel label="4" resonanceReaction="H1 + Li6" L="6" channelSpin="3/2" columnIndex="4"></channel></channels>
             <resonanceParameters>
               <table rows="0" columns="5">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He3 + He4 width" unit="MeV"/>
-                  <column index="2" name="H1 + Li6 width" unit="MeV"/>
-                  <column index="3" name="H1 + Li6 width_2" unit="MeV"/>
-                  <column index="4" name="H1 + Li6 width_3" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He3 + He4 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="H1 + Li6 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + Li6 width_2" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + Li6 width_3" unit="MeV**(1/2)"/></columnHeaders>
                 <data/></table></resonanceParameters></spinGroup></spinGroups></RMatrix></resolved></resonances>
   <reactions>
     <reaction label="He3 + He4" ENDF_MT="2">
@@ -393,9 +407,10 @@ Thompson, Ian J.
                 <axes>
                   <axis index="1" label="energy_in" unit="MeV"/>
                   <axis index="0" label="crossSection" unit="b"/></axes>
-                <XYs1d index="0">
-                  <values>
-                    1.00000000e+00 0.00000000e+00 1.20000000e+01 0.00000000e+00</values></XYs1d></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
+                <function1ds>
+                  <XYs1d index="0">
+                    <values>
+                      1.00000000e+00 0.00000000e+00 1.20000000e+01 0.00000000e+00</values></XYs1d></function1ds></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
       <outputChannel genre="twoBody">
         <Q>
           <constant1d label="eval" value="0" domainMin="1" domainMax="12">
@@ -429,9 +444,10 @@ Thompson, Ian J.
                 <axes>
                   <axis index="1" label="energy_in" unit="MeV"/>
                   <axis index="0" label="crossSection" unit="b"/></axes>
-                <XYs1d index="0">
-                  <values>
-                    1.00000000e+00 0.00000000e+00 1.20000000e+01 0.00000000e+00</values></XYs1d></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
+                <function1ds>
+                  <XYs1d index="0">
+                    <values>
+                      1.00000000e+00 0.00000000e+00 1.20000000e+01 0.00000000e+00</values></XYs1d></function1ds></regions1d></resolvedRegion></background></resonancesWithBackground></crossSection>
       <outputChannel genre="twoBody">
         <Q>
           <constant1d label="eval" value="-4.0198" domainMin="1" domainMax="12">

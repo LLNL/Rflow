@@ -3,7 +3,7 @@
 
 ##############################################
 #                                            #
-#    Rflow 0.20      Ian Thompson, LLNL      #
+#    Rflow 0.30      Ian Thompson, LLNL      #
 #                                            #
 # SPDX-License-Identifier: MIT               #
 ##############################################
@@ -62,7 +62,7 @@ pi = 3.1415926536
 if __name__=='__main__':
     import argparse,re
 
-    print('\nRflow 0.20')
+    print('\nRflow 0.30')
     cmd = ' '.join([t if '*' not in t else ("'%s'" % t) for t in sys.argv[:]])
     print('Command:',cmd ,'\n')
 

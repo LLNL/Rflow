@@ -2,7 +2,7 @@
 
 ##############################################
 #                                            #
-#    Rflow 0.20      Ian Thompson, LLNL      #
+#    Rflow 0.30      Ian Thompson, LLNL      #
 #                                            #
 # SPDX-License-Identifier: MIT               #
 ##############################################
@@ -1189,7 +1189,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 # write Ryaml file with complete parameter+norms covariance data
     
         outFile = "%s-fit.Ryaml" % base
-        write_Ryaml(gnd,outFile,inverse_hessian,border,frontier,GNDS_var,NORM_var,searchnames,searchpars_n,fixedpars,fixednames,verbose,debug)
+        write_Ryaml(gnd,outFile,inverse_hessian,border,frontier,GNDS_var,searchloc,norm_info,norm_refs,fixedloc, 
+                    searchnames,searchpars_n,fixedpars,fixednames,verbose,debug)
     
 # Copy covariance matrix back into GNDS 
         covarianceSuite = write_gnds_covariances(gnd,searchpars_n,inverse_hessian,GNDS_loc,POLE_details,searchnames,border,  base,verbose,debug)

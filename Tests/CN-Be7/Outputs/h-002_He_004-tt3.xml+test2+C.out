@@ -1,9 +1,12 @@
 
-Rflow
-Command: ../../rflow.py h-002_He_004-tt3.xml test2.data test2.norms -C 
+Rflow 0.30
+Command: /Users/ian/binw/rflow.py h-002_He_004-tt3.xml test2.data test2.norms -C 
 
- Trim incoming data within [ 1.0 , 12.0 ] in lab MeV for projectile He3
-1874 data lines after -x and lab energies defined by projectile He3 ( 0 lines excluded)
+ Trim incoming data within [ 1.0 , 12.0 ] in cm MeV for projectile He3
+1874 data lines after -x options and lab energies defined by projectile He3 ( 0 lines excluded)
+Kept data in the Ecm g-p range [ 1.4070000000000003 , 6.565799999999999 ] using Qd,Qi = 0.0 0.0 
+
+Make 1874 data from 1809 angular, 65 angle integrals, 0 totals and 0 Reich-Moore captures
 Using previously fitted norm for r:Barnard              :  1.00105e+00 instead of  1.00000e+00
 Using previously fitted norm for r:Elwyn                :  1.09767e+00 instead of  1.00000e+00
 Using previously fitted norm for r:Elwyn_dXS            :  1.08813e+00 instead of  1.00000e+00
@@ -16,14 +19,14 @@ Using previously fitted norm for r:Spiger_3He3He        :  9.24014e-01 instead o
 Using previously fitted norm for r:Spiger_3Hep          :  1.02697e+00 instead of  1.00000e+00
 Using previously fitted norm for r:Tumino               :  1.12291e+00 instead of  1.00000e+00
 
-Data points: 1874 of which 1809 are for angles, 65 are for angle-integrals, and  0 are for totals 
+Data points: 1874 of which 1809 are for angles, 65 are for angle-integrals, 0 are for totals, and 0 for Reich-Moore captures 
 Data groups: 92 
 X4 groups: 11 
 Variable norms: 11  of which  7 constrained, 4 free, and 0  fixed ( 0 temporarily)
 
 Energy limits:   Data min,max: None None .  Poles min,max: None None
 File base: h-002_He_004-tt3.xml+test2+C
-Finish setup:  delta times: cpu = 0.83 s, wall = 0.61 s on Wed Nov 24 14:41:51 2021 
+Finish setup:  delta times: cpu = 0.19 s, wall = 0.26 s on Tue May 14 08:57:06 2024 
 
 Partition 0 elim,label False He3 + He4
 Partition 1 elim,label False H1 + Li6
@@ -50,31 +53,33 @@ Variable parameters - E,w,norms,D:  15 57 11 0  = 83
 Fixed    parameters - E,w,norms,D:  0 0 0 0  = 0
 # zero widths  = 63 
 
-Searching on pole energies: [ -7.01304437  24.07859608  35.07034297 -29.12814573  35.07034297
- -21.77410855  35.07034297  11.70926747  10.98257148  35.07034297
-  35.07034297  22.33489863  35.07034297  27.18337354  35.07034297]
+Searching on pole energies: ['PJ1.5-:E-7.013', 'PJ1.5-:E24.079', 'PJ1.5-:E35.070', 'PJ0.5-:E-29.128', 'PJ0.5-:E35.070', 'PJ3.5-:E-21.774', 'PJ3.5-:E35.070', 'PJ2.5-:E11.709', 'PJ2.5-:E10.983', 'PJ2.5-:E35.070', 'PJ0.5+:E35.070', 'PJ1.5+:E22.335', 'PJ1.5+:E35.070', 'PJ2.5+:E27.183', 'PJ2.5+:E35.070']
 Keep fixed   pole energies: []
+Searching on widths : ['w0,J1.5-:E-7.013', 'w1,J1.5-:E-7.013', 'w2,J1.5-:E-7.013', 'w3,J1.5-:E-7.013', 'w0,J1.5-:E24.079', 'w1,J1.5-:E24.079', 'w2,J1.5-:E24.079', 'w3,J1.5-:E24.079', 'w0,J1.5-:E35.070', 'w1,J1.5-:E35.070', 'w2,J1.5-:E35.070', 'w3,J1.5-:E35.070', 'w0,J0.5-:E-29.128', 'w1,J0.5-:E-29.128', 'w2,J0.5-:E-29.128', 'w0,J0.5-:E35.070', 'w1,J0.5-:E35.070', 'w2,J0.5-:E35.070', 'w0,J3.5-:E-21.774', 'w1,J3.5-:E-21.774', 'w2,J3.5-:E-21.774', 'w3,J3.5-:E-21.774', 'w0,J3.5-:E35.070', 'w1,J3.5-:E35.070', 'w2,J3.5-:E35.070', 'w3,J3.5-:E35.070', 'w0,J2.5-:E11.709', 'w1,J2.5-:E11.709', 'w2,J2.5-:E11.709', 'w3,J2.5-:E11.709', 'w0,J2.5-:E10.983', 'w1,J2.5-:E10.983', 'w2,J2.5-:E10.983', 'w3,J2.5-:E10.983', 'w0,J2.5-:E35.070', 'w1,J2.5-:E35.070', 'w2,J2.5-:E35.070', 'w3,J2.5-:E35.070', 'w0,J0.5+:E35.070', 'w1,J0.5+:E35.070', 'w2,J0.5+:E35.070', 'w0,J1.5+:E22.335', 'w1,J1.5+:E22.335', 'w2,J1.5+:E22.335', 'w3,J1.5+:E22.335', 'w0,J1.5+:E35.070', 'w1,J1.5+:E35.070', 'w2,J1.5+:E35.070', 'w3,J1.5+:E35.070', 'w0,J2.5+:E27.183', 'w1,J2.5+:E27.183', 'w2,J2.5+:E27.183', 'w3,J2.5+:E27.183', 'w0,J2.5+:E35.070', 'w1,J2.5+:E35.070', 'w2,J2.5+:E35.070', 'w3,J2.5+:E35.070']
+Keep fixed   widths: []
+Searching on norms : ['r:Barnard', 'r:Elwyn', 'r:Elwyn_dXS', 'r:Fasoli', 'r:Fiedler', 'r:Harrison', 'r:Ivanovic', 'r:McCray', 'r:Spiger_3He3He', 'r:Spiger_3Hep', 'r:Tumino']
+Keep fixed   norms: []
 Searching on damping widths: [  ]
 L4 norm of widths: 34044.28710718078
 AAL, AA sizes/p= 0.003, 0.117 GB from 1809*(10*3^2)^2 reals
 Number of search parameters: 83
-To start tf:  delta times: cpu = 2.95 s, wall = 2.77 s on Wed Nov 24 14:41:53 2021
-GPUs: []
+To start tf:  delta times: cpu = 0.88 s, wall = 0.98 s on Tue May 14 08:57:07 2024
+GPUs: [PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')] with TF: 2.13.0
 
 Tp_mat size 0.01079424 GB
 Search parameters : 83
-Data points: 1874 of which 1809 are for angles, 65 are for angle-integrals, and  0 are for totals. Dof= 1791
-First FitStatusTF:  delta times: cpu = 7.63 s, wall = 8.3 s on Wed Nov 24 14:41:59 2021
+Data points: 1874 of which 1809 are for angles, 65 are for angle-integrals, 0 are for totals, and 0 for capture. Dof= 1791
+First FitStatusTF:  delta times: cpu = 3.04 s, wall = 3.41 s on Tue May 14 08:57:09 2024
 
-First run chisq/pt: 1.9282181414517356 including ww/pt 0.0 : 1.9282181414517356 for data.
+First run chisq/pt: 1.9282181414611441 including ww/pt 0.0 : 1.9282181414611441 for data.
 
-Second FitStatusTF start:  delta times: cpu = 28.779999999999998 s, wall = 24.94 s on Wed Nov 24 14:42:15 2021
-chisq from FitStatusTF/pt: 1.9282181414517356  chisq/dof = 2.01757721780042
+Second FitStatusTF start:  delta times: cpu = 8.1 s, wall = 8 s on Tue May 14 08:57:14 2024
+chisq from FitStatusTF/pt: 1.9282181414611441  chisq/dof = 2.0175772178102647
 TAp_mat size 0.01079424 GB
 TCp_mat size 0.01041984 GB
-First FitStatusTF:  delta times: cpu = 39.48 s, wall = 28.6 s on Wed Nov 24 14:42:19 2021 giving chisq/pt 1.9282181414517354
-Ending tf:  delta times: cpu = 39.48 s, wall = 28.6 s on Wed Nov 24 14:42:19 2021
-Finished tf:  delta times: cpu = 39.48 s, wall = 28.6 s on Wed Nov 24 14:42:19 2021
+First FitStatusTF:  delta times: cpu = 10.22 s, wall = 9.42 s on Tue May 14 08:57:15 2024 giving chisq/pt 1.928218141461144
+Ending tf:  delta times: cpu = 10.22 s, wall = 9.42 s on Tue May 14 08:57:15 2024
+Finished tf:  delta times: cpu = 10.280000000000001 s, wall = 9.48 s on Tue May 14 08:57:15 2024
 
 R-matrix parameters:
 
@@ -192,7 +197,7 @@ Formal and 'Observed' properties by first-order (Thomas) corrections:
 
    P  Loc   Fixed:    V                   Parameter
 
-*** chisq/pt = 1.9282181414517356  so chisq/dof= 2.01757721780042  with ww 0.0  so data chisq/dof 2.01757721780042
+*** chisq/pt = 1.9282181414611441  so chisq/dof= 2.0175772178102647  with ww 0.0  so data chisq/dof 2.0175772178102647
 
 *** chisq/pt =      2.01758 including ww/dof =      0.00000 and chisq/dof=      2.01758  for dof = 1791
 
@@ -375,5 +380,5 @@ Unadjusted shape data:
 
 *** chisq/pt =      1.92822, chisq/dof =      2.01758 with ww =      0.00000 so data Chisq/DOF =      2.01758 from dof = 1791
 
-Final rflow:  delta times: cpu = 39.9 s, wall = 29.02 s on Wed Nov 24 14:42:19 2021
+Final rflow:  delta times: cpu = 10.42 s, wall = 9.63 s on Tue May 14 08:57:15 2024
 Target stdout: h-002_He_004-tt3.xml+test2+C.out

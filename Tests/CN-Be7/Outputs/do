@@ -1,0 +1,3 @@
+rflow.py h-002_He_004-tt3.xml ../test2.data ../test2.norms -C  | tee h-002_He_004-tt3.xml+../test2+C.out
+rflow.py h-002_He_004-tt3.xml ../test2.data ../test2.norms -C -S 1 -I 2000  | tee h-002_He_004-tt3.xml+../test2+S1_I2000+C.out
+rflow.py h-002_He_004-tt3.xml ../test2.data ../test2.norms  | tee h-002_He_004-tt3.xml+../test2.out

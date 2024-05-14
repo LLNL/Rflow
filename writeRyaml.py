@@ -14,7 +14,6 @@ from fudge import reactionSuite as reactionSuiteModule
 from fudge.processing.resonances.getCoulombWavefunctions import *
 import fudge.resonances.resolved as resolvedResonanceModule
 from fudge import documentation as documentationModule
-# import masses
 from PoPs.chemicalElements.misc import *
 
 import json,sys
@@ -29,7 +28,7 @@ except ImportError:
 # This is based on ferdinand/write_Ryaml.py but writes the full covariance matrix.
 # Adds covIndex data to the Ryaml file.
 
-def write_Ryaml(gnds,outFile,inverse_hessian,border,frontier,GNDS_var,NORM_var,
+def write_Ryaml(gnds,outFile,inverse_hessian,border,frontier,GNDS_var,searchloc,norm_info,norm_refs,fixedloc,
                 searchnames,searchpars,fixedpars,fixednames,verbose,debug):
   
     print("Write",outFile,'\n')
@@ -126,12 +125,13 @@ def write_Ryaml(gnds,outFile,inverse_hessian,border,frontier,GNDS_var,NORM_var,
         Particles[p] = {'gndsName':p, 'gsMass':pMass, 'charge':pZ, 'spin':jp, 'parity':pt, 'excitation':float(ep)}
         Particles[t] = {'gndsName':t, 'gsMass':tMass, 'charge':tZ, 'spin':jt, 'parity':tt, 'excitation':float(et)}
 
-        Particles[CN] = {'gndsName':CN, 'gsMass':masses.getMassFromZA( cZA ), 'charge':tZ+pZ, 'excitation':0.0}
         try:
             CN_PoPs = PoPs[CN]
-            jCN = CN_PoPs.spin[0].float('hbar')
-            pCN = CN_PoPs.parity[0].value
+            CNMass = CN_PoPs.getMass('amu')
+            Particles[CN]['gsMass'] = CNMass
+            jCN =    CN_PoPs.spin[0].float('hbar')
             Particles[CN]['spin'] = jCN
+            pCN =    CN_PoPs.parity[0].value
             Particles[CN]['parity'] = pCN
         except:
             pass
@@ -250,36 +250,56 @@ def write_Ryaml(gnds,outFile,inverse_hessian,border,frontier,GNDS_var,NORM_var,
     numVariables = index
     SpinGroups['order'] = spinGroupOrder
     print('Number of R-matrix parameters:',numVariables) #,nParameters)
-# Data
-
-    fittedData = {}
     
+# DATA NORMS
+
+    normData = {}
+    dataOrder = []
     for ip in range(border[2],border[3]):
-        name = searchnames[ip].replace('r:','')
+        name1 = searchnames[ip]
         datanorm = float(searchpars[ip])
+        ni = searchloc[ip,0]
+        name2,reffile = norm_refs[ni]
+        name = name2.replace('r:','')
+        expect,chi_scale,fixed = norm_info[ni,:]
         
         dataDict = {}
         dataDict['datanorm'] = datanorm
         dataDict['covIndex'] = ip
-        fittedData[name] = dataDict
-        filename = 'Unknown'
-        if verbose:
-            print("Previous norm for %-20s is %10.5f from %s in cov at %s" % (name,datanorm,filename,ip) )
-    Data['Fitted'] = fittedData
+        dataDict['filename'] = reffile
+        dataDict['shape'] = True if (chi_scale == 0 and fixed == 0) else False
+        dataDict['expected'] = float(expect)
+        if chi_scale > 0:
+            dataDict['syserror'] = 1./float(chi_scale)
             
-    fixedData = {}
+        normData[name] = dataDict
+        dataOrder.append(name)
+        if verbose:
+            print("Previous norm for %-20s is %10.5f from %s in cov at %s" % (name,datanorm,reffile,ip) )
+            
     for ifixed in range(frontier[2],frontier[3]):
-        name = fixednames[ifixed].replace('r:','')
+        name1 = fixednames[ifixed]
         datanorm = float(fixedpars[ifixed])
-#         covIndex =  None
-        
+        covIndex =  None
+        ni = fixedloc[ifixed,0]
+        name2,reffile = norm_refs[ni]
+        name = name2.replace('r:','')
+        expect,chi_scale,fixed = norm_info[ni,:]
+                
         dataDict = {}
         dataDict['datanorm'] = datanorm
-        fixedData[name]  = dataDict
-        filename = 'Unknown'
+        dataDict['filename'] = reffile
+        dataDict['shape'] =  True if (chi_scale == 0 and fixed == 0) else False
+        dataDict['expected'] = float(expect)
+        if chi_scale > 0:
+            dataDict['syserror'] = 1./float(chi_scale)
+        normData[name]  = dataDict
+        dataOrder.append(name)
         if verbose:
-            print("Fixed norm for %-20s is %10.5f from %s, not in cov" % (name,datanorm,filename) )        
-    Data['Fixed']  = fixedData
+            print("Fixed norm for %-20s is %10.5f from %s, not in cov" % (name,datanorm,reffile) )        
+ 
+    normData['order'] = dataOrder
+    Data['Normalizations']  = normData
             
 # COVARIANCES
 
