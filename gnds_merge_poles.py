@@ -146,15 +146,7 @@ if( __name__ == '__main__' ) :
             widths = []
             for c in range(cols-1):
                widths.append(R.data[n][1+c])
-#             widths = R.data[n][1:]
-#             print('    E= %8.5f,' % E,len(widths),' #',n)
-#             if args.scale is not None:
-#                 newwidths = []
-#                 for c in range(cols-1-damping):
-#                    newwidths.append(widths[c] * args.scale )              
-#                    R.data[n][1+damping+c] = newwidths[c]                
-#                 print('    New: E= %8.5f, D = %4.1e,' % (E,D),newwidths)
-#                 extension = '.s%s' % args.scale 
+
         pwLists = []
         pwColumns= []
         for ch in Jpi.channels:
@@ -300,6 +292,3 @@ if( __name__ == '__main__' ) :
 
     gnds.saveToFile( output, formatVersion = args.formatVersion )
 
-#     for covarianceSuite in covariances:
-#         output = os.path.join( os.path.dirname( output ), os.path.basename( covarianceSuite.sourcePath ) ) + extension
-#         covarianceSuite.saveToFile( output, formatVersion = args.formatVersion )

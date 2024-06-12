@@ -516,10 +516,16 @@ if __name__=='__main__':
         newFitFile = base  + '-fit.xml'
         print('Write gnds files to',newFitFile)
         if cov is not None: 
-            if hasattr(gnd, 'loadCovariances'): 
-                for oldCov in gnd.loadCovariances():
-                    gnd.externalFiles.pop(oldCov.label)     
+        
+            covs2Delete = []
+            for externalFile in gnd.externalFiles:
+                if externalFile.label == 'covariances':
+                    covs2Delete.append(externalFile)
+            for cov2Delete in covs2Delete:
+                gnd.externalFiles.pop(cov2Delete.label)
+                
             gnd.addCovariance(cov)
+    
 
         covFiles = gnd.saveAllToFile( newFitFile , covarianceDir = '.' )
         print('Written new fit file:',newFitFile)
