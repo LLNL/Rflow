@@ -1,5 +1,5 @@
 # Rflow:  R-matrix methods for fitting EXFOR data using tensorflow
-	 Version 0.20
+	 Version 0.30
 	 Release: LLNL-CODE-853144
 	 SPDX-License-Identifier: MIT
 ###  Ian J. Thompson
