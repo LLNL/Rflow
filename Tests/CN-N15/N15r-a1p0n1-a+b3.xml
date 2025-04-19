@@ -791,12 +791,12 @@ Mon May 22 17:27:58 2023
               <table rows="4" columns="7">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="3" name="H1 + C14 width" unit="MeV"/>
-                  <column index="4" name="n + N14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width_2" unit="MeV"/>
-                  <column index="6" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--           energy |          He4 + B11 |       He4 + B11_e1 |           H1 + C14 |             n + N14 |              n + N14 |         n + N14_e1  -->
                  <!--                  |             width  |             width  |             width  |              width  |             width_2  |             width   -->
@@ -816,12 +816,12 @@ Mon May 22 17:27:58 2023
               <table rows="10" columns="7">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="3" name="H1 + C14 width" unit="MeV"/>
-                  <column index="4" name="n + N14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width_2" unit="MeV"/>
-                  <column index="6" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="3" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--           energy |           He4 + B11 |        He4 + B11_e1 |             H1 + C14 |            n + N14 |             n + N14 |          n + N14_e1  -->
                  <!--                  |              width  |              width  |               width  |             width  |            width_2  |              width   -->
@@ -849,14 +849,14 @@ Mon May 22 17:27:58 2023
               <table rows="10" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--           energy |          He4 + B11 |            He4 + B11 |       He4 + B11_e1 |            H1 + C14 |            n + N14 |             n + N14 |              n + N14 |         n + N14_e1  -->
                  <!--                  |             width  |             width_2  |             width  |              width  |             width  |            width_2  |             width_3  |             width   -->
@@ -884,14 +884,14 @@ Mon May 22 17:27:58 2023
               <table rows="14" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--            energy |           He4 + B11 |           He4 + B11 |         He4 + B11_e1 |            H1 + C14 |             n + N14 |             n + N14 |             n + N14 |          n + N14_e1  -->
                  <!--                   |              width  |            width_2  |               width  |              width  |              width  |            width_2  |            width_3  |              width   -->
@@ -923,14 +923,14 @@ Mon May 22 17:27:58 2023
               <table rows="3" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--          energy |          He4 + B11 |           He4 + B11 |       He4 + B11_e1 |           H1 + C14 |              n + N14 |            n + N14 |            n + N14 |        n + N14_e1  -->
                  <!--                 |             width  |            width_2  |             width  |             width  |               width  |           width_2  |           width_3  |            width   -->
@@ -951,14 +951,14 @@ Mon May 22 17:27:58 2023
               <table rows="41" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--           energy |            He4 + B11 |           He4 + B11 |        He4 + B11_e1 |             H1 + C14 |             n + N14 |              n + N14 |              n + N14 |          n + N14_e1  -->
                  <!--                  |               width  |            width_2  |              width  |               width  |              width  |             width_2  |             width_3  |              width   -->
@@ -1017,14 +1017,14 @@ Mon May 22 17:27:58 2023
               <table rows="2" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--           energy |         He4 + B11 |          He4 + B11 |      He4 + B11_e1 |             H1 + C14 |             n + N14 |             n + N14 |           n + N14 |        n + N14_e1  -->
                  <!--                  |            width  |           width_2  |            width  |               width  |              width  |            width_2  |          width_3  |            width   -->
@@ -1044,14 +1044,14 @@ Mon May 22 17:27:58 2023
               <table rows="3" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--          energy |          He4 + B11 |           He4 + B11 |      He4 + B11_e1 |           H1 + C14 |             n + N14 |            n + N14 |            n + N14 |        n + N14_e1  -->
                  <!--                 |             width  |            width_2  |            width  |             width  |              width  |           width_2  |           width_3  |            width   -->
@@ -1072,14 +1072,14 @@ Mon May 22 17:27:58 2023
               <table rows="1" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data>
                  <!--          energy |          He4 + B11 |        He4 + B11 |       He4 + B11_e1 |          H1 + C14 |          n + N14 |          n + N14 |          n + N14 |        n + N14_e1  -->
                  <!--                 |             width  |         width_2  |             width  |            width  |           width  |         width_2  |         width_3  |            width   -->
@@ -1098,14 +1098,14 @@ Mon May 22 17:27:58 2023
               <table rows="0" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data/></table></resonanceParameters></spinGroup>
           <spinGroup label="10" spin="9/2" parity="1">
             <channels>
@@ -1121,14 +1121,14 @@ Mon May 22 17:27:58 2023
               <table rows="0" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data/></table></resonanceParameters></spinGroup>
           <spinGroup label="11" spin="11/2" parity="-1">
             <channels>
@@ -1144,14 +1144,14 @@ Mon May 22 17:27:58 2023
               <table rows="0" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data/></table></resonanceParameters></spinGroup>
           <spinGroup label="12" spin="11/2" parity="1">
             <channels>
@@ -1167,14 +1167,14 @@ Mon May 22 17:27:58 2023
               <table rows="0" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data/></table></resonanceParameters></spinGroup>
           <spinGroup label="13" spin="13/2" parity="-1">
             <channels>
@@ -1190,14 +1190,14 @@ Mon May 22 17:27:58 2023
               <table rows="0" columns="9">
                 <columnHeaders>
                   <column index="0" name="energy" unit="MeV"/>
-                  <column index="1" name="He4 + B11 width" unit="MeV"/>
-                  <column index="2" name="He4 + B11 width_2" unit="MeV"/>
-                  <column index="3" name="He4 + B11_e1 width" unit="MeV"/>
-                  <column index="4" name="H1 + C14 width" unit="MeV"/>
-                  <column index="5" name="n + N14 width" unit="MeV"/>
-                  <column index="6" name="n + N14 width_2" unit="MeV"/>
-                  <column index="7" name="n + N14 width_3" unit="MeV"/>
-                  <column index="8" name="n + N14_e1 width" unit="MeV"/></columnHeaders>
+                  <column index="1" name="He4 + B11 width" unit="MeV**(1/2)"/>
+                  <column index="2" name="He4 + B11 width_2" unit="MeV**(1/2)"/>
+                  <column index="3" name="He4 + B11_e1 width" unit="MeV**(1/2)"/>
+                  <column index="4" name="H1 + C14 width" unit="MeV**(1/2)"/>
+                  <column index="5" name="n + N14 width" unit="MeV**(1/2)"/>
+                  <column index="6" name="n + N14 width_2" unit="MeV**(1/2)"/>
+                  <column index="7" name="n + N14 width_3" unit="MeV**(1/2)"/>
+                  <column index="8" name="n + N14_e1 width" unit="MeV**(1/2)"/></columnHeaders>
                 <data/></table></resonanceParameters></spinGroup></spinGroups></RMatrix></resolved></resonances>
   <reactions>
     <reaction label="He4 + B11" ENDF_MT="2">

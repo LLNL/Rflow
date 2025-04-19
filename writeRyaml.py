@@ -224,7 +224,7 @@ def write_Ryaml(gnds,outFile,inverse_hessian,border,frontier,GNDS_var,searchloc,
 #         print('Pole variables:',GNDS_var[jset,:rows,0])
         poleData = {}
         for i in range(rows):
-            tag = 'pole'+str(i)+':'+"%.3f" % R[i][0]
+            tag = 'pole'+str(i).zfill(3)+':'+"%.3f" % R[i][0]
             
             covIndex = index if GNDS_var[jset,i,0]>0 else None
             par = [ [covIndex, float(R[i][0]) ] , [] ]
