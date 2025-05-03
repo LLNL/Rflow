@@ -16,8 +16,23 @@ Users to download:
 **tensorflow** from [www.tensorflow.org/install](https://www.tensorflow.org/install).
 For macs optionally see [developer.apple.com/metal/tensorflow-plugin/](https://developer.apple.com/metal/tensorflow-plugin/)
 
+For getX4cn4datas.py: 
 **x4i** from [github.com/brown170/x4i.git](https://github.com/brown170/x4i.git)
 
+
+## Example conda installation (May 2025)
+ 
+	conda create --name T2
+	conda activate T2 
+
+	conda install -c apple tensorflow-deps # get 2.9.0, python 3.10.16, numpy 1.22.3
+	python -m pip install tensorflow # get 2.19.0, python 3.10.16, numpy 2.1.3
+	python -m pip install tensorflow_probability # get 0.25
+	python -m pip install tensorflow_keras # get 2.19. Needed for tensorflow_probability
+
+	python -m pip install tensorflow-metal # get 1.2.0, for mac GPU (optional: the CPU calculations use all cpus well)
+
+	(the # get comments summarise my results, and should not be pasted as part of the command!)
 
 ## R-matrix fitting EXFOR data using tensorflow
 ```
