@@ -13,6 +13,9 @@ Users to download:
 **fudge** version > 6 from [github.com/LLNL/fudge](https://github.com/LLNL/fudge),
   for example the tag at [github.com/LLNL/fudge/releases/tag/6.1.0](https://github.com/LLNL/fudge/releases/tag/6.1.0). Include fudge in PYTHONPATH.
 
+
+**yaml** files: install libyaml, py-yaml
+
 **tensorflow** from [www.tensorflow.org/install](https://www.tensorflow.org/install).
 For macs optionally see [developer.apple.com/metal/tensorflow-plugin/](https://developer.apple.com/metal/tensorflow-plugin/)
 
@@ -29,6 +32,8 @@ For getX4cn4datas.py:
 	python -m pip install tensorflow # get 2.19.0, python 3.10.16, numpy 2.1.3
 	python -m pip install tensorflow_probability # get 0.25
 	python -m pip install tensorflow_keras # get 2.19. Needed for tensorflow_probability
+	python -m pip install pyyaml # get 6.0.2
+	python -m pip install scipy # get 1.15.2. Needed for loggamma
 
 	python -m pip install tensorflow-metal # get 1.2.0, for mac GPU (optional: the CPU calculations use all cpus well)
 
@@ -170,4 +175,5 @@ sketchChannels.py:	plot levels for multiple mass partitions of a nuclide.
 snapnorm.py:		plot largest search parameters from a snap file.
 romp.py				make a R-matrix parameter set from YAHFC level densities
 						 and optical potentials.
+levels2sfresco.py	read ENSDF levels from RIPL xml file and make sfresco list of resonances
 ```

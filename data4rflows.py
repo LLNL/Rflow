@@ -28,6 +28,10 @@ hbar = 6.582e-22 # MeV.s
 
 EPS = 1e-6 # upper bound on accuracy of Coulomb functions from CoulCF.py
 
+print('\ndata4rflows 0.20')
+cmd = ' '.join([t if '*' not in t else ("'%s'" % t) for t in sys.argv[:]])
+print('  Command:',cmd ,'\n')
+
 defaultPops = '../ripl2pops_to_Z8.xml'
 lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
 
