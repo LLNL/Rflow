@@ -13,8 +13,7 @@ Users to download:
 **fudge** version > 6 from [github.com/LLNL/fudge](https://github.com/LLNL/fudge),
   for example the tag at [github.com/LLNL/fudge/releases/tag/6.1.0](https://github.com/LLNL/fudge/releases/tag/6.1.0). Include fudge in PYTHONPATH.
 
-
-**yaml** files: install libyaml, py-yaml
+**yaml** files: install py-yaml or pyyaml.
 
 **tensorflow** from [www.tensorflow.org/install](https://www.tensorflow.org/install).
 For macs optionally see [developer.apple.com/metal/tensorflow-plugin/](https://developer.apple.com/metal/tensorflow-plugin/)

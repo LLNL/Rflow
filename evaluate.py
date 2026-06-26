@@ -71,7 +71,7 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
     LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose = Logicals
 
-    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections = Search_Control
+    searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base,Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections,covs_in = Search_Control
 
     Pleg, ExptAint,ExptTot,ExptCap,CS_diag,p_mask,gfac_s = Data_Control
 
@@ -134,7 +134,23 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
     print('Search parameters :',n_pars)
     n_dof = n_data - n_pars
     print('Data points:',n_data,'of which',n_angles,'are for angles,',n_angle_integrals,'are for angle-integrals,',n_totals,'are for totals, and',n_captures,'for capture. Dof=',n_dof)
-    
+
+    if covs_in is not None:
+        invhessian_in = numpy.zeros([n_pars, n_pars], dtype=REAL)
+        n_covs = len(covs_in)
+        diag_c = 1e-4  # for unknown diagonals
+
+        for i in range(n_covs):
+            for j in range(n_covs):
+                invhessian_in[i,j] = covs_in[i][j]   #  norm uncertainties missing from xml covariances
+        if n_covs < n_pars:
+            print('######## Search parameters from',n_covs,'to',n_pars,'are missing initial estimated inverse hessian. Diagonals set to ',diag_c)
+        for i in range(n_covs,n_pars):
+            invhessian_in[i,i] = diag_c
+    else:
+        print('######## No initial estimated inverse hessian')
+        invhessian_in = None
+
     sys.stdout.flush()
 
 
@@ -422,7 +438,8 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
 
         print('Start search'); sys.stdout.flush()
         optim_results = tfp.optimizer.bfgs_minimize (FitMeasureTF, initial_position=searchpars,
-                            max_iterations=Iterations, tolerance=float(Search))
+                            max_iterations=Iterations, tolerance=float(Search), 
+                            initial_inverse_hessian_estimate=invhessian_in)
                         
         last_cppt = optim_results.objective_value.numpy()/n_data
         searchpars = optim_results.position

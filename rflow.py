@@ -73,6 +73,9 @@ if __name__=='__main__':
     parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
     parser.add_argument('dataFile', type=str, help='Experimental data to fit' )
     parser.add_argument('normFile', type=str, help='Experimental norms for fitting' )
+    parser.add_argument(      "--covs_in", action="store_true",  help="Use initial covariance matrix for initial inverse hessian")
+    parser.add_argument("-y", "--yaml", action="store_true",  help="Read inFile as Ryaml format, and covariances if --covs_in")
+
     parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Substrings to exclude in datasets if any string within group name")
     parser.add_argument(      "--ExcludeFile", type=str,   help="Name of file with names of datasets (as regex) to exclude if any string within group name")
 
@@ -130,7 +133,15 @@ if __name__=='__main__':
         realSize = 4  # bytes
     ComputerPrecisions = (REAL, CMPLX, INT, realSize)
 
-    gnd=reactionSuiteModule.ReactionSuite.readXML_file(args.inFile)
+
+    if not args.yaml:    
+        gnd = reactionSuiteModule.ReactionSuite.readXML_file(args.inFile)
+    else:
+        from read_Ryaml import read_Ryaml
+        x4dict = {}
+        plotting = False
+        gnd = read_Ryaml(args.inFile, "Ryaml", x4dict, args.emin,args.EMAX, not args.covs_in, plotting, args.verbose,args.debug)
+
 #   print('gnd.sourcePath =',gnd.sourcePath)
     p,t = gnd.projectile,gnd.target
     PoPs = gnd.PoPs
@@ -145,6 +156,27 @@ if __name__=='__main__':
     if args.emin is not None: emin = args.emin
     if args.EMAX is not None: emax = args.EMAX
     print(' Trim incoming data within [',emin,',',emax,'] in cm MeV for projectile',p)
+
+# COVARIANCES       
+    
+    cov_matrix_in = None
+    if args.covs_in and hasattr(gnd, 'loadCovariances'):
+        covFileName = []
+        for externalFile in gnd.externalFiles:
+            covFileName.append(externalFile.path)
+            print('   Covariances from',covFileName[-1])
+            
+        covariances = gnd.loadCovariances()
+        if len(covariances)>0:
+    #         print('loaded')
+    #         print(covariances[0].toXML())
+            evalCovs = covariances[0].parameterCovariances[0].evaluated
+
+            covArray = evalCovs.matrix.constructArray()
+#             if debug: print(covArray)
+    #         print(dir(covArray))
+            print("   Covariance matrix shape is",covArray.shape)
+            cov_matrix_in = covArray.tolist()
     
 # Previous fitted norms:
 # any variable or data namelists in the documentation?
@@ -499,7 +531,7 @@ if __name__=='__main__':
     print("Finish setup: ",tim.toString( ),'\n')
  
     chisq,ww,xsc,norm_val,n_pars,n_dof,XS_totals,ch_info,cov  = Gflow(
-                        gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,n_totals,n_captures,
+                        gnd,partitions,base,projectile4LabEnergies,cov_matrix_in,data_val,data_p,n_angles,n_angle_integrals,n_totals,n_captures,
                         Ein_list,args.Fixed,args.NLMAX,args.emin,args.EMAX,args.pmin,args.PMAX,args.dmin,args.DMAX,args.Averaging, args.Multi,args.ABES,args.Grid,args.nonzero,
                         norm_val,norm_info,norm_refs,effect_norm, args.Lambda,args.LMatrix,args.groupAngles,
                         args.init,args.Search,args.Iterations,args.widthWeight,args.restarts,args.Background,args.BG,args.ReichMoore,  
@@ -517,12 +549,18 @@ if __name__=='__main__':
         print('Write gnds files to',newFitFile)
         if cov is not None: 
         
-            covs2Delete = []
-            for externalFile in gnd.externalFiles:
-                if externalFile.label == 'covariances':
-                    covs2Delete.append(externalFile)
-            for cov2Delete in covs2Delete:
-                gnd.externalFiles.pop(cov2Delete.label)
+#             covs2Delete = []
+#             for externalFile in gnd.externalFiles:
+#                 if externalFile.label == 'covariances':
+#                     covs2Delete.append(externalFile)
+#             for cov2Delete in covs2Delete:
+#                 print('Remove old covariances',cov2Delete.label)
+#                 gnd.externalFiles.pop(cov2Delete.label)
+
+            if hasattr(gnd, 'loadCovariances'): 
+                for oldCov in gnd.loadCovariances():
+                    print('Remove old covariances',oldCov.label)
+                    gnd.externalFiles.pop(oldCov.label)
                 
             gnd.addCovariance(cov)
     

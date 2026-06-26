@@ -40,7 +40,7 @@ rsqr4pi = 1.0/(4*pi)**0.5
 def now():
     return date.Date( resolution = date.Resolution.time )
 
-def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_angle_integrals,n_totals,n_captures,
+def Gflow(gnd,partitions,base,projectile4LabEnergies,covs_in,data_val,data_p,n_angles,n_angle_integrals,n_totals,n_captures,
         Ein_list, fixedlist, NLMAX,emind,emaxd,pmin,pmax,dmin,dmax,Averaging,Multi,ABES,Grid,nonzero,
         norm_val,norm_info,norm_refs,effect_norm, Lambda,LMatrix,batches,
         init,Search,Iterations,widthWeight,restarts,Background,BG,ReichMoore, 
@@ -740,6 +740,11 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
     print('Searching on damping widths: [',' '.join(['%.2e' % d**2 for d in searchparms[border[3]:border[4]]]),']') 
     print('L4 norm of widths:',numpy.sum(searchparms[border[1]:border[2]]**4))
     
+    if covs_in is not None:
+        covs_dim = len(covs_in)
+        print('######## New # variables  =',n_pars,' and previously',covs_dim)
+
+
     if brune and False:
         for jset in range(n_jsets):
             for n in range(npl[jset]):
@@ -989,7 +994,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,data_val,data_p,n_angles,n_
 
     Dimensions = [n_data,npairs,n_jsets,n_poles,n_chans,n_angles,n_angle_integrals,n_totals,n_captures,NL,maxpc,batches]
     Logicals = [LMatrix,brune,Grid,Lambda,EBU,chargedElastic, debug,verbose]
-    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections]
+    Search_Control = [searchloc,border,E_poles_fixed_v,g_poles_fixed_v,D_poles_fixed_v, fixed_norms,norm_info,effect_norm,data_p, AAL,base, Search,Iterations,Averaging,widthWeight,restarts,Cross_Sections,covs_in]
 
     Data_Control = [Pleg, ExptAint,ExptTot,ExptCap,CS_diag,p_mask,gfac_s]     # Pleg + extra for Cross-sections  
     
