@@ -15,6 +15,7 @@ from fudge.processing.resonances.getCoulombWavefunctions import *
 import fudge.resonances.resolved as resolvedResonanceModule
 from fudge import documentation as documentationModule
 from PoPs.chemicalElements.misc import *
+import masses
 
 import json,sys
 from yaml import load, dump
@@ -257,7 +258,7 @@ def write_Ryaml(gnds,outFile,inverse_hessian,border,frontier,GNDS_var,searchloc,
     dataOrder = []
     for ip in range(border[2],border[3]):
         name1 = searchnames[ip]
-        datanorm = float(searchpars[ip])
+        datanorm = float(searchpars[ip])**2    # search on sqrt(norm), so norms always positive!
         ni = searchloc[ip,0]
         name2,reffile = norm_refs[ni]
         name = name2.replace('r:','')
@@ -279,7 +280,7 @@ def write_Ryaml(gnds,outFile,inverse_hessian,border,frontier,GNDS_var,searchloc,
             
     for ifixed in range(frontier[2],frontier[3]):
         name1 = fixednames[ifixed]
-        datanorm = float(fixedpars[ifixed])
+        datanorm = float(fixedpars[ifixed])**2  # search on sqrt(norm), so norms always positive!
         covIndex =  None
         ni = fixedloc[ifixed,0]
         name2,reffile = norm_refs[ni]

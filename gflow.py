@@ -1019,6 +1019,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,covs_in,data_val,data_p,n_a
 ################################################################
                     
     if Search:     
+
 #  Write back fitted parameters into evaluation:
         E_poles = numpy.zeros([n_jsets,n_poles], dtype=REAL) 
         g_poles = numpy.zeros([n_jsets,n_poles,n_chans], dtype=REAL)
@@ -1088,7 +1089,7 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,covs_in,data_val,data_p,n_a
             nam='PJ%.1f%s:D%.3f' % (J_set[jset],parity, D_poles[jset,n])
             newname[searchnames[ip]] = nam
 
-        for ip in range(frontier[3],frontier[4]): #### Extract parameters after previous search:
+        for ip in range(frontier[3],frontier[4]): #### Extract fixed parameters after previous search:
             i = fixedloc[ip,0]
             jset = i//n_poles;  n = i%n_poles
             parity = '+' if pi_set[jset] > 0 else '-'
@@ -1186,7 +1187,8 @@ def Gflow(gnd,partitions,base,projectile4LabEnergies,covs_in,data_val,data_p,n_a
         for p in range(frontier[4]):
             print(fmt2 % (p,fixedloc[p,0],fixedpars[p],fixednames[p],newname.get(fixednames[p],'')) )
             
-        print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[3])]))
+        if frontier[3] > 0:
+            print('New names for fixed parameters: ',' '.join([newname.get(fixednames[p],'') for p in range(frontier[3])]))
 
         print('\n*** chisq/pt = %12.5f, with chisq/dof= %12.5f for dof=%i from %11.3e' % (chisq_n/n_data,chisqpdof,n_dof,chisq_n*n_data))
                 

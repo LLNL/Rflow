@@ -70,11 +70,11 @@ if __name__=='__main__':
 
     # Process command line options
     parser = argparse.ArgumentParser(description='Compare R-matrix Cross sections with Data')
-    parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set' )
+    parser.add_argument('inFile', type=str, help='The  intial gnds R-matrix set, xml or Ryaml' )
     parser.add_argument('dataFile', type=str, help='Experimental data to fit' )
     parser.add_argument('normFile', type=str, help='Experimental norms for fitting' )
     parser.add_argument(      "--covs_in", action="store_true",  help="Use initial covariance matrix for initial inverse hessian")
-    parser.add_argument("-y", "--yaml", action="store_true",  help="Read inFile as Ryaml format, and covariances if --covs_in")
+    parser.add_argument("-y", "--yaml", action="store_true",  help="Only inFile as Ryaml format, and covariances if --covs_in")
 
     parser.add_argument("-x", "--exclude", metavar="EXCL", nargs="*", help="Substrings to exclude in datasets if any string within group name")
     parser.add_argument(      "--ExcludeFile", type=str,   help="Name of file with names of datasets (as regex) to exclude if any string within group name")
@@ -134,7 +134,7 @@ if __name__=='__main__':
     ComputerPrecisions = (REAL, CMPLX, INT, realSize)
 
 
-    if not args.yaml:    
+    if not args.yaml or args.inFile.split('.')[-1] == '.xml':    
         gnd = reactionSuiteModule.ReactionSuite.readXML_file(args.inFile)
     else:
         from read_Ryaml import read_Ryaml
