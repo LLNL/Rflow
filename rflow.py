@@ -547,23 +547,32 @@ if __name__=='__main__':
         info = '+S_' + args.tag
         newFitFile = base  + '-fit.xml'
         print('Write gnds files to',newFitFile)
-        if cov is not None: 
-        
-#             covs2Delete = []
-#             for externalFile in gnd.externalFiles:
-#                 if externalFile.label == 'covariances':
-#                     covs2Delete.append(externalFile)
-#             for cov2Delete in covs2Delete:
-#                 print('Remove old covariances',cov2Delete.label)
-#                 gnd.externalFiles.pop(cov2Delete.label)
 
-            if hasattr(gnd, 'loadCovariances'): 
-                for oldCov in gnd.loadCovariances():
-                    print('Remove old covariances',oldCov.label)
-                    gnd.externalFiles.pop(oldCov.label)
-                
-            gnd.addCovariance(cov)
-    
+
+        if cov is not None:  # have new covariances from search
+        
+            CS = gnd.loadCovariances()                           # previous covariances?
+            new_parameter_covariance = cov.parameterCovariances[0]  # new covariances
+
+            if len(CS) == 0:
+                # no covariances present. Make new CovarianceSuite and add it
+                gnd.addCovariance(cov)
+
+            elif len(CS) == 1:
+                # add to existing covarianceSuite
+                from fudge.covariances import modelParameters
+                parameterCovariances = CS[0].parameterCovariances
+                resolvedCovariances = [covar for covar in parameterCovariances if isinstance(covar, modelParameters.ParameterCovariance) and 'resolved resonances' in covar.label]
+                if len(resolvedCovariances) == 0:
+                    parameterCovariances.add( new_parameter_covariance )
+                elif len(resolvedCovariances) == 1:
+                    new_parameter_covariance.label = resolvedCovariances[0].label
+                    parameterCovariances.replace( new_parameter_covariance )
+                else:
+                    raise Exception("Multiple resolved region covariances found!")
+            
+            else:
+                raise NotImplementedError("Multiple covarianceSuite files")
 
         covFiles = gnd.saveAllToFile( newFitFile , covarianceDir = '.' )
         print('Written new fit file:',newFitFile)
