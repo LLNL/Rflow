@@ -33,7 +33,7 @@ cmd = ' '.join([t if '*' not in t else ("'%s'" % t) for t in sys.argv[:]])
 print('  Command:',cmd ,'\n')
 
 defaultPops = '../ripl2pops_to_Z8.xml'
-lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g'}
+lightnuclei = {'n':'n', 'H1':'p', 'H2':'d', 'H3':'t', 'He3':'h', 'He4':'a', 'photon':'g', 'nn':'nn'}
 
 fresco_start = \
 """R-matrix starter for {%s}
@@ -71,6 +71,7 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
     for ic in range(len(projs)):
         p = projs[ic]
         t = targs[ic]
+        print('Fresco: p,t=',p,t)
         pz = charges[p]
         tz = charges[t]
         pmass = masses[p];  Ap = int(pmass+0.5)
@@ -93,10 +94,11 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
         if p not in Projectiles: continue    
         if emax + Q < 1.:
             print('Omitting partition %s+%s as not open even at %s MeV' % (p,t,emax))
-            continue
+            # continue
 
         nex = 1
         jp = (Ap % 2) * 0.5 if Ap!=2 else 1.0
+        if Ap==2 and pz==0: jp = 0 # 2n=nn
         pp = 1  # all stable projectiles  A<=4 are + parity
         ep = 0.0
 
@@ -110,8 +112,10 @@ def make_fresco_input(projs,targs,masses,charges,qvalue,levels,pops,Jmax,Project
 #         jp,pp,ep =   proj.spin[0].float('hbar'),   proj.parity[0].value,   proj.energy[0].pqu('MeV').value
     
 
-        levelList = levels[t]
+        levelList = levels.get(t,[0])
         nex = len(levelList)
+        nex = max(nex,1)
+        print('Partition for fresco',p,t,'with',nex,'levels')
         print("\n &PARTITION namep='%s' massp=%s zp=%s nex=%s namet='%s' masst=%s zt=%s qval=%s prmax=%.4f/" % (p,pmass,pz,nex,t,tmass,tz,Q,prmax), file=fresco)
         partitions.append(ic)
         mxp += 1
@@ -421,7 +425,7 @@ if args.pops2 is not None: pops.addFile( args.pops2 , replace=True)
 scales = {-1: "nodim", 0: "fm^2", 1: "b", 2:"mb", 3:"mic-b"}
 rscales = {"nodim": -1, "fm^2":0, "b":1, "mb":2, "mic-b":3, "microbarns":3}
 xscales = {-1:1,  0:10, 1:1000, 2:1, 3:1e-3}
-lightA      = {'p':'H1', 'd':'H2', 't':'H3', 'h':'He3', 'a':'He4', 'g':'photon'}
+lightA      = {'p':'H1', 'd':'H2', 't':'H3', 'h':'He3', 'a':'He4', 'g':'photon', 'nn':'nn'}
 
 amu   = 931.4940954e0             # 1 amu/c^2 in MeV
 
@@ -465,7 +469,13 @@ if 'photon' not in projs:
     projs += ['photon']
 masses['photon'] = 0.0
 charges['photon'] = 0.0
+masses['nn'] = 2.0172
+charges['nn'] = 0
+masses['Li7'] = 7.016004548
+charges['Li7'] = 3
+
 print('projs 2',projs)
+print('masses 2',masses)
 MPT = len(projs)
 targs = ['' for i in range(MPT)]
 ejects = ['' for i in range(MPT)]
@@ -581,6 +591,7 @@ for ipi in range(MPT):
     print('partition',ipi,' p,t=',p,t)
     masses_i = masses[p] + masses[t]
     qvalue[p] = (masses_ref - masses_i) * amu
+    print('Q =',qvalue[p],'MeV from masses in,out =',masses_ref , masses_i,'from',masses[p] , masses[t])
     elimits[ipi] = args.EmaxCN 
 
 print('Partitions with projs:',projs,' targs:',targs)
