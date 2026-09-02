@@ -572,18 +572,18 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
                         TCind[ie,jset,ico,ici,:] = numpy.asarray([co,ci])
                         MCind[ie,jset,ico,ici]   = 1.0
 
-        @tf.function
-        def T_convert_s(T_mat):
-            # multiply left and right by Coulomb phases:
-            TC_mat = tf.expand_dims(CS_diag,3) * T_mat * tf.expand_dims(CS_diag,2)
-
-            TAp_mat = tf.gather_nd(T_mat, TAind, batch_dims=2) * tf.constant(MAind)
-            if n_angles>0:
-                TCp_mat = tf.gather_nd(TC_mat[:n_angles,...], TCind, batch_dims=2) * tf.constant(MCind)  # ie,jset,p1,c1,p2,c2
-            else:
-                TCp_mat = tf.zeros_like(MCind)
-            
-            return( TAp_mat,TCp_mat )
+#         @tf.function
+#         def T_convert_s(T_mat):
+#             # multiply left and right by Coulomb phases:
+#             TC_mat = tf.expand_dims(CS_diag,3) * T_mat * tf.expand_dims(CS_diag,2)
+# 
+#             TAp_mat = tf.gather_nd(T_mat, TAind, batch_dims=2) * tf.constant(MAind)
+#             if n_angles>0:
+#                 TCp_mat = tf.gather_nd(TC_mat[:n_angles,...], TCind, batch_dims=2) * tf.constant(MCind)  # ie,jset,p1,c1,p2,c2
+#             else:
+#                 TCp_mat = tf.zeros_like(MCind)
+#             
+#             return( TAp_mat,TCp_mat )
 
         @tf.function
         def T2X_transforms_s(TAp_mat,CS_diag,gfac_s,p_mask, n_jsets,n_chans,npairs,maxpc):
@@ -623,8 +623,15 @@ def evaluate(Multi,ComputerPrecisions,Channels,CoulombFunctions_data,CoulombFunc
         else:
              T_mat = LM2T_transformsTF(g_cpoles,E_rpoles,E_ipoles,E_cscat,L_diag, Om2_mat,POm_diag, n_jsets,n_poles,n_chans,brune,Grid,L_poles,dLdE_poles,EO_poles) 
              
-        TAp_mat,TCp_mat = T_convert_s(T_mat)
-#         TAi_mat = T_convert_i(T_mat)
+#         TAp_mat,TCp_mat = T_convert_s(T_mat)
+        TC_mat = tf.expand_dims(CS_diag,3) * T_mat * tf.expand_dims(CS_diag,2)
+
+        TAp_mat = tf.gather_nd(T_mat, TAind, batch_dims=2) * tf.constant(MAind)
+        if n_angles>0:
+            TCp_mat = tf.gather_nd(TC_mat[:n_angles,...], TCind, batch_dims=2) * tf.constant(MCind)  # ie,jset,p1,c1,p2,c2
+        else:
+            TCp_mat = tf.zeros_like(MCind)
+            
 
         Ax = T2B_transformsTF(TCp_mat,AA, n_jsets,n_chans,n_angles)
 
